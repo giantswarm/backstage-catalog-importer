@@ -2,6 +2,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -12,6 +13,8 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
@@ -30,6 +33,7 @@ const (
 
 func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", "output.yaml", "Output file path")
+	rootCmd.PersistentFlags().StringP("format", "f", "raw", "Output format, 'raw' or 'configmap'.")
 }
 
 func Execute() {
@@ -50,6 +54,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal("Please set environment variable GITHUB_TOKEN to a personal GitHub access token (PAT).")
 	}
 
+	format, err := cmd.PersistentFlags().GetString("format")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if format != "raw" && format != "configmap" {
+		log.Fatal("Invalid --format value. Please use 'raw' or 'configmap'.")
+	}
+
 	lists, err := repositories.GetLists(token)
 	if err != nil {
 		log.Fatal(err)
@@ -61,11 +74,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// Collect user names for User entity creation.
 	userNamesMap := make(map[string]bool, 1)
 
-	f, err := os.Create(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
+	var f bytes.Buffer
 
 	numComponents := 0
 	numTeams := 0
@@ -171,8 +180,49 @@ func runRoot(cmd *cobra.Command, args []string) {
 		numUsers++
 	}
 
+	file, err := os.Create(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	if format == "raw" {
+		_, err = file.WriteString(f.String())
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		cm := corev1.ConfigMap{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ConfigMap",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "catalog",
+				Namespace: "backstage",
+			},
+			Data: map[string]string{
+				"catalog.yaml": f.String(),
+			},
+		}
+
+		cmYamlBytes, err := yaml.Marshal(&cm)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+
+		_, err = file.Write(cmYamlBytes)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	log.Printf("Wrote %d components, %d teams, %d users", numComponents, numTeams, numUsers)
-	log.Printf("Wrote output to %s", path)
+	if format == "configmap" {
+		log.Printf("Wrote ConfigMap to %s", path)
+	} else {
+		log.Printf("Wrote YAML output to %s", path)
+	}
 }
 
 func createComponentEntity(r repositories.Repo, team string) catalog.Entity {
