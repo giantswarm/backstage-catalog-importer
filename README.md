@@ -1,56 +1,23 @@
-# General template repository
+# Backstage catalog importer
 
-This is a general template repository containing some basic files every GitHub repo owned by Giant Swarm should have.
+A utility to fill the catalog in the Giant Swarm developer portal.
 
-Note also these more specific repositories:
+## Usage
 
-- [template-app](https://github.com/giantswarm/template-app)
-- [gitops-template](https://github.com/giantswarm/gitops-template)
-- [python-app-template](https://github.com/giantswarm/python-app-template)
+Requires a Github personal access token (PTA) with permission to read repository content, teams, and user info for the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
 
-To use this template, just hit the **Use this template** button above or click [this link](https://github.com/giantswarm/template/generate).
+To run the export, execute
 
-## Adapting your repository
+```nohighlight
+go run main.go
+```
 
-After you created your new repo with name `backstage-catalog-importer`, please follow these steps:
+As a result, the file `output.yaml` in the current directory provide the catalog content.
 
-1. Configure the correct repository name in all files:
+## What's covered
 
-   ```nohighlight
-   devctl replace -i backstage-catalog-importer \
-     "$(basename $(git rev-parse --show-toplevel))" --ignore '.git/**' '**'
-     
-   devctl replace -i "template" \
-     "$(basename $(git rev-parse --show-toplevel))" --ignore '.git/**' '**'
-   ```
-   
-   Find `devctl` [here](https://github.com/giantswarm/devctl).
+The following data will be exported/imported into the catalog:
 
-2. Adjust repo settings in the [repo settings page](https://github.com/giantswarm/backstage-catalog-importer/settings). Make sure that the
-   - **Allow merge commits** box is not checked
-   - **Automatically delete head branches** box is checked
-
-3. Adjust access permissions on the [access settings page](https://github.com/giantswarm/backstage-catalog-importer/settings/access) as follows:
-   - Add `giantswarm/bots` with `Write` access.
-   - Add `giantswarm/employees` with `Admin` access.
-
-4. Add this repository to your team's [repositories list](https://github.com/giantswarm/github/tree/master/repositories) in the giantswarm/github repository, to keep up-to-date with general changes.
-
-5. Replace these instructions by meaningful `README.md` content.
-
-6. Adjust the repository description, tags, and under "Include in the home page" deselect the Packages and Environments options.
-
-### Optional
-
-- If a container image will get built based on your repository, [set up a Quay.io repository](https://intranet.giantswarm.io/docs/dev-and-releng/container-registry/) for it.
-
-- Add the project to the CircleCI via [this link](https://circleci.com/setup-project/gh/giantswarm/backstage-catalog-importer)
-
-- Add badges to the top of `README.md` where applicable
-
-  - [CircleCI](https://app.circleci.com/settings/project/github/giantswarm/backstage-catalog-importer/status-badges). Note: if this is a private repository, an [API token](https://app.circleci.com/settings/project/github/giantswarm/backstage-catalog-importer/api) with scope `status` will be needed. The resulting badge URL will look something like `https://circleci.com/gh/giantswarm/backstage-catalog-importer.svg?style=svg&circle-token=TOKEN_FOR_PRIVATE_REPO`.
-  
-  - [Quay.io](https://quay.io/repository/giantswarm/backstage-catalog-importer?tab=settings)
-   
-   
-
+- All repositories referenced in the repositories lists in [giantswarm/github](https://github.com/giantswarm/github/tree/main/repositories) as _Component_ entities.
+- All owner teams of above components as _Group_ entities.
+- All members of the above teams as _User_ entities.

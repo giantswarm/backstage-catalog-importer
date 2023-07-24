@@ -1,3 +1,3 @@
-module github.com/giantswarm/REPOSITORY_NAME
+module github.com/giantswarm/backstage-catalog-importer
 
-go 1.18
+go 1.19
