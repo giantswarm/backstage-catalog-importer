@@ -1,0 +1,164 @@
+- name: aws-load-balancer-controller-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: cert-manager-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: cloudflared-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: coredns-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: external-dns-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: flamethrower-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: gatling-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: ingress-exporter
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+- name: ingress-nginx-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: inlets-operator-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: kong-app
+  gen:
+    flavours:
+    - app
+    language: generic
+    installUpdateChart: true
+  replace:
+    architect-orb: true
+- name: kubectl-apply-job
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: kyverno-policies-connectivity
+  gen:
+    flavours:
+    - app
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: linkerd-bundle
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: linkerd-control-plane-app
+  gen:
+    flavours:
+    - app
+    language: generic
+    installUpdateChart: true
+  replace:
+    architect-orb: true
+- name: linkerd-multicluster-app
+  gen:
+    flavours:
+    - app
+    language: generic
+    installUpdateChart: true
+  replace:
+    architect-orb: true
+- name: linkerd-multicluster-link-app
+  gen:
+    flavours:
+    - app
+    language: generic
+    installUpdateChart: true
+  replace:
+    architect-orb: true
+- name: linkerd-viz-app
+  gen:
+    flavours:
+    - app
+    language: generic
+    installUpdateChart: true
+  replace:
+    architect-orb: true
+- name: linkerd2-cni-app
+  gen:
+    flavours:
+    - app
+    language: generic
+    installUpdateChart: true
+  replace:
+    architect-orb: true
+- name: loadtest-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: net-exporter
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: oauth2-proxy-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true

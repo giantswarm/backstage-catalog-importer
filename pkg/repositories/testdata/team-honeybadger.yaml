@@ -1,0 +1,573 @@
+- name: adidas-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: apiextensions-application
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: app
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: app-admission-controller
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: app-build-suite
+  gen:
+    flavours:
+    - generic
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: app-catalog-cleanup-tool
+  gen:
+    flavours:
+    - generic
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: app-exporter
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: app-operator
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: app-test-suite
+  gen:
+    flavours:
+    - generic
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: appcatalog
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: apptest
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: apptestctl
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: architect
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+- name: architect-orb
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+- name: babymarkt-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: backstage
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: blog
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: caicloud-event-exporter-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: chart-operator
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: cluster-apps-operator
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: config
+  gen:
+    enableFloatingMajorTags: true
+    flavours:
+    - generic
+    language: generic
+- name: config-controller
+  gen:
+    flavours:
+    - app
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: continental-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: crossplane
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: crsync
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: cyta-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: devctl
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: docs-indexer
+  gen:
+    flavours:
+    - app
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: docs-proxy
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: egger-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: external-secrets
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: fashion-digital-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: flexshopper-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: flux-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+  app_test_suite: {}
+- name: giantswarm-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false  # Not used in this repo.
+- name: giantswarmio-nginx
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: gitops-server-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: gk-software-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: happa
+  gen:
+    flavours:
+    - app
+    language: generic
+- name: harbor-config-operator
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+- name: harbor-operator-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: hello-world-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: helm-values-gen
+  gen:
+    flavours:
+    - cli
+    language: go
+    enableFloatingMajorTags: true
+  replace:
+    architect-orb: true
+    renovate: true
+- name: helmclient
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: install-binary-action
+  gen:
+    enableFloatingMajorTags: true
+    flavours:
+    - generic
+    language: generic
+- name: ista-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: klingel-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: konfigure
+  gen:
+    flavours:
+    - app
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+    renovate: true
+- name: kubeconfig
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: false
+    precommit: true
+    renovate: true
+- name: kubectl-gs
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: kyverno-policies-dx
+  gen:
+    flavours:
+    - app
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: management-clusters-fleet
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false  # Not used in this repo.
+    renovate: true
+- name: microclient
+  gen:
+    flavours:
+    - generic
+    language: go
+- name: microendpoint
+  gen:
+    flavours:
+    - generic
+    language: go
+- name: microerror
+  gen:
+    flavours:
+    - generic
+    language: go
+- name: microkit
+  gen:
+    flavours:
+    - generic
+    language: go
+- name: micrologger
+  gen:
+    flavours:
+    - generic
+    language: go
+- name: microstorage
+  gen:
+    flavours:
+    - generic
+    language: go
+- name: panamax-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: passage
+  gen:
+    flavours:
+    - generic
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prow-log-aggregator
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    precommit: true
+- name: pytest-helm-charts
+  gen:
+    flavours:
+    - generic
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: python-app-template
+  gen:
+    flavours:
+    - generic
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: resource
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: retagger
+- name: schema
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: false
+- name: schema-server
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: schemadocs
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: schemalint
+  gen:
+    flavours:
+    - cli
+    language: go
+    enableFloatingMajorTags: true
+  replace:
+    architect-orb: true
+    renovate: true
+- name: signcode-util
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: sitesearch
+- name: startup-script
+- name: step-exec-lib
+  gen:
+    flavours:
+    - generic
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: subtree-util
+  gen:
+    enableFloatingMajorTags: true
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: template
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: test-infra
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: vodafone-management-clusters
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: false
+- name: web-assets
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true

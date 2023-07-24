@@ -9,10 +9,10 @@ Requires a Github personal access token (PTA) with permission to read repository
 To run the export, execute
 
 ```nohighlight
-go run main.go
+go run main.go [--output output.yaml]
 ```
 
-As a result, the file `output.yaml` in the current directory provide the catalog content.
+As a result, the file `output.yaml` in the current directory will provide the catalog content.
 
 ## What's covered
 
