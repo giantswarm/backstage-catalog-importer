@@ -12,12 +12,12 @@ To use this template, just hit the **Use this template** button above or click [
 
 ## Adapting your repository
 
-After you created your new repo with name `REPOSTORY_NAME`, please follow these steps:
+After you created your new repo with name `backstage-catalog-importer`, please follow these steps:
 
 1. Configure the correct repository name in all files:
 
    ```nohighlight
-   devctl replace -i REPOSTORY_NAME \
+   devctl replace -i backstage-catalog-importer \
      "$(basename $(git rev-parse --show-toplevel))" --ignore '.git/**' '**'
      
    devctl replace -i "template" \
@@ -26,11 +26,11 @@ After you created your new repo with name `REPOSTORY_NAME`, please follow these 
    
    Find `devctl` [here](https://github.com/giantswarm/devctl).
 
-2. Adjust repo settings in the [repo settings page](https://github.com/giantswarm/REPOSTORY_NAME/settings). Make sure that the
+2. Adjust repo settings in the [repo settings page](https://github.com/giantswarm/backstage-catalog-importer/settings). Make sure that the
    - **Allow merge commits** box is not checked
    - **Automatically delete head branches** box is checked
 
-3. Adjust access permissions on the [access settings page](https://github.com/giantswarm/REPOSTORY_NAME/settings/access) as follows:
+3. Adjust access permissions on the [access settings page](https://github.com/giantswarm/backstage-catalog-importer/settings/access) as follows:
    - Add `giantswarm/bots` with `Write` access.
    - Add `giantswarm/employees` with `Admin` access.
 
@@ -44,13 +44,13 @@ After you created your new repo with name `REPOSTORY_NAME`, please follow these 
 
 - If a container image will get built based on your repository, [set up a Quay.io repository](https://intranet.giantswarm.io/docs/dev-and-releng/container-registry/) for it.
 
-- Add the project to the CircleCI via [this link](https://circleci.com/setup-project/gh/giantswarm/REPOSTORY_NAME)
+- Add the project to the CircleCI via [this link](https://circleci.com/setup-project/gh/giantswarm/backstage-catalog-importer)
 
 - Add badges to the top of `README.md` where applicable
 
-  - [CircleCI](https://app.circleci.com/settings/project/github/giantswarm/REPOSTORY_NAME/status-badges). Note: if this is a private repository, an [API token](https://app.circleci.com/settings/project/github/giantswarm/REPOSTORY_NAME/api) with scope `status` will be needed. The resulting badge URL will look something like `https://circleci.com/gh/giantswarm/REPOSTORY_NAME.svg?style=svg&circle-token=TOKEN_FOR_PRIVATE_REPO`.
+  - [CircleCI](https://app.circleci.com/settings/project/github/giantswarm/backstage-catalog-importer/status-badges). Note: if this is a private repository, an [API token](https://app.circleci.com/settings/project/github/giantswarm/backstage-catalog-importer/api) with scope `status` will be needed. The resulting badge URL will look something like `https://circleci.com/gh/giantswarm/backstage-catalog-importer.svg?style=svg&circle-token=TOKEN_FOR_PRIVATE_REPO`.
   
-  - [Quay.io](https://quay.io/repository/giantswarm/REPOSTORY_NAME?tab=settings)
+  - [Quay.io](https://quay.io/repository/giantswarm/backstage-catalog-importer?tab=settings)
    
    
 
