@@ -1,0 +1,390 @@
+- name: atlassian-data-center-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: backoff
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: cluster-api-monitoring-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: dashboards
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: datadog-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: efk-stack-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: errors
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: esrally-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: eventrouter-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: exporterkit
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: fluent-logshipping-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: giantswarm-kubernetes-mixin
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: go-tcp-proxy
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: goldilocks-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: grafana-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: heartbeatctl
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: jaeger-operator-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: k8s-api-healthz
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: k8sclient
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: keda-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: kube-eagle-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: kyverno-policies-observability
+  gen:
+    flavours:
+    - app
+    language: python
+  replace:
+    architect-orb: true
+    renovate: true
+- name: loki-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: loki-multi-tenant-proxy
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: macropower-analytics-panel-server-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: metrics-server-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: mimir-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: nginx-proxy
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: node-exporter-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: observability-bundle
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: operatorkit
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: opsctl
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prometheus-agent-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prometheus-meta-operator
+  gen:
+    flavours:
+    - app
+    - k8sapi
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prometheus-operator-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prometheus-operator-crd
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prometheus-pushgateway-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prometheus-remotewrite
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: prometheus-rules
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: promtail-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: promxy-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: silence-operator
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: silencectl
+  gen:
+    flavours:
+    - cli
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: sloth-app
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: sloth-rules
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: valuemodifier
+  gen:
+    flavours:
+    - generic
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
+- name: velero-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+- name: vertical-pod-autoscaler-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: vertical-pod-autoscaler-crd
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true

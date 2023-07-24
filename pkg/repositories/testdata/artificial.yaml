@@ -1,0 +1,23 @@
+- name: name-only
+- name: repo-with-gen-part
+  gen:
+    flavours:
+    - app
+    language: generic
+- name: repo-with-replace-part
+  replace:
+    architect-orb: true
+    renovate: true
+- name: generic-go
+  gen:
+    flavours:
+    - generic
+    language: go
+    installUpdateChart: false
+    enableFloatingMajorTags: true
+  lifecycle: deprecated
+  replace:
+    architect-orb: false
+    renovate: true
+    precommit: true
+    dependabotRemove: false

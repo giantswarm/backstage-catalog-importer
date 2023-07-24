@@ -1,0 +1,72 @@
+- name: azure-ad-pod-identity-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: azure-cloud-controller-manager-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: azure-cloud-node-manager-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: azuredisk-csi-driver-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: capz-app-collection
+  gen:
+    flavours:
+    - generic
+    language: generic
+  replace:
+    architect-orb: true
+- name: cluster-api-provider-azure-app
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: cluster-azure
+  gen:
+    flavours:
+    - app
+    - cluster-app
+    language: generic
+  replace:
+    architect-orb: true
+    renovate: true
+- name: default-apps-azure
+  gen:
+    flavours:
+    - app
+    language: generic
+  replace:
+    renovate: true
+    architect-orb: true
+- name: dns-operator-azure
+  gen:
+    flavours:
+    - app
+    language: go
+  replace:
+    architect-orb: true
+    renovate: true
