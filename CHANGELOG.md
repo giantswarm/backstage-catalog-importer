@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2023-07-24
+
 ### Added
 
 - Added option to write ConfigMap output.
@@ -17,5 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/giantswarm/backstage-catalog-importer/releases/tag/v0.0.1
