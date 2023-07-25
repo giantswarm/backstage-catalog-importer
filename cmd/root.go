@@ -15,6 +15,7 @@ import (
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
@@ -206,12 +207,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 			},
 		}
 
-		cmYamlBytes, err := yaml.Marshal(&cm)
+		serializer := json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil)
+		var buf bytes.Buffer
+		err := serializer.Encode(&cm, &buf)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 
-		_, err = file.Write(cmYamlBytes)
+		_, err = file.WriteString(buf.String())
 		if err != nil {
 			log.Fatal(err)
 		}
