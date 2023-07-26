@@ -43,7 +43,16 @@ func TestLoadListShallow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := LoadList(tt.path)
+			s, err := New(Config{
+				GithubAuthToken:      "abc",
+				GithubOrganization:   "foo",
+				GithubRepositoryName: "bar",
+				DirectoryPath:        "",
+			})
+			if err != nil {
+				t.Errorf("unexpected error %v", err)
+			}
+			_, err = s.LoadList(tt.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadList() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -103,7 +112,17 @@ func TestLoadList(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := LoadList(tt.args.path)
+			s, err := New(Config{
+				GithubAuthToken:      "abc",
+				GithubOrganization:   "foo",
+				GithubRepositoryName: "bar",
+				DirectoryPath:        "",
+			})
+			if err != nil {
+				t.Errorf("unexpected error %v", err)
+			}
+
+			got, err := s.LoadList(tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadList() error = %v, wantErr %v", err, tt.wantErr)
 				return

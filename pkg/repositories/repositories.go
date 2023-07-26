@@ -9,40 +9,80 @@ import (
 	"os"
 	"strings"
 
+	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v53/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 )
 
-const (
+type Config struct {
 	// Name of the GitHub organization owning our repository.
-	githubOrganization = "giantswarm"
+	GithubOrganization string
 
 	// Name of the repository containing our repositories config.
-	githubRepositoryName = "github"
+	GithubRepositoryName string
+
+	// Github personal access token (PTA) to use for client authentication.
+	GithubAuthToken string
 
 	// Path within the repository containing repository config YAML lists.
-	directoryPath = "repositories"
-)
+	// An empty string indicates the root directory.
+	DirectoryPath string
+}
 
 type ListResult struct {
 	OwnerTeamName string
 	Repositories  []Repo
 }
 
+type Service struct {
+	config       Config
+	ctx          context.Context
+	githubClient *github.Client
+}
+
+// New instantiates a new repositories service.
+func New(c Config) (*Service, error) {
+	if c.GithubOrganization == "" {
+		return nil, microerror.Maskf(invalidConfigError, "no Github organization configured")
+	}
+	if c.GithubRepositoryName == "" {
+		return nil, microerror.Maskf(invalidConfigError, "no Github repository name configured")
+	}
+	if c.GithubAuthToken == "" {
+		return nil, microerror.Maskf(invalidConfigError, "no Github token given")
+	}
+
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: c.GithubAuthToken},
+	)
+
+	ctx := context.Background()
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
+
+	s := &Service{
+		config:       c,
+		ctx:          ctx,
+		githubClient: client,
+	}
+
+	return s, nil
+}
+
 // LoadList loads a list of repository configurations from a local path.
 // The file name is asserted in the format `<team_name>.yaml`, with all
 // repositories mentioned in it belonging to the team of that name.
-func LoadList(path string) ([]Repo, error) {
+func (s *Service) LoadList(path string) ([]Repo, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return LoadListFromBytes(data)
+	return s.LoadListFromBytes(data)
 }
 
-func LoadListFromBytes(data []byte) ([]Repo, error) {
+func (s *Service) LoadListFromBytes(data []byte) ([]Repo, error) {
 	repos := []Repo{}
 	err := yaml.UnmarshalStrict(data, &repos)
 	if err != nil {
@@ -52,17 +92,9 @@ func LoadListFromBytes(data []byte) ([]Repo, error) {
 	return repos, nil
 }
 
-// GetLists is loading the list of repository YAML files from GitHub giantswarm/github.
-// This requires a personal access token.
-func GetLists(githubToken string) ([]ListResult, error) {
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: githubToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
-	_, directoryContent, _, err := client.Repositories.GetContents(ctx, githubOrganization, githubRepositoryName, directoryPath, nil)
+// GetLists loads the lists of repository YAML files from GitHub giantswarm/github.
+func (s *Service) GetLists() ([]ListResult, error) {
+	_, directoryContent, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, s.config.DirectoryPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -74,13 +106,13 @@ func GetLists(githubToken string) ([]ListResult, error) {
 			continue
 		}
 
-		fileContent, _, _, err := client.Repositories.GetContents(ctx, githubOrganization, githubRepositoryName, *item.Path, nil)
+		fileContent, _, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, *item.Path, nil)
 		if err != nil {
 			return nil, err
 		}
 
 		decodedContent, _ := b64.StdEncoding.DecodeString(*fileContent.Content)
-		lists, err := LoadListFromBytes(decodedContent)
+		lists, err := s.LoadListFromBytes(decodedContent)
 		if err != nil {
 			return nil, err
 		}
