@@ -30,6 +30,12 @@ var rootCmd = &cobra.Command{
 const (
 	// Name of the GitHub organization owning our teams and users.
 	githubOrganization = "giantswarm"
+
+	// Name of the repository holding our repository meta data.
+	githubManagementRepository = "github"
+
+	// Directory path within githubManagementRepository holding repo metadata YAML files.
+	repositoriesPath = "repositories"
 )
 
 func init() {
@@ -64,7 +70,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal("Invalid --format value. Please use 'raw' or 'configmap'.")
 	}
 
-	lists, err := repositories.GetLists(token)
+	repoService, err := repositories.New(repositories.Config{
+		GithubOrganization:   githubOrganization,
+		GithubRepositoryName: githubManagementRepository,
+		GithubAuthToken:      token,
+		DirectoryPath:        repositoriesPath,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	lists, err := repoService.GetLists()
 	if err != nil {
 		log.Fatal(err)
 	}

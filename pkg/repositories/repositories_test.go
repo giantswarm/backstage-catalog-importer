@@ -44,6 +44,7 @@ func TestLoadListShallow(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s, err := New(Config{
+				GithubAuthToken:      "abc",
 				GithubOrganization:   "foo",
 				GithubRepositoryName: "bar",
 				DirectoryPath:        "",
@@ -112,6 +113,7 @@ func TestLoadList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s, err := New(Config{
+				GithubAuthToken:      "abc",
 				GithubOrganization:   "foo",
 				GithubRepositoryName: "bar",
 				DirectoryPath:        "",
