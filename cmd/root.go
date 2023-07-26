@@ -19,6 +19,7 @@ import (
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/teams"
 )
 
 var rootCmd = &cobra.Command{
@@ -80,13 +81,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	lists, err := repoService.GetLists()
+	teamsService, err := teams.New(teams.Config{
+		GithubOrganization: githubOrganization,
+		GithubAuthToken:    token,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Collect team names for Group entity creation.
-	teamNamesMap := make(map[string]bool, 1)
+	lists, err := repoService.GetLists()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Collect user names for User entity creation.
 	userNamesMap := make(map[string]bool, 1)
@@ -99,8 +105,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// Iterate repository lists (per team) and create component entities.
 	for _, list := range lists {
-		teamNamesMap[list.OwnerTeamName] = true
-
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
 		for _, repo := range list.Repositories {
@@ -122,22 +126,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
 	// Export teams
-	teamNames := getMapKeys(teamNamesMap)
-	for _, teamSlug := range teamNames {
-		team, _, err := client.Teams.GetTeamBySlug(ctx, githubOrganization, teamSlug)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
+	teams, err := teamsService.GetAll()
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	log.Printf("Processing %d teams", len(teams))
 
-		members, _, err := client.Teams.ListTeamMembersBySlug(ctx, githubOrganization, teamSlug, nil)
+	for _, team := range teams {
+		members, err := teamsService.GetMembers(team.GetSlug())
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -149,7 +146,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 			userNamesMap[n] = true
 		}
 
-		entity := createGroupEntity(teamSlug, team.GetName(), team.GetDescription(), *team.Parent.Name, memberNames, team.GetID())
+		parentTeamName := ""
+		if team.GetParent() != nil {
+			parentTeamName = team.GetParent().GetSlug()
+		}
+
+		log.Printf("Team has %d members", len(memberNames))
+
+		entity := createGroupEntity(team.GetSlug(), team.GetName(), team.GetDescription(), parentTeamName, memberNames, team.GetID())
 
 		numTeams++
 
@@ -166,6 +170,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.Fatalf("Error: %v", err)
 		}
 	}
+
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
 
 	// Export users
 	userNames := getMapKeys(userNamesMap)
