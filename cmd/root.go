@@ -108,7 +108,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
 		for _, repo := range list.Repositories {
-			ent := createComponentEntity(repo, list.OwnerTeamName)
+			ent := catalog.CreateComponentEntity(repo, list.OwnerTeamName)
 			numComponents++
 
 			d, err := yaml.Marshal(&ent)
@@ -151,7 +151,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			parentTeamName = team.GetParent().GetSlug()
 		}
 
-		entity := createGroupEntity(team.GetSlug(), team.GetName(), team.GetDescription(), parentTeamName, memberNames, team.GetID())
+		entity := catalog.CreateGroupEntity(team.GetSlug(), team.GetName(), team.GetDescription(), parentTeamName, memberNames, team.GetID())
 
 		numTeams++
 
@@ -186,7 +186,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.Fatalf("Error: %v", err)
 		}
 
-		entity := createUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL())
+		entity := catalog.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL())
 
 		d, err := yaml.Marshal(&entity)
 		if err != nil {
@@ -253,113 +253,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	} else {
 		log.Printf("Wrote YAML output to %s with %d bytes", path, size)
 	}
-}
-
-func createComponentEntity(r repositories.Repo, team string) catalog.Entity {
-	e := catalog.Entity{
-		APIVersion: "backstage.io/v1alpha1",
-		Kind:       catalog.EntityKindComponent,
-		Metadata: catalog.EntityMetadata{
-			Name:   r.Name,
-			Labels: map[string]string{},
-			Annotations: map[string]string{
-				"github.com/project-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
-				"github.com/team-slug":         team,
-				"backstage.io/source-location": fmt.Sprintf("url:https://github.com/giantswarm/%s", r.Name),
-				"circleci.com/project-slug":    fmt.Sprintf("github/giantswarm/%s", r.Name),
-				"quay.io/repository-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
-			},
-			Tags: []string{},
-		},
-	}
-
-	spec := catalog.ComponentSpec{
-		Type:      "service",
-		Lifecycle: "production",
-		Owner:     team,
-	}
-
-	if r.Lifecycle != "production" && r.Lifecycle != "" {
-		spec.Lifecycle = string(r.Lifecycle)
-	}
-
-	e.Spec = spec
-
-	if r.Gen.Language != "" && r.Gen.Language != repositories.RepoLanguageGeneric {
-		e.Metadata.Labels["giantswarm.io/language"] = string(r.Gen.Language)
-
-		e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("language:%s", r.Gen.Language))
-	}
-
-	for _, flavor := range r.Gen.Flavors {
-		e.Metadata.Labels[fmt.Sprintf("giantswarm.io/flavor-%s", flavor)] = "true"
-
-		e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("flavor:%s", flavor))
-	}
-
-	return e
-}
-
-func createGroupEntity(name, displayName, description, parent string, members []string, id int64) catalog.Entity {
-	e := catalog.Entity{
-		APIVersion: "backstage.io/v1alpha1",
-		Kind:       catalog.EntityKindGroup,
-		Metadata: catalog.EntityMetadata{
-			Name: name,
-		},
-	}
-	spec := catalog.GroupSpec{
-		Type:    "team",
-		Members: members,
-		Profile: catalog.GroupProfile{
-			Picture: fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", id),
-		},
-	}
-
-	if description != "" {
-		e.Metadata.Description = description
-	}
-	if displayName != "" {
-		spec.Profile.DisplayName = displayName
-	}
-	if parent != "" {
-		spec.Parent = parent
-	}
-
-	e.Spec = spec
-
-	return e
-}
-
-func createUserEntity(name, email, displayName, description, avatarURL string) catalog.Entity {
-	e := catalog.Entity{
-		APIVersion: "backstage.io/v1alpha1",
-		Kind:       catalog.EntityKindUser,
-		Metadata: catalog.EntityMetadata{
-			Name: name,
-		},
-	}
-
-	spec := catalog.UserSpec{
-		MemberOf: []string{},
-		Profile: catalog.UserProfile{
-			Email: email,
-		},
-	}
-
-	if description != "" {
-		e.Metadata.Description = description
-	}
-	if displayName != "" {
-		spec.Profile.DisplayName = displayName
-	}
-	if avatarURL != "" {
-		spec.Profile.Picture = avatarURL
-	}
-
-	e.Spec = spec
-
-	return e
 }
 
 // Returns a sorted slice of keys.
