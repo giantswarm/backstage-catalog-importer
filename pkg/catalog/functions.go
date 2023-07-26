@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
@@ -52,6 +53,7 @@ func CreateComponentEntity(r repositories.Repo, team string) Entity {
 }
 
 func CreateGroupEntity(name, displayName, description, parent string, members []string, id int64) Entity {
+	sort.Strings(members)
 	e := Entity{
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindGroup,
