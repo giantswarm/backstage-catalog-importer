@@ -3,6 +3,7 @@ module github.com/giantswarm/backstage-catalog-importer
 go 1.19
 
 require (
+	github.com/giantswarm/microerror v0.4.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v53 v53.2.0
 	github.com/spf13/cobra v1.7.0
