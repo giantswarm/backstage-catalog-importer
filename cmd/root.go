@@ -179,6 +179,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// Export users
 	userNames := getMapKeys(userNamesMap)
+	log.Printf("Processing %d users", len(userNames))
+
 	for _, userSlug := range userNames {
 
 		// load user data from Github
