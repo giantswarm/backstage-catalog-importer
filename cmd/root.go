@@ -212,7 +212,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 	defer file.Close()
 
+	var size int
+
 	if format == "raw" {
+		size = f.Len()
 		_, err = file.WriteString(f.String())
 		if err != nil {
 			log.Fatal(err)
@@ -239,17 +242,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.Fatalf("Error: %v", err)
 		}
 
+		size = buf.Len()
 		_, err = file.WriteString(buf.String())
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	log.Printf("Wrote %d components, %d teams, %d users", numComponents, numTeams, numUsers)
+	log.Printf("Wrote %d components, %d groups, %d users", numComponents, numTeams, numUsers)
 	if format == "configmap" {
-		log.Printf("Wrote ConfigMap to %s", path)
+		log.Printf("Wrote ConfigMap to %s with size %d bytes", path, size)
 	} else {
-		log.Printf("Wrote YAML output to %s", path)
+		log.Printf("Wrote YAML output to %s with %d bytes", path, size)
 	}
 }
 
