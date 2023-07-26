@@ -94,9 +94,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	// Collect user names for User entity creation.
-	userNamesMap := make(map[string]bool, 1)
-
+	// Output buffer
 	var f bytes.Buffer
 
 	numComponents := 0
@@ -125,6 +123,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
+
+	// Collect user names for User entity creation.
+	userNamesMap := make(map[string]bool, 1)
 
 	// Export teams
 	teams, err := teamsService.GetAll()
