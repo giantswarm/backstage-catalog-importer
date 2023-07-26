@@ -116,7 +116,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// Export teams
 	teamNames := getMapKeys(teamNamesMap)
 	for _, teamSlug := range teamNames {
-		log.Printf("Group %s", teamSlug)
 		team, _, err := client.Teams.GetTeamBySlug(ctx, githubOrganization, teamSlug)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -155,7 +154,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// Export users
 	userNames := getMapKeys(userNamesMap)
 	for _, userSlug := range userNames {
-		log.Printf("User %s", userSlug)
 
 		// load user data from Github
 		user, _, err := client.Users.Get(ctx, userSlug)
