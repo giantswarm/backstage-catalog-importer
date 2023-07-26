@@ -151,8 +151,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 			parentTeamName = team.GetParent().GetSlug()
 		}
 
-		log.Printf("Team has %d members", len(memberNames))
-
 		entity := createGroupEntity(team.GetSlug(), team.GetName(), team.GetDescription(), parentTeamName, memberNames, team.GetID())
 
 		numTeams++
