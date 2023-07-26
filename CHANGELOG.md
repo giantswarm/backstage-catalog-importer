@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.4] - 2023-07-26
 
+- Treat all GitHub teams in the organization, instead of only the teams owning repositories.
+
 ## [0.0.3] - 2023-07-25
 
 ### Fixed
