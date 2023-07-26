@@ -19,5 +19,5 @@ As a result, the file `output.yaml` in the current directory will provide the ca
 The following data will be exported/imported into the catalog:
 
 - All repositories referenced in the repositories lists in [giantswarm/github](https://github.com/giantswarm/github/tree/main/repositories) as _Component_ entities.
-- All owner teams of above components as _Group_ entities.
+- All teams of the configured Github organizaiton as _Group_ entities.
 - All members of the above teams as _User_ entities.
