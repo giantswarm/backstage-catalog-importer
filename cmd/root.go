@@ -106,7 +106,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
 		for _, repo := range list.Repositories {
-			ent := catalog.CreateComponentEntity(repo, list.OwnerTeamName)
+			ent := catalog.CreateComponentEntity(repo, list.OwnerTeamName, repoService.GetDescription(repo.Name))
 			numComponents++
 
 			d, err := yaml.Marshal(&ent)

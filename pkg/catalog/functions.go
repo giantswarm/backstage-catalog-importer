@@ -7,13 +7,14 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
-func CreateComponentEntity(r repositories.Repo, team string) Entity {
+func CreateComponentEntity(r repositories.Repo, team, description string) Entity {
 	e := Entity{
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindComponent,
 		Metadata: EntityMetadata{
-			Name:   r.Name,
-			Labels: map[string]string{},
+			Name:        r.Name,
+			Labels:      map[string]string{},
+			Description: description,
 			Annotations: map[string]string{
 				"github.com/project-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
 				"github.com/team-slug":         team,
