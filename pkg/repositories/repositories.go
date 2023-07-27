@@ -39,6 +39,7 @@ type ListResult struct {
 type GithubRepo struct {
 	Name        string
 	Description string
+	IsPrivate   bool
 }
 
 type Service struct {
@@ -103,6 +104,7 @@ func (s *Service) loadGithubRepoData() (map[string]GithubRepo, error) {
 			repos[repo.GetName()] = GithubRepo{
 				Name:        repo.GetName(),
 				Description: repo.GetDescription(),
+				IsPrivate:   repo.GetPrivate(),
 			}
 		}
 
@@ -180,4 +182,13 @@ func (s *Service) GetDescription(name string) string {
 		return repo.Description
 	}
 	return ""
+}
+
+// Returns the public/private info for the given repo. If not available,
+// return an error.
+func (s *Service) GetIsPrivate(name string) (bool, error) {
+	if repo, ok := s.githubRepos[name]; ok {
+		return repo.IsPrivate, nil
+	}
+	return false, microerror.Maskf(repositoryNotFoundError, "repository %s not found", name)
 }

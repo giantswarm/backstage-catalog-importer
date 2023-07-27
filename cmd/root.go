@@ -106,7 +106,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
 		for _, repo := range list.Repositories {
-			ent := catalog.CreateComponentEntity(repo, list.OwnerTeamName, repoService.GetDescription(repo.Name))
+			isPrivate, err := repoService.GetIsPrivate(repo.Name)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
+			ent := catalog.CreateComponentEntity(
+				repo,
+				list.OwnerTeamName,
+				repoService.GetDescription(repo.Name),
+				isPrivate)
 			numComponents++
 
 			d, err := yaml.Marshal(&ent)
@@ -152,7 +161,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 			parentTeamName = team.GetParent().GetSlug()
 		}
 
-		entity := catalog.CreateGroupEntity(team.GetSlug(), team.GetName(), team.GetDescription(), parentTeamName, memberNames, team.GetID())
+		entity := catalog.CreateGroupEntity(
+			team.GetSlug(),
+			team.GetName(),
+			team.GetDescription(),
+			parentTeamName,
+			memberNames,
+			team.GetID())
 
 		numTeams++
 

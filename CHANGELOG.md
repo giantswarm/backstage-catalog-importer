@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Export repository descriptions to component entities.
+- Export repository visibility (private) to component entity tags.
 
 ## [0.0.5] - 2023-07-26
 
