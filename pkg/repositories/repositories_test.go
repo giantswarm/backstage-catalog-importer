@@ -52,7 +52,7 @@ func TestLoadListShallow(t *testing.T) {
 			if err != nil {
 				t.Errorf("unexpected error %v", err)
 			}
-			_, err = s.LoadList(tt.path)
+			_, err = s.loadList(tt.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadList() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -122,7 +122,7 @@ func TestLoadList(t *testing.T) {
 				t.Errorf("unexpected error %v", err)
 			}
 
-			got, err := s.LoadList(tt.args.path)
+			got, err := s.loadList(tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadList() error = %v, wantErr %v", err, tt.wantErr)
 				return

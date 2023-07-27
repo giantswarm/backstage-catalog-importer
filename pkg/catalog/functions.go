@@ -7,13 +7,14 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
-func CreateComponentEntity(r repositories.Repo, team string) Entity {
+func CreateComponentEntity(r repositories.Repo, team, description string, isPrivate bool) Entity {
 	e := Entity{
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindComponent,
 		Metadata: EntityMetadata{
-			Name:   r.Name,
-			Labels: map[string]string{},
+			Name:        r.Name,
+			Labels:      map[string]string{},
+			Description: description,
 			Annotations: map[string]string{
 				"github.com/project-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
 				"github.com/team-slug":         team,
@@ -41,6 +42,10 @@ func CreateComponentEntity(r repositories.Repo, team string) Entity {
 		e.Metadata.Labels["giantswarm.io/language"] = string(r.Gen.Language)
 
 		e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("language:%s", r.Gen.Language))
+	}
+
+	if isPrivate {
+		e.Metadata.Tags = append(e.Metadata.Tags, "private")
 	}
 
 	for _, flavor := range r.Gen.Flavors {
