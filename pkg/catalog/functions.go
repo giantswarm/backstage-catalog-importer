@@ -7,7 +7,7 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
-func CreateComponentEntity(r repositories.Repo, team, description string, isPrivate bool) Entity {
+func CreateComponentEntity(r repositories.Repo, team, description string, isPrivate bool, hasCircleCi, hasReadme bool, defaultBranch string) Entity {
 	e := Entity{
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindComponent,
@@ -19,11 +19,18 @@ func CreateComponentEntity(r repositories.Repo, team, description string, isPriv
 				"github.com/project-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
 				"github.com/team-slug":         team,
 				"backstage.io/source-location": fmt.Sprintf("url:https://github.com/giantswarm/%s", r.Name),
-				"circleci.com/project-slug":    fmt.Sprintf("github/giantswarm/%s", r.Name),
 				"quay.io/repository-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
 			},
 			Tags: []string{},
 		},
+	}
+
+	if hasCircleCi {
+		e.Metadata.Annotations["circleci.com/project-slug"] = fmt.Sprintf("github/giantswarm/%s", r.Name)
+	}
+
+	if hasReadme && defaultBranch != "" {
+		e.Metadata.Annotations["backstage.io/techdocs-ref"] = fmt.Sprintf("url:https://github.com/giantswarm/%s/tree/%s", r.Name, defaultBranch)
 	}
 
 	spec := ComponentSpec{
