@@ -116,12 +116,19 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 
+			hasReadme, err := repoService.GetHasReadme(repo.Name)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
 			ent := catalog.CreateComponentEntity(
 				repo,
 				list.OwnerTeamName,
 				repoService.MustGetDescription(repo.Name),
 				isPrivate,
-				hasCircleCi)
+				hasCircleCi,
+				hasReadme,
+				repoService.MustGetDefaultBranch(repo.Name))
 			numComponents++
 
 			d, err := yaml.Marshal(&ent)

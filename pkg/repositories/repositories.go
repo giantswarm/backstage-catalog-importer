@@ -37,11 +37,12 @@ type ListResult struct {
 
 // GithubRepo is a sparce struct for just the GitHub repository info we need.
 type GithubRepoDetails struct {
-	Name        string
-	Description string
-	IsPrivate   bool
-	HasCircleCI bool
-	HasReadme   bool
+	Name          string
+	Description   string
+	DefaultBranch string
+	IsPrivate     bool
+	HasCircleCI   bool
+	HasReadme     bool
 }
 
 type Service struct {
@@ -91,9 +92,10 @@ func (s *Service) loadGithubRepoDetails(name string) error {
 	}
 
 	details := GithubRepoDetails{
-		Name:        name,
-		Description: repo.GetDescription(),
-		IsPrivate:   repo.GetPrivate(),
+		Name:          name,
+		Description:   repo.GetDescription(),
+		IsPrivate:     repo.GetPrivate(),
+		DefaultBranch: repo.GetDefaultBranch(),
 	}
 
 	_, _, resp2, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
@@ -198,6 +200,18 @@ func (s *Service) GetIsPrivate(name string) (bool, error) {
 	}
 
 	return s.githubRepoDetails[name].IsPrivate, nil
+}
+
+// Returns the default branch name. Returns an empty string in case of error.
+func (s *Service) MustGetDefaultBranch(name string) string {
+	if _, ok := s.githubRepoDetails[name]; !ok {
+		err := s.loadGithubRepoDetails(name)
+		if err != nil {
+			return ""
+		}
+	}
+
+	return s.githubRepoDetails[name].DefaultBranch
 }
 
 // Returns whether the repo has a CircleCI configuration.
