@@ -35,14 +35,29 @@ type ListResult struct {
 	Repositories  []Repo
 }
 
-// GithubRepo is a sparce struct for just the GitHub repository info we need.
+// A sparce struct for caching just the GitHub
+// repository details we need.
 type GithubRepoDetails struct {
-	Name          string
-	Description   string
+	// Repository name
+	Name string
+
+	// Repository description
+	Description string
+
+	// Name of the default branch
 	DefaultBranch string
-	IsPrivate     bool
-	HasCircleCI   bool
-	HasReadme     bool
+
+	// Whether the repository is private. If false, it's public.
+	IsPrivate bool
+}
+
+// A struct for caching repository content information.
+type GithubRepoContentDetails struct {
+	// Whether the repository has a CircleCI configuration file.
+	HasCircleCI bool
+
+	// Whether the repository has a README.md in the root directory.
+	HasReadme bool
 }
 
 type Service struct {
@@ -52,6 +67,8 @@ type Service struct {
 
 	// Cached information on certain repos
 	githubRepoDetails map[string]GithubRepoDetails
+	// Cached information on repo content
+	githubRepoContentDetails map[string]GithubRepoContentDetails
 }
 
 // New instantiates a new repositories service.
@@ -75,46 +92,80 @@ func New(c Config) (*Service, error) {
 	client := github.NewClient(tc)
 
 	s := &Service{
-		config:            c,
-		ctx:               ctx,
-		githubClient:      client,
-		githubRepoDetails: make(map[string]GithubRepoDetails),
+		config:                   c,
+		ctx:                      ctx,
+		githubClient:             client,
+		githubRepoDetails:        make(map[string]GithubRepoDetails),
+		githubRepoContentDetails: make(map[string]GithubRepoContentDetails),
+	}
+
+	err := s.loadGithubRepoDetails()
+	if err != nil {
+		return nil, err
 	}
 
 	return s, nil
 }
 
-// Load information for a specific repo from the Github API.
-func (s *Service) loadGithubRepoDetails(name string) error {
-	repo, _, err := s.githubClient.Repositories.Get(s.ctx, s.config.GithubOrganization, name)
-	if err != nil {
-		return err
+// Load main information for all repositories of the organization.
+//
+// This also loads info for archived repos, but it's still cheaper
+// to do it this way than one by one, as we get up to 100 repos
+// per request.
+func (s *Service) loadGithubRepoDetails() error {
+	opts := &github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
+	}
+	repos := make(map[string]GithubRepoDetails)
+
+	for {
+		r, resp, err := s.githubClient.Repositories.ListByOrg(s.ctx, s.config.GithubOrganization, opts)
+		if err != nil {
+			return err
+		}
+
+		for _, repo := range r {
+			repos[repo.GetName()] = GithubRepoDetails{
+				Name:          repo.GetName(),
+				Description:   repo.GetDescription(),
+				IsPrivate:     repo.GetPrivate(),
+				DefaultBranch: repo.GetDefaultBranch(),
+			}
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
 	}
 
-	details := GithubRepoDetails{
-		Name:          name,
-		Description:   repo.GetDescription(),
-		IsPrivate:     repo.GetPrivate(),
-		DefaultBranch: repo.GetDefaultBranch(),
-	}
+	s.githubRepoDetails = repos
 
-	_, _, resp2, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
+	return nil
+}
+
+func (s *Service) loadGithubRepoContentDetails(name string) error {
+	details := GithubRepoContentDetails{}
+
+	_, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
 	if err == nil {
 		details.HasCircleCI = true
-	} else if resp2.StatusCode != 404 {
+	} else if resp.StatusCode != 404 {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
 	}
 
-	_, _, resp3, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, "README.md", nil)
+	_, _, resp, err = s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, "README.md", nil)
 	if err == nil {
 		details.HasReadme = true
-	} else if resp3.StatusCode != 404 {
+	} else if resp.StatusCode != 404 {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
 	}
 
-	s.githubRepoDetails[name] = details
+	s.githubRepoContentDetails[name] = details
 
 	return nil
 }
@@ -181,10 +232,7 @@ func (s *Service) GetLists() ([]ListResult, error) {
 // or an error occurs, returns an empty string.
 func (s *Service) MustGetDescription(name string) string {
 	if _, ok := s.githubRepoDetails[name]; !ok {
-		err := s.loadGithubRepoDetails(name)
-		if err != nil {
-			return ""
-		}
+		return ""
 	}
 
 	return s.githubRepoDetails[name].Description
@@ -193,10 +241,7 @@ func (s *Service) MustGetDescription(name string) string {
 // Returns the public/private info for the given repo.
 func (s *Service) GetIsPrivate(name string) (bool, error) {
 	if _, ok := s.githubRepoDetails[name]; !ok {
-		err := s.loadGithubRepoDetails(name)
-		if err != nil {
-			return false, err
-		}
+		return false, microerror.Maskf(repositoryNotFoundError, "repository %s not found", name)
 	}
 
 	return s.githubRepoDetails[name].IsPrivate, nil
@@ -205,10 +250,7 @@ func (s *Service) GetIsPrivate(name string) (bool, error) {
 // Returns the default branch name. Returns an empty string in case of error.
 func (s *Service) MustGetDefaultBranch(name string) string {
 	if _, ok := s.githubRepoDetails[name]; !ok {
-		err := s.loadGithubRepoDetails(name)
-		if err != nil {
-			return ""
-		}
+		return ""
 	}
 
 	return s.githubRepoDetails[name].DefaultBranch
@@ -216,24 +258,24 @@ func (s *Service) MustGetDefaultBranch(name string) string {
 
 // Returns whether the repo has a CircleCI configuration.
 func (s *Service) GetHasCircleCI(name string) (bool, error) {
-	if _, ok := s.githubRepoDetails[name]; !ok {
-		err := s.loadGithubRepoDetails(name)
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
 		if err != nil {
-			return false, err
+			return false, microerror.Mask(err)
 		}
 	}
 
-	return s.githubRepoDetails[name].HasCircleCI, nil
+	return s.githubRepoContentDetails[name].HasCircleCI, nil
 }
 
 // Returns whether the repo has a main README file.
 func (s *Service) GetHasReadme(name string) (bool, error) {
-	if _, ok := s.githubRepoDetails[name]; !ok {
-		err := s.loadGithubRepoDetails(name)
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
 		if err != nil {
-			return false, err
+			return false, microerror.Mask(err)
 		}
 	}
 
-	return s.githubRepoDetails[name].HasReadme, nil
+	return s.githubRepoContentDetails[name].HasReadme, nil
 }
