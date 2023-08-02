@@ -30,7 +30,7 @@ func CreateComponentEntity(r repositories.Repo, team, description string, isPriv
 	}
 
 	if hasReadme && defaultBranch != "" {
-		e.Metadata.Annotations["backstage.io/techdocs-ref"] = fmt.Sprintf("url:https://github.com/giantswarm/%s/%s", r.Name, defaultBranch)
+		e.Metadata.Annotations["backstage.io/techdocs-ref"] = fmt.Sprintf("url:https://github.com/giantswarm/%s/tree/%s", r.Name, defaultBranch)
 	}
 
 	spec := ComponentSpec{
