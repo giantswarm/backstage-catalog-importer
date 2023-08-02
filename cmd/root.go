@@ -111,11 +111,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 
+			hasCircleCi, err := repoService.GetHasCircleCI(repo.Name)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
 			ent := catalog.CreateComponentEntity(
 				repo,
 				list.OwnerTeamName,
-				repoService.GetDescription(repo.Name),
-				isPrivate)
+				repoService.MustGetDescription(repo.Name),
+				isPrivate,
+				hasCircleCi)
 			numComponents++
 
 			d, err := yaml.Marshal(&ent)
