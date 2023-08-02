@@ -6,7 +6,6 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
-	"log"
 	"os"
 	"strings"
 
@@ -86,8 +85,6 @@ func New(c Config) (*Service, error) {
 
 // Load information for a specific repo from the Github API.
 func (s *Service) loadGithubRepoDetails(name string) error {
-	log.Printf("Fetching details for repo %s", name)
-
 	repo, _, err := s.githubClient.Repositories.Get(s.ctx, s.config.GithubOrganization, name)
 	if err != nil {
 		return err
