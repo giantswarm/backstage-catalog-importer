@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `backstage.io/techdocs-ref` annotation for components (only if `/README.md` is present).
+
 ### Changed
 
 - Only create `circleci.com/project-slug` annotation on component if there is a `.circleci/config.yml` file.
