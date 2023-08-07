@@ -1,11 +1,12 @@
 package repositories
 
 type Repo struct {
-	Name         string           `yaml:"name"`
-	Gen          RepoGen          `yaml:"gen"`
-	Lifecycle    RepoLifecycle    `yaml:"lifecycle"`
-	Replacements RepoReplacements `yaml:"replace"`
-	AppTestSuite interface{}      `yaml:"app_test_suite"`
+	Name          string           `yaml:"name"`
+	ComponentType string           `yaml:"componentType"`
+	Gen           RepoGen          `yaml:"gen"`
+	Lifecycle     RepoLifecycle    `yaml:"lifecycle"`
+	Replacements  RepoReplacements `yaml:"replace"`
+	AppTestSuite  interface{}      `yaml:"app_test_suite"`
 }
 
 type RepoFlavor string
