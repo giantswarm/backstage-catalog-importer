@@ -34,9 +34,13 @@ func CreateComponentEntity(r repositories.Repo, team, description string, isPriv
 	}
 
 	spec := ComponentSpec{
-		Type:      "service",
+		Type:      "unspecified",
 		Lifecycle: "production",
 		Owner:     team,
+	}
+
+	if r.ComponentType != "" {
+		spec.Type = r.ComponentType
 	}
 
 	if r.Lifecycle != "production" && r.Lifecycle != "" {
