@@ -49,6 +49,9 @@ type GithubRepoDetails struct {
 
 	// Whether the repository is private. If false, it's public.
 	IsPrivate bool
+
+	// The main programming language in the repo.
+	MainLanguage string
 }
 
 // A struct for caching repository content information.
@@ -132,6 +135,7 @@ func (s *Service) loadGithubRepoDetails() error {
 				Description:   repo.GetDescription(),
 				IsPrivate:     repo.GetPrivate(),
 				DefaultBranch: repo.GetDefaultBranch(),
+				MainLanguage:  strings.ToLower(repo.GetLanguage()),
 			}
 		}
 
@@ -236,6 +240,16 @@ func (s *Service) MustGetDescription(name string) string {
 	}
 
 	return s.githubRepoDetails[name].Description
+}
+
+// Returns the main language for the given repo. If not available,
+// or an error occurs, returns an empty string.
+func (s *Service) MustGetLanguage(name string) string {
+	if _, ok := s.githubRepoDetails[name]; !ok {
+		return ""
+	}
+
+	return s.githubRepoDetails[name].MainLanguage
 }
 
 // Returns the public/private info for the given repo.

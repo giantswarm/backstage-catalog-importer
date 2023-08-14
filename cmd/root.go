@@ -121,6 +121,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 
+			deps := []string{}
+			lang := repoService.MustGetLanguage(repo.Name)
+
+			if lang == "go" {
+				deps, err = repoService.GetDependencies(repo.Name)
+				if err != nil {
+					log.Printf("WARN - %s: error fetching dependencies: %v", repo.Name, err)
+				}
+				fmt.Printf("Dependencies: %v\n", deps)
+			}
+
 			ent := catalog.CreateComponentEntity(
 				repo,
 				list.OwnerTeamName,
@@ -128,7 +139,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 				isPrivate,
 				hasCircleCi,
 				hasReadme,
-				repoService.MustGetDefaultBranch(repo.Name))
+				repoService.MustGetDefaultBranch(repo.Name),
+				deps)
 			numComponents++
 
 			d, err := yaml.Marshal(&ent)
