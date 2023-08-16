@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Export `dependsOn` relationships between a Go component and the libraries it is using (if the library is ours).
+
 ## [0.0.9] - 2023-08-08
 
 ### Added
