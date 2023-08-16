@@ -52,5 +52,20 @@ func (s *Service) GetDependencies(name string) ([]string, error) {
 		}
 	}
 
-	return names, nil
+	return uniq(names), nil
+}
+
+// Return de-duplicated strings slice.
+func uniq(strings []string) []string {
+	m := map[string]bool{}
+	for _, item := range strings {
+		m[item] = true
+	}
+
+	s := []string{}
+	for key := range m {
+		s = append(s, key)
+	}
+
+	return s
 }
