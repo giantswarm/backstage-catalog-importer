@@ -42,18 +42,11 @@ func (s *Service) GetDependencies(name string) ([]string, error) {
 	}
 
 	godepRegex := regexp.MustCompile("go:github.com/giantswarm/([^/]+).*")
-	actionRegex := regexp.MustCompile("actions:giantswarm/([^/]+).*")
 
 	for _, item := range payload.Sbom.Packages {
-		// We only want either of these:
+		// We only want these:
 		// 'go:github.com/giantswarm/NAME'
-		// 'actions:giantswarm/NAME'
 		matches := godepRegex.FindStringSubmatch(item.Name)
-		if len(matches) > 0 {
-			names = append(names, matches[1])
-		}
-
-		matches = actionRegex.FindStringSubmatch(item.Name)
 		if len(matches) > 0 {
 			names = append(names, matches[1])
 		}
