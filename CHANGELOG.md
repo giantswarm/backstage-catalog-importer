@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- For components of type "service", we add a Grafana dashboard link.
+
 ### Removed
 
 - Removed debug logging on dependencies found.
