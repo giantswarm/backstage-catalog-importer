@@ -37,7 +37,7 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 		Type:      "unspecified",
 		Lifecycle: "production",
 		Owner:     team,
-		System: 	 system,
+		System:    system,
 	}
 
 	if r.ComponentType != "" {

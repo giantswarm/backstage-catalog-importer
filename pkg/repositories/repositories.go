@@ -31,7 +31,7 @@ type Config struct {
 }
 
 type FileResult struct {
-	FileName string
+	FileName    string
 	FileContent []byte
 }
 
@@ -225,7 +225,7 @@ func (s *Service) GetFiles() ([]FileResult, error) {
 		decodedContent, _ := b64.StdEncoding.DecodeString(*fileContent.Content)
 
 		result = append(result, FileResult{
-			FileName: *item.Name,
+			FileName:    *item.Name,
 			FileContent: decodedContent,
 		})
 	}
