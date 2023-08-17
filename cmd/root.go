@@ -171,7 +171,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				if err != nil {
 					log.Printf("WARN - %s: error fetching dependencies: %v", repo.Name, err)
 				}
-				fmt.Printf("Dependencies: %v\n", deps)
 			}
 
 			ent := catalog.CreateComponentEntity(

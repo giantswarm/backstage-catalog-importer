@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Export catalog data from static YAML files.
 - Accept `system` property when reading repository data.
 
+### Removed
+
+- Removed debug logging on dependencies found.
+
 ## [0.1.0] - 2023-08-16
 
 ### Added
