@@ -30,6 +30,11 @@ type Config struct {
 	DirectoryPath string
 }
 
+type FileResult struct {
+	FileName string
+	FileContent []byte
+}
+
 type ListResult struct {
 	OwnerTeamName string
 	Repositories  []Repo
@@ -194,6 +199,38 @@ func (s *Service) loadListFromBytes(data []byte) ([]Repo, error) {
 	}
 
 	return repos, nil
+}
+
+// GetFiles loads raw YAML files from GitHub repository directory.
+func (s *Service) GetFiles() ([]FileResult, error) {
+	// Get directory content.
+	_, directoryContent, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, s.config.DirectoryPath, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	result := []FileResult{}
+
+	for _, item := range directoryContent {
+		if !strings.HasSuffix(*item.Name, ".yaml") {
+			continue
+		}
+
+		// Get file content.
+		fileContent, _, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, *item.Path, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		decodedContent, _ := b64.StdEncoding.DecodeString(*fileContent.Content)
+
+		result = append(result, FileResult{
+			FileName: *item.Name,
+			FileContent: decodedContent,
+		})
+	}
+
+	return result, nil
 }
 
 // GetLists loads the lists of repository YAML files from GitHub giantswarm/github.

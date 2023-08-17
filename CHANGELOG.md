@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Export catalog data from static YAML files.
+
 ## [0.1.0] - 2023-08-16
 
 ### Added

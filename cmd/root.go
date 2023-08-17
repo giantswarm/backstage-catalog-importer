@@ -35,6 +35,9 @@ const (
 	// Name of the repository holding our repository meta data.
 	githubManagementRepository = "github"
 
+	// Directory path within githubManagementRepository holding static catalog YAML files.
+	catalogPath = "catalog"
+
 	// Directory path within githubManagementRepository holding repo metadata YAML files.
 	repositoriesPath = "repositories"
 )
@@ -71,6 +74,43 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal("Invalid --format value. Please use 'raw' or 'configmap'.")
 	}
 
+	// Output buffer
+	var f bytes.Buffer
+
+	// Export static catalog data
+	catalogService, err := repositories.New(repositories.Config{
+		GithubOrganization:   githubOrganization,
+		GithubRepositoryName: githubManagementRepository,
+		GithubAuthToken:      token,
+		DirectoryPath:        catalogPath,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	files, err := catalogService.GetFiles()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		filePath := fmt.Sprintf("%s/%s/%s/%s", githubOrganization, githubManagementRepository, catalogPath, file.FileName)
+
+		_, err = f.WriteString(fmt.Sprintf("# Catalog data from %q\n\n", filePath))
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		_, err = f.Write(file.FileContent)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		_, err = f.WriteString("\n")
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		log.Printf("Copied catalog data from %q\n", filePath)
+	}
+
 	repoService, err := repositories.New(repositories.Config{
 		GithubOrganization:   githubOrganization,
 		GithubRepositoryName: githubManagementRepository,
@@ -94,12 +134,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	// Output buffer
-	var f bytes.Buffer
-
 	numComponents := 0
 	numTeams := 0
 	numUsers := 0
+
+	_, err = f.WriteString("# Catalog entities\n\n")
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 
 	// Iterate repository lists (per team) and create component entities.
 	for _, list := range lists {
