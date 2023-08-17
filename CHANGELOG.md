@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - For components of type "service", we add a Grafana dashboard link.
+- Export catalog data from static YAML files.
+- Accept `system` property when reading repository data.
 
 ### Removed
 
