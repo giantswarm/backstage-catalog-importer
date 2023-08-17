@@ -7,7 +7,7 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
-func CreateComponentEntity(r repositories.Repo, team, description string, isPrivate bool, hasCircleCi, hasReadme bool, defaultBranch string, dependsOn []string) Entity {
+func CreateComponentEntity(r repositories.Repo, team, description string, system string, isPrivate bool, hasCircleCi, hasReadme bool, defaultBranch string, dependsOn []string) Entity {
 	e := Entity{
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindComponent,
@@ -37,6 +37,7 @@ func CreateComponentEntity(r repositories.Repo, team, description string, isPriv
 		Type:      "unspecified",
 		Lifecycle: "production",
 		Owner:     team,
+		System: 	 system,
 	}
 
 	if r.ComponentType != "" {

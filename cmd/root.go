@@ -178,6 +178,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				repo,
 				list.OwnerTeamName,
 				repoService.MustGetDescription(repo.Name),
+				repo.System,
 				isPrivate,
 				hasCircleCi,
 				hasReadme,
