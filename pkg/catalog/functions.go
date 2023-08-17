@@ -71,6 +71,18 @@ func CreateComponentEntity(r repositories.Repo, team, description string, isPriv
 		e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("flavor:%s", flavor))
 	}
 
+	if r.ComponentType == "service" {
+		// Add Grafana dashboard links
+		e.Metadata.Links = []EntityLink{
+			{
+				URL:   fmt.Sprintf("https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=%s&from=now-24h&to=now", r.Name),
+				Title: "General service metrics dashboard",
+				Icon:  "dashboard",
+				Type:  "grafana-dashboard",
+			},
+		}
+	}
+
 	return e
 }
 
