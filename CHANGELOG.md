@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2023-08-18
+
 ## [0.2.0] - 2023-08-17
 
 ### Added
@@ -82,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.0.9...v0.1.0
 [0.0.9]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.0.8...v0.0.9
