@@ -94,6 +94,9 @@ func CreateGroupEntity(name, displayName, description, parent string, members []
 		Kind:       EntityKindGroup,
 		Metadata: EntityMetadata{
 			Name: name,
+			Annotations: map[string]string{
+				"grafana/dashboard-selector": "tags @> 'owner:team-atlas'",
+			},
 		},
 	}
 	spec := GroupSpec{
