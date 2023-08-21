@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fix dashboard selector.
+
 ## [0.3.0] - 2023-08-21
 
-- Add `grafana/dashboard-selector` annotaion to Group entities, to enable showing of dashboards for teams.
+- Add `grafana/dashboard-selector` annotation to Group entities, to enable showing of dashboards for teams.
 
 ## [0.2.1] - 2023-08-18
 

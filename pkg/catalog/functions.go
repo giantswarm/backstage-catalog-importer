@@ -95,7 +95,7 @@ func CreateGroupEntity(name, displayName, description, parent string, members []
 		Metadata: EntityMetadata{
 			Name: name,
 			Annotations: map[string]string{
-				"grafana/dashboard-selector": fmt.Sprintf("tags @> 'owner:team-%s'", name),
+				"grafana/dashboard-selector": fmt.Sprintf("tags @> 'owner:%s'", name),
 			},
 		},
 	}
