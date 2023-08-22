@@ -253,6 +253,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 	defer file.Close()
 
+	_, err = file.WriteString("#\n# This file was automatically generated, PLEASE DO NOT MODIFY IT BY HAND.\n#\n\n")
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
 	var size int
 
 	if format == "raw" {
