@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove catalog data export from static YAML files.
+
 ## [0.3.1] - 2023-08-21
 
 - Fix dashboard selector.
