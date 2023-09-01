@@ -188,7 +188,7 @@ func (s *Service) loadList(path string) ([]Repo, error) {
 
 func (s *Service) loadListFromBytes(data []byte) ([]Repo, error) {
 	repos := []Repo{}
-	err := yaml.UnmarshalStrict(data, &repos)
+	err := yaml.Unmarshal(data, &repos)
 	if err != nil {
 		return nil, err
 	}
