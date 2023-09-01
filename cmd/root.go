@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-github/v54/github"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
