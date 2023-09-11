@@ -4,6 +4,7 @@
 package repositories
 
 import (
+	"os"
 	"testing"
 
 	cmp "github.com/google/go-cmp/cmp"
@@ -41,17 +42,19 @@ func TestLoadListShallow(t *testing.T) {
 			wantErr: false,
 		},
 	}
+
+	s, err := New(Config{
+		GithubAuthToken:      os.Getenv("GITHUB_TOKEN"),
+		GithubOrganization:   "giantswarm",
+		GithubRepositoryName: "github",
+		DirectoryPath:        "repositories",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := New(Config{
-				GithubAuthToken:      "abc",
-				GithubOrganization:   "foo",
-				GithubRepositoryName: "bar",
-				DirectoryPath:        "",
-			})
-			if err != nil {
-				t.Errorf("unexpected error %v", err)
-			}
 			_, err = s.loadList(tt.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadList() error = %v, wantErr %v", err, tt.wantErr)
@@ -110,18 +113,19 @@ func TestLoadList(t *testing.T) {
 			wantErr: false,
 		},
 	}
+
+	s, err := New(Config{
+		GithubAuthToken:      os.Getenv("GITHUB_TOKEN"),
+		GithubOrganization:   "giantswarm",
+		GithubRepositoryName: "github",
+		DirectoryPath:        "repositories",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := New(Config{
-				GithubAuthToken:      "abc",
-				GithubOrganization:   "foo",
-				GithubRepositoryName: "bar",
-				DirectoryPath:        "",
-			})
-			if err != nil {
-				t.Errorf("unexpected error %v", err)
-			}
-
 			got, err := s.loadList(tt.args.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("LoadList() error = %v, wantErr %v", err, tt.wantErr)
