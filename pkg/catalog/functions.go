@@ -21,7 +21,7 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 				"github.com/team-slug":            team,
 				"backstage.io/source-location":    fmt.Sprintf("url:https://github.com/giantswarm/%s", r.Name),
 				"quay.io/repository-slug":         fmt.Sprintf("giantswarm/%s", r.Name),
-				"opsgenie.com/component-selector": fmt.Sprintf("app:%s", r.Name),
+				"opsgenie.com/component-selector": fmt.Sprintf("detailsPair(app:%s)", r.Name),
 				// Like team name, but without "team-" prefix
 				"opsgenie.com/team": strings.TrimPrefix(team, "team-"),
 			},
