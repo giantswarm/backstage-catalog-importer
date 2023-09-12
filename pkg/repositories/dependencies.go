@@ -21,9 +21,6 @@ type SbomPackage struct {
 }
 
 // Returns list of dependencies.
-//
-// As long as https://github.com/google/go-github/issues/2864 is open,
-// we have to make this a low-level request.
 func (s *Service) GetDependencies(name string) ([]string, error) {
 	sbom, resp, err := s.githubClient.DependencyGraph.GetSBOM(s.ctx, s.config.GithubOrganization, name)
 	if err != nil {
