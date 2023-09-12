@@ -5,10 +5,10 @@ go 1.19
 require (
 	github.com/giantswarm/microerror v0.4.0
 	github.com/google/go-cmp v0.5.9
-	github.com/google/go-github/v54 v54.0.0
+	github.com/google/go-github/v55 v55.0.0
 	github.com/spf13/cobra v1.7.0
-	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
-	golang.org/x/oauth2 v0.11.0
+	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	golang.org/x/oauth2 v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.27.4
 	k8s.io/apimachinery v0.27.4
@@ -27,10 +27,10 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/crypto v0.12.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
