@@ -101,6 +101,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	numTeams := 0
 	numUsers := 0
 
+	// Collect Go dependencies for later analysis
+	dependencies := make(map[string][]string)
+	repositoriesImported := make(map[string]bool)
+
 	// Iterate repository lists (per team) and create component entities.
 	for _, list := range lists {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
@@ -129,6 +133,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 				if err != nil {
 					log.Printf("WARN - %s: error fetching dependencies: %v", repo.Name, err)
 				}
+
+				for _, d := range deps {
+					dependencies[d] = append(dependencies[d], fmt.Sprintf("used in [%s](https://github.com/%s/%s) owned by @%s/%s", repo.Name, githubOrganization, repo.Name, githubOrganization, list.OwnerTeamName))
+				}
 			}
 
 			ent := catalog.CreateComponentEntity(
@@ -155,6 +163,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 			if err != nil {
 				log.Fatalf("Error: %v", err)
 			}
+
+			repositoriesImported[repo.Name] = true
 		}
 	}
 
@@ -295,12 +305,34 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	log.Printf("Wrote %d components, %d groups, %d users", numComponents, numTeams, numUsers)
-	if format == "configmap" {
-		log.Printf("Wrote ConfigMap to %s with size %d bytes", path, size)
-	} else {
-		log.Printf("Wrote YAML output to %s with %d bytes", path, size)
+	// Filter Go dependencies to those that are not in the catalog.
+	dependenciesNotCovered := make(map[string][]string)
+	for name, info := range dependencies {
+		ok := repositoriesImported[name]
+		if !ok {
+			dependenciesNotCovered[name] = info
+		}
 	}
+
+	if len(dependenciesNotCovered) > 0 {
+		fmt.Println("\nFound the following Go dependencies not covered in the catalog:")
+		for name, info := range dependenciesNotCovered {
+			fmt.Printf("\n- [ ] [%s](https://github.com/%s/%s)", name, githubOrganization, name)
+			for _, infoItem := range info {
+				fmt.Printf("\n   - %s", infoItem)
+			}
+		}
+
+		fmt.Println("")
+	}
+
+	fmt.Printf("\nWrote %d components, %d groups, %d users", numComponents, numTeams, numUsers)
+	if format == "configmap" {
+		fmt.Printf("\nWrote ConfigMap to %s with size %d bytes", path, size)
+	} else {
+		fmt.Printf("\nWrote YAML output to %s with %d bytes\n", path, size)
+	}
+
 }
 
 // Returns a sorted slice of keys.
