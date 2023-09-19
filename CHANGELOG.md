@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add reporting for Go dependencies that are used by other components in the catalog, but not imported into the catalog. This appears in the end of every workflow run log.
+
 ## [0.5.0] - 2023-09-14
 
 - Add OpsGenie related entity annotations.
