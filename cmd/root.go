@@ -256,6 +256,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n%d components written to file %s with size %d bytes", numComponents, componentExporter.TargetPath, componentExporter.Len())
 	fmt.Printf("\n%d groups written to file %s with size %d bytes", numGroups, groupExporter.TargetPath, groupExporter.Len())
 	fmt.Printf("\n%d users written to file %s with size %d bytes", numUsers, userExporter.TargetPath, userExporter.Len())
+	fmt.Println("")
 }
 
 // Returns a sorted slice of keys.
