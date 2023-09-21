@@ -13,9 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
@@ -41,7 +38,6 @@ const (
 
 func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", "output.yaml", "Output file path")
-	rootCmd.PersistentFlags().StringP("format", "f", "raw", "Output format, 'raw' or 'configmap'.")
 }
 
 func Execute() {
@@ -60,15 +56,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		log.Fatal("Please set environment variable GITHUB_TOKEN to a personal GitHub access token (PAT).")
-	}
-
-	format, err := cmd.PersistentFlags().GetString("format")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if format != "raw" && format != "configmap" {
-		log.Fatal("Invalid --format value. Please use 'raw' or 'configmap'.")
 	}
 
 	repoService, err := repositories.New(repositories.Config{
@@ -268,41 +255,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatalf("Error: %v", err)
 	}
 
-	var size int
-
-	if format == "raw" {
-		size = f.Len()
-		_, err = file.WriteString(f.String())
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		cm := corev1.ConfigMap{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "ConfigMap",
-				APIVersion: "v1",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "catalog",
-				Namespace: "backstage",
-			},
-			Data: map[string]string{
-				"catalog.yaml": f.String(),
-			},
-		}
-
-		serializer := json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil)
-		var buf bytes.Buffer
-		err := serializer.Encode(&cm, &buf)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-
-		size = buf.Len()
-		_, err = file.WriteString(buf.String())
-		if err != nil {
-			log.Fatal(err)
-		}
+	size := f.Len()
+	_, err = file.WriteString(f.String())
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Filter Go dependencies to those that are not in the catalog.
@@ -327,12 +283,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("\nWrote %d components, %d groups, %d users", numComponents, numTeams, numUsers)
-	if format == "configmap" {
-		fmt.Printf("\nWrote ConfigMap to %s with size %d bytes", path, size)
-	} else {
-		fmt.Printf("\nWrote YAML output to %s with %d bytes\n", path, size)
-	}
-
+	fmt.Printf("\nWrote YAML output to %s with %d bytes\n", path, size)
 }
 
 // Returns a sorted slice of keys.
