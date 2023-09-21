@@ -6,6 +6,7 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
+	"net/http"
 	"os"
 	"strings"
 
@@ -156,7 +157,7 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	_, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
 	if err == nil {
 		details.HasCircleCI = true
-	} else if resp.StatusCode != 404 {
+	} else if resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
 	}
@@ -164,7 +165,7 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	_, _, resp, err = s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, "README.md", nil)
 	if err == nil {
 		details.HasReadme = true
-	} else if resp.StatusCode != 404 {
+	} else if resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
 	}
