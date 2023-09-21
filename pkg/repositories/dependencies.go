@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"net/http"
 	"regexp"
 
 	"github.com/giantswarm/microerror"
@@ -24,7 +25,7 @@ type SbomPackage struct {
 func (s *Service) GetDependencies(name string) ([]string, error) {
 	sbom, resp, err := s.githubClient.DependencyGraph.GetSBOM(s.ctx, s.config.GithubOrganization, name)
 	if err != nil {
-		if resp.StatusCode == 404 {
+		if resp.StatusCode == http.StatusNotFound {
 			return nil, microerror.Mask(dependenciesNotFoundError)
 		}
 		return nil, err
