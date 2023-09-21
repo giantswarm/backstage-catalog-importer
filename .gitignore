@@ -1,3 +1,6 @@
 
 backstage-catalog-importer
 output.yaml
+components.yaml
+groups.yaml
+users.yaml
