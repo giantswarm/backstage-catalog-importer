@@ -2,7 +2,6 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -12,9 +11,9 @@ import (
 	"github.com/google/go-github/v55/github"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
-	"gopkg.in/yaml.v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/teams"
 )
@@ -81,8 +80,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	// Output buffer
-	var f bytes.Buffer
+	exporter := export.New(export.Config{TargetPath: path})
 
 	numComponents := 0
 	numTeams := 0
@@ -138,15 +136,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				deps)
 			numComponents++
 
-			d, err := yaml.Marshal(&ent)
-			if err != nil {
-				log.Fatalf("Error: %v", err)
-			}
-			_, err = f.WriteString("---\n")
-			if err != nil {
-				log.Fatalf("Error: %v", err)
-			}
-			_, err = f.Write(d)
+			err = exporter.AddEntity(&ent)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
 			}
@@ -193,15 +183,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		numTeams++
 
-		d, err := yaml.Marshal(&entity)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		_, err = f.WriteString("---\n")
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		_, err = f.Write(d)
+		err = exporter.AddEntity(&entity)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -219,7 +201,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	log.Printf("Processing %d users", len(userNames))
 
 	for _, userSlug := range userNames {
-
 		// load user data from Github
 		user, _, err := client.Users.Get(ctx, userSlug)
 		if err != nil {
@@ -228,15 +209,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		entity := catalog.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL())
 
-		d, err := yaml.Marshal(&entity)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		_, err = f.WriteString("---\n")
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		_, err = f.Write(d)
+		err = exporter.AddEntity(&entity)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -244,21 +217,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		numUsers++
 	}
 
-	file, err := os.Create(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
+	size := exporter.Len()
 
-	_, err = file.WriteString("#\n# This file was automatically generated, PLEASE DO NOT MODIFY IT BY HAND.\n#\n\n")
+	err = exporter.WriteFile()
 	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-
-	size := f.Len()
-	_, err = file.WriteString(f.String())
-	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error writing output: %v", err)
 	}
 
 	// Filter Go dependencies to those that are not in the catalog.
