@@ -10,6 +10,8 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 )
 
+const separator = "---\n"
+
 type Service struct {
 	targetPath string
 	buffer     bytes.Buffer
@@ -36,7 +38,7 @@ func (s *Service) AddEntity(entity *catalog.Entity) error {
 	if err != nil {
 		return err
 	}
-	_, err = s.buffer.WriteString("---\n")
+	_, err = s.buffer.WriteString(separator)
 	if err != nil {
 		return err
 	}
