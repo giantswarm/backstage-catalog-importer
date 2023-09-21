@@ -69,3 +69,7 @@ func (s *Service) WriteFile() error {
 	}
 	return nil
 }
+
+func (s *Service) String() string {
+	return s.buffer.String()
+}
