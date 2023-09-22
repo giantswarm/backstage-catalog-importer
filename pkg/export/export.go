@@ -13,18 +13,18 @@ import (
 const separator = "---\n"
 
 type Service struct {
-	targetPath string
+	TargetPath string
 	buffer     bytes.Buffer
 }
 
 type Config struct {
-	// Path to folder we'll export all files to.
+	// Path of the file that will be written.
 	TargetPath string
 }
 
 func New(config Config) *Service {
 	s := &Service{
-		targetPath: config.TargetPath,
+		TargetPath: config.TargetPath,
 	}
 
 	_, _ = s.buffer.WriteString("#\n# This file was generated automatically. PLEASE DO NOT MODIFY IT BY HAND!\n#\n\n")
@@ -57,7 +57,7 @@ func (s *Service) Len() int {
 
 // Writes the buffer content to a file.
 func (s *Service) WriteFile() error {
-	file, err := os.Create(s.targetPath)
+	file, err := os.Create(s.TargetPath)
 	if err != nil {
 		return err
 	}
@@ -68,4 +68,8 @@ func (s *Service) WriteFile() error {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) String() string {
+	return s.buffer.String()
 }

@@ -1,0 +1,69 @@
+#
+# This file was generated automatically. PLEASE DO NOT MODIFY IT BY HAND!
+#
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+    name: myorg/team-slug
+    description: A simple team with simple people
+    annotations:
+        grafana/dashboard-selector: tags @> 'owner:myorg/team-slug'
+        opsgenie.com/team: myorg/team-slug
+spec:
+    type: team
+    profile:
+        displayName: team-name
+        picture: https://avatars.githubusercontent.com/t/16638849?s=116&v=4
+    children: []
+    parent: area-everything
+    members:
+        - jane-doe
+        - second-member
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+    name: jane-doe
+    description: Experienced DevOps engineer, jack of all trades
+spec:
+    profile:
+        displayName: Jane Doe
+        email: jane@acme.org
+        picture: https://avatars.githubusercontent.com/u/12345678?v=4
+    memberOf: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+    name: my-service
+    description: Awesome microservice
+    labels:
+        giantswarm.io/flavor-app: "true"
+        giantswarm.io/language: go
+    annotations:
+        backstage.io/source-location: url:https://github.com/giantswarm/my-service
+        backstage.io/techdocs-ref: url:https://github.com/giantswarm/my-service/tree/main
+        circleci.com/project-slug: github/giantswarm/my-service
+        github.com/project-slug: giantswarm/my-service
+        github.com/team-slug: myorg/team-slug
+        opsgenie.com/component-selector: detailsPair(app:my-service)
+        opsgenie.com/team: myorg/team-slug
+        quay.io/repository-slug: giantswarm/my-service
+    tags:
+        - language:go
+        - flavor:app
+    links:
+        - url: https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=my-service&from=now-24h&to=now
+          title: General service metrics dashboard
+          icon: dashboard
+          type: grafana-dashboard
+spec:
+    type: service
+    lifecycle: production
+    owner: myorg/team-slug
+    system: everything-system
+    dependsOn:
+        - component:first-dependency
+        - component:second-dependency

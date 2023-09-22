@@ -36,7 +36,7 @@ const (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringP("output", "o", "output.yaml", "Output file path")
+	rootCmd.PersistentFlags().StringP("output", "o", ".", "Output directory path")
 }
 
 func Execute() {
@@ -80,10 +80,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	exporter := export.New(export.Config{TargetPath: path})
+	userExporter := export.New(export.Config{TargetPath: path + "/users.yaml"})
+	groupExporter := export.New(export.Config{TargetPath: path + "/groups.yaml"})
+	componentExporter := export.New(export.Config{TargetPath: path + "/components.yaml"})
 
 	numComponents := 0
-	numTeams := 0
+	numGroups := 0
 	numUsers := 0
 
 	// Collect Go dependencies for later analysis
@@ -136,7 +138,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				deps)
 			numComponents++
 
-			err = exporter.AddEntity(&ent)
+			err = componentExporter.AddEntity(&ent)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
 			}
@@ -181,9 +183,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			memberNames,
 			team.GetID())
 
-		numTeams++
+		numGroups++
 
-		err = exporter.AddEntity(&entity)
+		err = groupExporter.AddEntity(&entity)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -209,7 +211,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		entity := catalog.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL())
 
-		err = exporter.AddEntity(&entity)
+		err = userExporter.AddEntity(&entity)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -217,11 +219,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 		numUsers++
 	}
 
-	size := exporter.Len()
-
-	err = exporter.WriteFile()
+	err = componentExporter.WriteFile()
 	if err != nil {
-		log.Fatalf("Error writing output: %v", err)
+		log.Fatalf("Error writing components: %v", err)
+	}
+	err = groupExporter.WriteFile()
+	if err != nil {
+		log.Fatalf("Error writing groups: %v", err)
+	}
+	err = userExporter.WriteFile()
+	if err != nil {
+		log.Fatalf("Error writing users: %v", err)
 	}
 
 	// Filter Go dependencies to those that are not in the catalog.
@@ -245,8 +253,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 		fmt.Println("")
 	}
 
-	fmt.Printf("\nWrote %d components, %d groups, %d users", numComponents, numTeams, numUsers)
-	fmt.Printf("\nWrote YAML output to %s with %d bytes\n", path, size)
+	fmt.Printf("\n%d components written to file %s with size %d bytes", numComponents, componentExporter.TargetPath, componentExporter.Len())
+	fmt.Printf("\n%d groups written to file %s with size %d bytes", numGroups, groupExporter.TargetPath, groupExporter.Len())
+	fmt.Printf("\n%d users written to file %s with size %d bytes", numUsers, userExporter.TargetPath, userExporter.Len())
+	fmt.Println("")
 }
 
 // Returns a sorted slice of keys.

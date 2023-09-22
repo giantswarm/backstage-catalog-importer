@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Export one file per entity kind instead of one common file.
+
 ### Removed
 
 - Removed `--format` flag and ability to export a Kubernetes ConfigMap.
