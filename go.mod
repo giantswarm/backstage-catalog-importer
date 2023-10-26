@@ -23,3 +23,5 @@ require (
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
+
+replace golang.org/x/net => golang.org/x/net v0.17.0
