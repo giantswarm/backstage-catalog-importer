@@ -4,11 +4,11 @@ go 1.19
 
 require (
 	github.com/giantswarm/microerror v0.4.0
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v56 v56.0.0
 	github.com/spf13/cobra v1.7.0
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/oauth2 v0.12.0
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
+	golang.org/x/oauth2 v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
