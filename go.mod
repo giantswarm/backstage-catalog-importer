@@ -24,4 +24,4 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
-replace golang.org/x/net => golang.org/x/net v0.18.0
+replace golang.org/x/net => golang.org/x/net v0.19.0
