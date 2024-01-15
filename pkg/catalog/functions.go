@@ -2,8 +2,11 @@ package catalog
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
@@ -86,6 +89,19 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 				Type:  "grafana-dashboard",
 			},
 		}
+
+		// Add a list of possible deployment names for GS plugin
+		name := strings.TrimSuffix(r.Name, "-app")
+		nameWithAppSuffix := fmt.Sprintf("%s-app", name)
+		deploymentNames := []string{
+			name,
+			nameWithAppSuffix,
+		}
+		bytes, err := yaml.Marshal(deploymentNames)
+		if err != nil {
+			log.Fatal(err)
+		}
+		e.Metadata.Annotations["giantswarm.io/deployment-names"] = string(bytes)
 	}
 
 	return e
