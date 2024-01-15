@@ -46,6 +46,9 @@ metadata:
         backstage.io/source-location: url:https://github.com/giantswarm/my-service
         backstage.io/techdocs-ref: url:https://github.com/giantswarm/my-service/tree/main
         circleci.com/project-slug: github/giantswarm/my-service
+        giantswarm.io/deployment-names: |
+            - my-service
+            - my-service-app
         github.com/project-slug: giantswarm/my-service
         github.com/team-slug: myorg/team-slug
         opsgenie.com/component-selector: detailsPair(app:my-service)
