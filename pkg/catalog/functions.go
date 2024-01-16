@@ -86,6 +86,15 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 				Type:  "grafana-dashboard",
 			},
 		}
+
+		// Add a list of possible deployment names for GS plugin
+		name := strings.TrimSuffix(r.Name, "-app")
+		nameWithAppSuffix := fmt.Sprintf("%s-app", name)
+		deploymentNames := []string{
+			name,
+			nameWithAppSuffix,
+		}
+		e.Metadata.Annotations["giantswarm.io/deployment-names"] = strings.Join(deploymentNames, ", ")
 	}
 
 	return e
