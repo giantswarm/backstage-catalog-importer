@@ -77,6 +77,9 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 	}
 
 	if r.ComponentType == "service" {
+		// Add Kubernetes plugin annotation
+		e.Metadata.Annotations["backstage.io/kubernetes-id"] = r.Name
+
 		// Add Grafana dashboard links
 		e.Metadata.Links = []EntityLink{
 			{
