@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- For components of type "service", we add kubernetes-id annotation.
+
 ## [0.8.0] - 2024-01-16
 
 ### Added
