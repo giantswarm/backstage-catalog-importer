@@ -43,6 +43,7 @@ metadata:
         giantswarm.io/flavor-app: "true"
         giantswarm.io/language: go
     annotations:
+        backstage.io/kubernetes-id: my-service
         backstage.io/source-location: url:https://github.com/giantswarm/my-service
         backstage.io/techdocs-ref: url:https://github.com/giantswarm/my-service/tree/main
         circleci.com/project-slug: github/giantswarm/my-service
