@@ -84,7 +84,7 @@ func New(c Config) (*Service, error) {
 		return nil, microerror.Maskf(invalidConfigError, "no Github repository name configured")
 	}
 	if c.GithubAuthToken == "" {
-		return nil, microerror.Maskf(invalidConfigError, "no Github token given")
+		return nil, microerror.Maskf(invalidConfigError, "no Github token given (env variable GITHUB_TOKEN not set)")
 	}
 
 	ts := oauth2.StaticTokenSource(
