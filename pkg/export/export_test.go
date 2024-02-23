@@ -1,6 +1,7 @@
 package export
 
 import (
+	"bytes"
 	"flag"
 	"io"
 	"os"
@@ -90,6 +91,39 @@ func TestServiceOutput(t *testing.T) {
 			want := goldenValue(t, tt.goldenFile, got, *update)
 			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("Service.Bytes() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestService_Len(t *testing.T) {
+	nonEmpty := bytes.Buffer{}
+	_, err := nonEmpty.WriteString("123")
+	if err != nil {
+		t.Fatalf("Error creating buffer: %v", err)
+
+	}
+
+	tests := []struct {
+		name    string
+		service *Service
+		want    int
+	}{
+		{
+			name:    "Empty buffer",
+			service: &Service{buffer: bytes.Buffer{}},
+			want:    0,
+		},
+		{
+			name:    "Buffer with length 3",
+			service: &Service{buffer: nonEmpty},
+			want:    3,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.service.Len(); got != tt.want {
+				t.Errorf("Service.Len() = %v, want %v", got, tt.want)
 			}
 		})
 	}
