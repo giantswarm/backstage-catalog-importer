@@ -297,6 +297,10 @@
   replace:
     architect-orb: false
 - name: happa
+  componentType: service
+  deploymentNames:
+    - happa
+    - fe-docs
   gen:
     flavours:
     - app
