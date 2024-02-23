@@ -47,17 +47,17 @@ metadata:
         backstage.io/source-location: url:https://github.com/giantswarm/my-service
         backstage.io/techdocs-ref: url:https://github.com/giantswarm/my-service/tree/main
         circleci.com/project-slug: github/giantswarm/my-service
-        giantswarm.io/deployment-names: my-service, my-service-app
+        giantswarm.io/deployment-names: my-service,my-service-app
         github.com/project-slug: giantswarm/my-service
         github.com/team-slug: myorg/team-slug
-        opsgenie.com/component-selector: detailsPair(app:my-service)
+        opsgenie.com/component-selector: detailsPair(app:my-service) OR detailsPair(app:my-service-app)
         opsgenie.com/team: myorg/team-slug
         quay.io/repository-slug: giantswarm/my-service
     tags:
         - language:go
         - flavor:app
     links:
-        - url: https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=my-service&from=now-24h&to=now
+        - url: https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=my-service&var-app=my-service-app&from=now-24h&to=now
           title: General service metrics dashboard
           icon: dashboard
           type: grafana-dashboard
