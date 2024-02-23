@@ -3,6 +3,7 @@ on:
   pull_request:
   push:
     branches:
+      - test-go-coverage-workflow # TODO: remove before merging
       # It's important that the action also runs on merge to main
       - main
 
@@ -10,13 +11,17 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Clone repository
+      uses: actions/checkout@v4
       with:
         # default fetch-depth is insufficent to find previous coverage notes
         fetch-depth: 10
 
-    - uses: gwatts/go-coverage-action@v1.3.0
+    - name: Create coverage report
+      uses: gwatts/go-coverage-action@v1.3.0
       id: coverage
+      env:
+          GITHUB_TOKEN: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
       with:
         # Optional coverage threshold
         # use fail-coverage to determine what should happen below this threshold
