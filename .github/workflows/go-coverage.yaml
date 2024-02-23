@@ -18,7 +18,7 @@ jobs:
         fetch-depth: 10
 
     - name: Create coverage report
-      uses: gwatts/go-coverage-action@v1.3.0
+      uses: gwatts/go-coverage-action@cf5795fd4027fa3163339b4c284ab50532e65d11 #v1.3.0
       id: coverage
       env:
           GITHUB_TOKEN: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
