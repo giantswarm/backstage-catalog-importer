@@ -71,6 +71,47 @@ func TestServiceOutput(t *testing.T) {
 					[]string{"first-dependency", "second-dependency"}),
 			},
 		},
+		{
+			name:       "Component with individual deployment names",
+			goldenFile: "case02.golden",
+			entities: []catalog.Entity{
+				// catalog.CreateGroupEntity(
+				// 	"myorg/team-slug",
+				// 	"team-name",
+				// 	"A simple team with simple people",
+				// 	"area-everything",
+				// 	[]string{"jane-doe", "second-member"},
+				// 	16638849),
+				// catalog.CreateUserEntity(
+				// 	"jane-doe",
+				// 	"jane@acme.org",
+				// 	"Jane Doe",
+				// 	"Experienced DevOps engineer, jack of all trades",
+				// 	"https://avatars.githubusercontent.com/u/12345678?v=4"),
+				catalog.CreateComponentEntity(
+					repositories.Repo{
+						Name:            "project-with-two-apps",
+						ComponentType:   "service",
+						DeploymentNames: []string{"first-name", "second-name-app"},
+						System:          "everything-system",
+						Gen: repositories.RepoGen{
+							Flavors:  []repositories.RepoFlavor{"app", "generic"},
+							Language: "go",
+						},
+						Lifecycle:    "production",
+						Replacements: repositories.RepoReplacements{},
+						AppTestSuite: t,
+					},
+					"myorg/team-slug",
+					"Project that includes two apps",
+					"everything-system",
+					false,
+					true,
+					true,
+					"main",
+					[]string{"first-dependency", "second-dependency"}),
+			},
+		},
 	}
 
 	for _, tt := range tests {

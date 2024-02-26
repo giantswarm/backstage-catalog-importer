@@ -17,11 +17,11 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 			Labels:      map[string]string{},
 			Description: description,
 			Annotations: map[string]string{
-				"github.com/project-slug":         fmt.Sprintf("giantswarm/%s", r.Name),
-				"github.com/team-slug":            team,
-				"backstage.io/source-location":    fmt.Sprintf("url:https://github.com/giantswarm/%s", r.Name),
-				"quay.io/repository-slug":         fmt.Sprintf("giantswarm/%s", r.Name),
-				"opsgenie.com/component-selector": fmt.Sprintf("detailsPair(app:%s)", r.Name),
+				"github.com/project-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
+				"github.com/team-slug":         team,
+				"backstage.io/source-location": fmt.Sprintf("url:https://github.com/giantswarm/%s", r.Name),
+				"quay.io/repository-slug":      fmt.Sprintf("giantswarm/%s", r.Name),
+
 				// Like team name, but without "team-" prefix
 				"opsgenie.com/team": strings.TrimPrefix(team, "team-"),
 			},
@@ -29,13 +29,77 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 		},
 	}
 
-	if hasCircleCi {
-		e.Metadata.Annotations["circleci.com/project-slug"] = fmt.Sprintf("github/giantswarm/%s", r.Name)
+	// Additional metadata
+	{
+		if hasCircleCi {
+			e.Metadata.Annotations["circleci.com/project-slug"] = fmt.Sprintf("github/giantswarm/%s", r.Name)
+		}
+
+		if hasReadme && defaultBranch != "" {
+			e.Metadata.Annotations["backstage.io/techdocs-ref"] = fmt.Sprintf("url:https://github.com/giantswarm/%s/tree/%s", r.Name, defaultBranch)
+		}
+
+		// Possible deployment names for resource discovery via the Giant Swarm plugin,
+		// Grafana dashboards, and OpsGenie alerts.
+		deploymentNames := r.DeploymentNames
+		sort.Strings(deploymentNames)
+
+		// Default deployment names are REPONAME and REPONAME-app.
+		if len(deploymentNames) == 0 {
+			name := strings.TrimSuffix(r.Name, "-app")
+			nameWithAppSuffix := fmt.Sprintf("%s-app", name)
+			deploymentNames = []string{
+				name,
+				nameWithAppSuffix,
+			}
+		}
+
+		e.Metadata.Annotations["giantswarm.io/deployment-names"] = strings.Join(deploymentNames, ",")
+
+		// OpsGenie query
+		queryParts := []string{}
+		for _, d := range deploymentNames {
+			queryParts = append(queryParts, fmt.Sprintf("detailsPair(app:%s)", d))
+		}
+		e.Metadata.Annotations["opsgenie.com/component-selector"] = strings.Join(queryParts, " OR ")
+
+		if r.Gen.Language != "" && r.Gen.Language != repositories.RepoLanguageGeneric {
+			e.Metadata.Labels["giantswarm.io/language"] = string(r.Gen.Language)
+
+			e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("language:%s", r.Gen.Language))
+		}
+
+		if isPrivate {
+			e.Metadata.Tags = append(e.Metadata.Tags, "private")
+		}
+
+		for _, flavor := range r.Gen.Flavors {
+			e.Metadata.Labels[fmt.Sprintf("giantswarm.io/flavor-%s", flavor)] = "true"
+
+			e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("flavor:%s", flavor))
+		}
+
+		if r.ComponentType == "service" {
+			// Kubernetes plugin annotation
+			e.Metadata.Annotations["backstage.io/kubernetes-id"] = r.Name
+
+			// Grafana dashboard links
+			urlParts := []string{}
+			for _, d := range deploymentNames {
+				urlParts = append(urlParts, fmt.Sprintf("var-app=%s", d))
+			}
+			e.Metadata.Links = []EntityLink{
+				{
+					URL:   fmt.Sprintf("https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&%s&from=now-24h&to=now", strings.Join(urlParts, "&")),
+					Title: "General service metrics dashboard",
+					Icon:  "dashboard",
+					Type:  "grafana-dashboard",
+				},
+			}
+		}
 	}
 
-	if hasReadme && defaultBranch != "" {
-		e.Metadata.Annotations["backstage.io/techdocs-ref"] = fmt.Sprintf("url:https://github.com/giantswarm/%s/tree/%s", r.Name, defaultBranch)
-	}
+	// Entity spec
 
 	spec := ComponentSpec{
 		Type:      "unspecified",
@@ -59,46 +123,6 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 	}
 
 	e.Spec = spec
-
-	if r.Gen.Language != "" && r.Gen.Language != repositories.RepoLanguageGeneric {
-		e.Metadata.Labels["giantswarm.io/language"] = string(r.Gen.Language)
-
-		e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("language:%s", r.Gen.Language))
-	}
-
-	if isPrivate {
-		e.Metadata.Tags = append(e.Metadata.Tags, "private")
-	}
-
-	for _, flavor := range r.Gen.Flavors {
-		e.Metadata.Labels[fmt.Sprintf("giantswarm.io/flavor-%s", flavor)] = "true"
-
-		e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("flavor:%s", flavor))
-	}
-
-	if r.ComponentType == "service" {
-		// Add Kubernetes plugin annotation
-		e.Metadata.Annotations["backstage.io/kubernetes-id"] = r.Name
-
-		// Add Grafana dashboard links
-		e.Metadata.Links = []EntityLink{
-			{
-				URL:   fmt.Sprintf("https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=%s&from=now-24h&to=now", r.Name),
-				Title: "General service metrics dashboard",
-				Icon:  "dashboard",
-				Type:  "grafana-dashboard",
-			},
-		}
-
-		// Add a list of possible deployment names for GS plugin
-		name := strings.TrimSuffix(r.Name, "-app")
-		nameWithAppSuffix := fmt.Sprintf("%s-app", name)
-		deploymentNames := []string{
-			name,
-			nameWithAppSuffix,
-		}
-		e.Metadata.Annotations["giantswarm.io/deployment-names"] = strings.Join(deploymentNames, ", ")
-	}
 
 	return e
 }

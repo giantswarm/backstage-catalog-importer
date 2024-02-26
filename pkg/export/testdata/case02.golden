@@ -1,0 +1,42 @@
+#
+# This file was generated automatically. PLEASE DO NOT MODIFY IT BY HAND!
+#
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+    name: project-with-two-apps
+    description: Project that includes two apps
+    labels:
+        giantswarm.io/flavor-app: "true"
+        giantswarm.io/flavor-generic: "true"
+        giantswarm.io/language: go
+    annotations:
+        backstage.io/kubernetes-id: project-with-two-apps
+        backstage.io/source-location: url:https://github.com/giantswarm/project-with-two-apps
+        backstage.io/techdocs-ref: url:https://github.com/giantswarm/project-with-two-apps/tree/main
+        circleci.com/project-slug: github/giantswarm/project-with-two-apps
+        giantswarm.io/deployment-names: first-name,second-name-app
+        github.com/project-slug: giantswarm/project-with-two-apps
+        github.com/team-slug: myorg/team-slug
+        opsgenie.com/component-selector: detailsPair(app:first-name) OR detailsPair(app:second-name-app)
+        opsgenie.com/team: myorg/team-slug
+        quay.io/repository-slug: giantswarm/project-with-two-apps
+    tags:
+        - language:go
+        - flavor:app
+        - flavor:generic
+    links:
+        - url: https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=first-name&var-app=second-name-app&from=now-24h&to=now
+          title: General service metrics dashboard
+          icon: dashboard
+          type: grafana-dashboard
+spec:
+    type: service
+    lifecycle: production
+    owner: myorg/team-slug
+    system: everything-system
+    dependsOn:
+        - component:first-dependency
+        - component:second-dependency
