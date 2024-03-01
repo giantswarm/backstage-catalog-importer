@@ -1,11 +1,13 @@
 module github.com/giantswarm/backstage-catalog-importer
 
-go 1.19
+go 1.21
+
+toolchain go1.22.0
 
 require (
 	github.com/giantswarm/microerror v0.4.1
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-github/v59 v59.0.0
+	github.com/google/go-github/v60 v60.0.0
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/oauth2 v0.17.0
