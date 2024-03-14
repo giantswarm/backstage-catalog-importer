@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add annotations about the latest release of a component entity:
+    - `backstage.giantswarm.io/latest-release-tag`
+    - `backstage.giantswarm.io/latest-release-date`
+- Add tag `no-releases` in case there are no releases for a component
+- Adds tag `defaultbranch:master` if the component repo uses master as the default branch name
+
+### Removed
+
+- Remove `dependabotRemove` key from repositories data processing
+
 ## [0.10.0] - 2024-02-26
 
 ### Added
