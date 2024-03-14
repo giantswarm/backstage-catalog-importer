@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -54,10 +55,9 @@ func TestServiceOutput(t *testing.T) {
 						},
 						Lifecycle: "production",
 						Replacements: repositories.RepoReplacements{
-							ArchitectOrb:     true,
-							Renovate:         true,
-							PreCommit:        true,
-							DependabotRemove: true,
+							ArchitectOrb: true,
+							Renovate:     true,
+							PreCommit:    true,
 						},
 						AppTestSuite: t,
 					},
@@ -68,6 +68,8 @@ func TestServiceOutput(t *testing.T) {
 					true,
 					true,
 					"main",
+					time.Time{},
+					"v1.2.3",
 					[]string{"first-dependency", "second-dependency"}),
 			},
 		},
@@ -75,19 +77,6 @@ func TestServiceOutput(t *testing.T) {
 			name:       "Component with individual deployment names",
 			goldenFile: "case02.golden",
 			entities: []catalog.Entity{
-				// catalog.CreateGroupEntity(
-				// 	"myorg/team-slug",
-				// 	"team-name",
-				// 	"A simple team with simple people",
-				// 	"area-everything",
-				// 	[]string{"jane-doe", "second-member"},
-				// 	16638849),
-				// catalog.CreateUserEntity(
-				// 	"jane-doe",
-				// 	"jane@acme.org",
-				// 	"Jane Doe",
-				// 	"Experienced DevOps engineer, jack of all trades",
-				// 	"https://avatars.githubusercontent.com/u/12345678?v=4"),
 				catalog.CreateComponentEntity(
 					repositories.Repo{
 						Name:            "project-with-two-apps",
@@ -108,7 +97,9 @@ func TestServiceOutput(t *testing.T) {
 					false,
 					true,
 					true,
-					"main",
+					"master",
+					time.Time{},
+					"",
 					[]string{"first-dependency", "second-dependency"}),
 			},
 		},

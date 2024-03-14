@@ -43,6 +43,8 @@ metadata:
         giantswarm.io/flavor-app: "true"
         giantswarm.io/language: go
     annotations:
+        backstage.giantswarm.io/latest-release-date: "0001-01-01T00:00:00Z"
+        backstage.giantswarm.io/latest-release-tag: v1.2.3
         backstage.io/kubernetes-id: my-service
         backstage.io/source-location: url:https://github.com/giantswarm/my-service
         backstage.io/techdocs-ref: url:https://github.com/giantswarm/my-service/tree/main
@@ -54,8 +56,8 @@ metadata:
         opsgenie.com/team: myorg/team-slug
         quay.io/repository-slug: giantswarm/my-service
     tags:
-        - language:go
         - flavor:app
+        - language:go
     links:
         - url: https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=my-service&var-app=my-service-app&from=now-24h&to=now
           title: General service metrics dashboard

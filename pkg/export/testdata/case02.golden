@@ -15,7 +15,7 @@ metadata:
     annotations:
         backstage.io/kubernetes-id: project-with-two-apps
         backstage.io/source-location: url:https://github.com/giantswarm/project-with-two-apps
-        backstage.io/techdocs-ref: url:https://github.com/giantswarm/project-with-two-apps/tree/main
+        backstage.io/techdocs-ref: url:https://github.com/giantswarm/project-with-two-apps/tree/master
         circleci.com/project-slug: github/giantswarm/project-with-two-apps
         giantswarm.io/deployment-names: first-name,second-name-app
         github.com/project-slug: giantswarm/project-with-two-apps
@@ -24,9 +24,11 @@ metadata:
         opsgenie.com/team: myorg/team-slug
         quay.io/repository-slug: giantswarm/project-with-two-apps
     tags:
-        - language:go
+        - defaultbranch:master
         - flavor:app
         - flavor:generic
+        - language:go
+        - no-releases
     links:
         - url: https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=first-name&var-app=second-name-app&from=now-24h&to=now
           title: General service metrics dashboard

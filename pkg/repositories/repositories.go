@@ -6,9 +6,11 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v60/github"
@@ -34,34 +36,6 @@ type Config struct {
 type ListResult struct {
 	OwnerTeamName string
 	Repositories  []Repo
-}
-
-// A sparce struct for caching just the GitHub
-// repository details we need.
-type GithubRepoDetails struct {
-	// Repository name
-	Name string
-
-	// Repository description
-	Description string
-
-	// Name of the default branch
-	DefaultBranch string
-
-	// Whether the repository is private. If false, it's public.
-	IsPrivate bool
-
-	// The main programming language in the repo.
-	MainLanguage string
-}
-
-// A struct for caching repository content information.
-type GithubRepoContentDetails struct {
-	// Whether the repository has a CircleCI configuration file.
-	HasCircleCI bool
-
-	// Whether the repository has a README.md in the root directory.
-	HasReadme bool
 }
 
 type Service struct {
@@ -131,13 +105,26 @@ func (s *Service) loadGithubRepoDetails() error {
 		}
 
 		for _, repo := range r {
-			repos[repo.GetName()] = GithubRepoDetails{
-				Name:          repo.GetName(),
+			name := repo.GetName()
+			details := GithubRepoDetails{
+				Name:          name,
 				Description:   repo.GetDescription(),
 				IsPrivate:     repo.GetPrivate(),
 				DefaultBranch: repo.GetDefaultBranch(),
 				MainLanguage:  strings.ToLower(repo.GetLanguage()),
 			}
+
+			latestRelease, response, err := s.githubClient.Repositories.GetLatestRelease(s.ctx, s.config.GithubOrganization, name)
+			if err != nil {
+				if response.StatusCode != http.StatusNotFound {
+					fmt.Printf("Error getting latest release for %s: %v\n", name, err)
+				}
+			} else {
+				details.LatestReleaseTime = latestRelease.CreatedAt.Time
+				details.LatestReleaseTag = latestRelease.GetTagName()
+			}
+
+			repos[name] = details
 		}
 
 		if resp.NextPage == 0 {
@@ -269,6 +256,26 @@ func (s *Service) MustGetDefaultBranch(name string) string {
 	}
 
 	return s.githubRepoDetails[name].DefaultBranch
+}
+
+// Returns the creation time of the repository's most recent release.
+// If no release was found, returns zero-value time.
+func (s *Service) MustGetLatestReleaseTime(name string) time.Time {
+	if _, ok := s.githubRepoDetails[name]; !ok {
+		return time.Time{}
+	}
+
+	return s.githubRepoDetails[name].LatestReleaseTime
+}
+
+// Returns the tag of the repository's most recent release.
+// If no release was found, returns empty string.
+func (s *Service) MustGetLatestReleaseTag(name string) string {
+	if _, ok := s.githubRepoDetails[name]; !ok {
+		return ""
+	}
+
+	return s.githubRepoDetails[name].LatestReleaseTag
 }
 
 // Returns whether the repo has a CircleCI configuration.

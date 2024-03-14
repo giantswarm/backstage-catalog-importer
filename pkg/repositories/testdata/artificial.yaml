@@ -20,4 +20,3 @@
     architect-orb: false
     renovate: true
     precommit: true
-    dependabotRemove: false
