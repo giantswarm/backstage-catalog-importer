@@ -115,8 +115,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 			deps := []string{}
 			lang := repoService.MustGetLanguage(repo.Name)
 
-			latestReleaseTime := repoService.MustGetLatestReleaseTime(repo.Name)
-			latestReleaseTag := repoService.MustGetLatestReleaseTag(repo.Name)
+			latestReleaseTime, err := repoService.MustGetLatestReleaseTime(repo.Name)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
+			latestReleaseTag, err := repoService.MustGetLatestReleaseTag(repo.Name)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
 
 			if lang == "go" {
 				deps, err = repoService.GetDependencies(repo.Name)
