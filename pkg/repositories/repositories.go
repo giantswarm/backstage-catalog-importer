@@ -6,7 +6,6 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -47,9 +46,14 @@ type Service struct {
 	githubRepoDetails map[string]GithubRepoDetails
 	// Cached information on repo content
 	githubRepoContentDetails map[string]GithubRepoContentDetails
+	// Cached information on repo releases
+	githubReleaseDetails map[string]GithubReleaseDetails
 }
 
 // New instantiates a new repositories service.
+//
+// This results in the fetching of basic data on all repositories owned by the organization,
+// issuing one request per 100 repositories. Beware of rate limiting!
 func New(c Config) (*Service, error) {
 	if c.GithubOrganization == "" {
 		return nil, microerror.Maskf(invalidConfigError, "no Github organization configured")
@@ -105,6 +109,10 @@ func (s *Service) loadGithubRepoDetails() error {
 		}
 
 		for _, repo := range r {
+			if repo.GetArchived() {
+				continue
+			}
+
 			name := repo.GetName()
 			details := GithubRepoDetails{
 				Name:          name,
@@ -112,16 +120,6 @@ func (s *Service) loadGithubRepoDetails() error {
 				IsPrivate:     repo.GetPrivate(),
 				DefaultBranch: repo.GetDefaultBranch(),
 				MainLanguage:  strings.ToLower(repo.GetLanguage()),
-			}
-
-			latestRelease, response, err := s.githubClient.Repositories.GetLatestRelease(s.ctx, s.config.GithubOrganization, name)
-			if err != nil {
-				if response.StatusCode != http.StatusNotFound {
-					fmt.Printf("Error getting latest release for %s: %v\n", name, err)
-				}
-			} else {
-				details.LatestReleaseTime = latestRelease.CreatedAt.Time
-				details.LatestReleaseTag = latestRelease.GetTagName()
 			}
 
 			repos[name] = details
@@ -158,6 +156,20 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	}
 
 	s.githubRepoContentDetails[name] = details
+
+	return nil
+}
+
+func (s *Service) loadGithubReleaseDetails(name string) error {
+	latestRelease, response, err := s.githubClient.Repositories.GetLatestRelease(s.ctx, s.config.GithubOrganization, name)
+	if err != nil && response.StatusCode != http.StatusNotFound {
+		return err
+	}
+
+	s.githubReleaseDetails[name] = GithubReleaseDetails{
+		LatestReleaseTime: latestRelease.CreatedAt.Time,
+		LatestReleaseTag:  latestRelease.GetTagName(),
+	}
 
 	return nil
 }
@@ -260,22 +272,28 @@ func (s *Service) MustGetDefaultBranch(name string) string {
 
 // Returns the creation time of the repository's most recent release.
 // If no release was found, returns zero-value time.
-func (s *Service) MustGetLatestReleaseTime(name string) time.Time {
-	if _, ok := s.githubRepoDetails[name]; !ok {
-		return time.Time{}
+func (s *Service) MustGetLatestReleaseTime(name string) (time.Time, error) {
+	if _, ok := s.githubReleaseDetails[name]; !ok {
+		err := s.loadGithubReleaseDetails(name)
+		if err != nil {
+			return time.Time{}, microerror.Mask(err)
+		}
 	}
 
-	return s.githubRepoDetails[name].LatestReleaseTime
+	return s.githubReleaseDetails[name].LatestReleaseTime, nil
 }
 
 // Returns the tag of the repository's most recent release.
 // If no release was found, returns empty string.
-func (s *Service) MustGetLatestReleaseTag(name string) string {
-	if _, ok := s.githubRepoDetails[name]; !ok {
-		return ""
+func (s *Service) MustGetLatestReleaseTag(name string) (string, error) {
+	if _, ok := s.githubReleaseDetails[name]; !ok {
+		err := s.loadGithubReleaseDetails(name)
+		if err != nil {
+			return "string", microerror.Mask(err)
+		}
 	}
 
-	return s.githubRepoDetails[name].LatestReleaseTag
+	return s.githubReleaseDetails[name].LatestReleaseTag, nil
 }
 
 // Returns whether the repo has a CircleCI configuration.

@@ -60,12 +60,6 @@ type GithubRepoDetails struct {
 
 	// The main programming language in the repo.
 	MainLanguage string
-
-	// Creation date/time of the latest release.
-	LatestReleaseTime time.Time
-
-	// Tag name of the latest release.
-	LatestReleaseTag string
 }
 
 // A struct for caching repository content information.
@@ -75,4 +69,13 @@ type GithubRepoContentDetails struct {
 
 	// Whether the repository has a README.md in the root directory.
 	HasReadme bool
+}
+
+// Cache for info on releases of a repo.
+type GithubReleaseDetails struct {
+	// Creation date/time of the latest release.
+	LatestReleaseTime time.Time
+
+	// Tag name of the latest release.
+	LatestReleaseTag string
 }
