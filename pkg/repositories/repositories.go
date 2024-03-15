@@ -79,6 +79,7 @@ func New(c Config) (*Service, error) {
 		githubClient:             client,
 		githubRepoDetails:        make(map[string]GithubRepoDetails),
 		githubRepoContentDetails: make(map[string]GithubRepoContentDetails),
+		githubReleaseDetails:     make(map[string]GithubReleaseDetails),
 	}
 
 	err := s.loadGithubRepoDetails()
@@ -166,10 +167,18 @@ func (s *Service) loadGithubReleaseDetails(name string) error {
 		return err
 	}
 
-	s.githubReleaseDetails[name] = GithubReleaseDetails{
-		LatestReleaseTime: latestRelease.CreatedAt.Time,
-		LatestReleaseTag:  latestRelease.GetTagName(),
+	created := time.Time{}
+	tag := latestRelease.GetTagName()
+	if tag != "" {
+		created = latestRelease.CreatedAt.Time
 	}
+
+	details := GithubReleaseDetails{
+		LatestReleaseTime: created,
+		LatestReleaseTag:  tag,
+	}
+
+	s.githubReleaseDetails[name] = details
 
 	return nil
 }
