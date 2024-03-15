@@ -1,5 +1,8 @@
 package repositories
 
+import "time"
+
+// Repo represents an entry in the giantswarm/github repositories YAML data.
 type Repo struct {
 	Name            string           `yaml:"name"`
 	ComponentType   string           `yaml:"componentType"`
@@ -35,8 +38,41 @@ type RepoGen struct {
 }
 
 type RepoReplacements struct {
-	ArchitectOrb     bool `yaml:"architect-orb"`
-	Renovate         bool `yaml:"renovate"`
-	PreCommit        bool `yaml:"precommit"`
-	DependabotRemove bool `yaml:"dependabotRemove"`
+	ArchitectOrb bool `yaml:"architect-orb"`
+	Renovate     bool `yaml:"renovate"`
+	PreCommit    bool `yaml:"precommit"`
+}
+
+// A sparse struct for caching just the GitHub
+// repository details we need.
+type GithubRepoDetails struct {
+	// Repository name
+	Name string
+
+	// Repository description
+	Description string
+
+	// Name of the default branch
+	DefaultBranch string
+
+	// Whether the repository is private. If false, it's public.
+	IsPrivate bool
+
+	// The main programming language in the repo.
+	MainLanguage string
+
+	// Creation date/time of the latest release.
+	LatestReleaseTime time.Time
+
+	// Tag name of the latest release.
+	LatestReleaseTag string
+}
+
+// A struct for caching repository content information.
+type GithubRepoContentDetails struct {
+	// Whether the repository has a CircleCI configuration file.
+	HasCircleCI bool
+
+	// Whether the repository has a README.md in the root directory.
+	HasReadme bool
 }

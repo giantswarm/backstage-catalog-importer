@@ -115,6 +115,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			deps := []string{}
 			lang := repoService.MustGetLanguage(repo.Name)
 
+			latestReleaseTime := repoService.MustGetLatestReleaseTime(repo.Name)
+			latestReleaseTag := repoService.MustGetLatestReleaseTag(repo.Name)
+
 			if lang == "go" {
 				deps, err = repoService.GetDependencies(repo.Name)
 				if err != nil {
@@ -135,6 +138,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 				hasCircleCi,
 				hasReadme,
 				repoService.MustGetDefaultBranch(repo.Name),
+				latestReleaseTime,
+				latestReleaseTag,
 				deps)
 			numComponents++
 

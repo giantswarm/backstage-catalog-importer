@@ -4,11 +4,22 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
-func CreateComponentEntity(r repositories.Repo, team, description string, system string, isPrivate bool, hasCircleCi, hasReadme bool, defaultBranch string, dependsOn []string) Entity {
+func CreateComponentEntity(r repositories.Repo,
+	team string,
+	description string,
+	system string,
+	isPrivate bool,
+	hasCircleCi,
+	hasReadme bool,
+	defaultBranch string,
+	latestReleaseTime time.Time,
+	latestReleaseTag string,
+	dependsOn []string) Entity {
 	e := Entity{
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindComponent,
@@ -31,6 +42,11 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 
 	// Additional metadata
 	{
+		if latestReleaseTag != "" {
+			e.Metadata.Annotations["backstage.giantswarm.io/latest-release-tag"] = latestReleaseTag
+			e.Metadata.Annotations["backstage.giantswarm.io/latest-release-date"] = latestReleaseTime.Format(time.RFC3339)
+		}
+
 		if hasCircleCi {
 			e.Metadata.Annotations["circleci.com/project-slug"] = fmt.Sprintf("github/giantswarm/%s", r.Name)
 		}
@@ -73,11 +89,21 @@ func CreateComponentEntity(r repositories.Repo, team, description string, system
 			e.Metadata.Tags = append(e.Metadata.Tags, "private")
 		}
 
+		if defaultBranch == "master" {
+			e.Metadata.Tags = append(e.Metadata.Tags, "defaultbranch:master")
+		}
+
+		if latestReleaseTag == "" {
+			e.Metadata.Tags = append(e.Metadata.Tags, "no-releases")
+		}
+
 		for _, flavor := range r.Gen.Flavors {
 			e.Metadata.Labels[fmt.Sprintf("giantswarm.io/flavor-%s", flavor)] = "true"
 
 			e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("flavor:%s", flavor))
 		}
+
+		sort.Strings(e.Metadata.Tags)
 
 		if r.ComponentType == "service" {
 			// Kubernetes plugin annotation
