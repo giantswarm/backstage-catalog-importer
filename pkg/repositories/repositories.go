@@ -105,6 +105,10 @@ func (s *Service) loadGithubRepoDetails() error {
 		}
 
 		for _, repo := range r {
+			if repo.GetArchived() {
+				continue
+			}
+
 			name := repo.GetName()
 			details := GithubRepoDetails{
 				Name:          name,
