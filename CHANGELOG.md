@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed nil pointer dereference problem
+
 ## [0.11.0] - 2024-03-15
 
 ### Added
