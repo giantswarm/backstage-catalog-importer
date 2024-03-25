@@ -43,8 +43,8 @@ func CreateComponentEntity(r repositories.Repo,
 	// Additional metadata
 	{
 		if latestReleaseTag != "" {
-			e.Metadata.Annotations["backstage.giantswarm.io/latest-release-tag"] = latestReleaseTag
-			e.Metadata.Annotations["backstage.giantswarm.io/latest-release-date"] = latestReleaseTime.Format(time.RFC3339)
+			e.Metadata.Annotations["giantswarm.io/latest-release-tag"] = latestReleaseTag
+			e.Metadata.Annotations["giantswarm.io/latest-release-date"] = latestReleaseTime.Format(time.RFC3339)
 		}
 
 		if hasCircleCi {
