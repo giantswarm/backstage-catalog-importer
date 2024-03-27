@@ -6,6 +6,7 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -62,7 +63,7 @@ func New(c Config) (*Service, error) {
 		return nil, microerror.Maskf(invalidConfigError, "no Github repository name configured")
 	}
 	if c.GithubAuthToken == "" {
-		return nil, microerror.Maskf(invalidConfigError, "no Github token given (env variable GITHUB_TOKEN not set)")
+		log.Println("WARNING: No Github token given (env variable GITHUB_TOKEN not set)")
 	}
 
 	ts := oauth2.StaticTokenSource(
@@ -82,9 +83,11 @@ func New(c Config) (*Service, error) {
 		githubReleaseDetails:     make(map[string]GithubReleaseDetails),
 	}
 
-	err := s.loadGithubRepoDetails()
-	if err != nil {
-		return nil, err
+	if c.GithubAuthToken != "" {
+		err := s.loadGithubRepoDetails()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s, nil
