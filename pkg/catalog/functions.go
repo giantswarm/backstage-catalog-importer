@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
@@ -19,6 +20,7 @@ func CreateComponentEntity(r repositories.Repo,
 	defaultBranch string,
 	latestReleaseTime time.Time,
 	latestReleaseTag string,
+	charts []*helmchart.Chart,
 	dependsOn []string) Entity {
 	e := Entity{
 		APIVersion: "backstage.io/v1alpha1",
@@ -81,7 +83,6 @@ func CreateComponentEntity(r repositories.Repo,
 
 		if r.Gen.Language != "" && r.Gen.Language != repositories.RepoLanguageGeneric {
 			e.Metadata.Labels["giantswarm.io/language"] = string(r.Gen.Language)
-
 			e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("language:%s", r.Gen.Language))
 		}
 
@@ -97,9 +98,24 @@ func CreateComponentEntity(r repositories.Repo,
 			e.Metadata.Tags = append(e.Metadata.Tags, "no-releases")
 		}
 
+		if len(charts) > 0 {
+			e.Metadata.Tags = append(e.Metadata.Tags, "helmchart")
+			names := []string{}
+			versions := []string{}
+			appVersions := []string{}
+			for _, c := range charts {
+				names = append(names, c.Metadata.Name)
+				versions = append(versions, c.Metadata.Version)
+				appVersions = append(appVersions, c.Metadata.AppVersion)
+			}
+
+			e.Metadata.Annotations["giantswarm.io/helmcharts"] = strings.Join(names, ",")
+			e.Metadata.Annotations["giantswarm.io/helmchart-versions"] = strings.Join(versions, ",")
+			e.Metadata.Annotations["giantswarm.io/helmchart-app-versions"] = strings.Join(appVersions, ",")
+		}
+
 		for _, flavor := range r.Gen.Flavors {
 			e.Metadata.Labels[fmt.Sprintf("giantswarm.io/flavor-%s", flavor)] = "true"
-
 			e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("flavor:%s", flavor))
 		}
 

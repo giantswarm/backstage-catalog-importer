@@ -14,6 +14,7 @@ import (
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/teams"
 )
@@ -112,6 +113,34 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 
+			// Fetch Helm chart info if available.
+			var charts []*helmchart.Chart
+			{
+				numCharts, err := repoService.GetNumHelmCharts(repo.Name)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				} else if numCharts > 0 {
+					chartNames, _ := repoService.GetHelmChartNames(repo.Name)
+					for _, chartName := range chartNames {
+						log.Printf("DEBUG - %s - fetching info on helm chart %s\n", repo.Name, chartName)
+						path := fmt.Sprintf("helm/%s/Chart.yaml", chartName)
+						data, err := repoService.LoadGitHubFile(repo.Name, path)
+						if err != nil {
+							if !repositories.IsFileNotFoundError(err) {
+								log.Printf("WARN - %s - error fetching helm chart %s: %v", repo.Name, chartName, err)
+							}
+						} else {
+							chart, err := helmchart.LoadString(data)
+							if err != nil {
+								log.Printf("WARN - %s - error parsing helm chart %s: %v", repo.Name, chartName, err)
+							} else {
+								charts = append(charts, chart)
+							}
+						}
+					}
+				}
+			}
+
 			deps := []string{}
 			lang := repoService.MustGetLanguage(repo.Name)
 
@@ -147,6 +176,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				repoService.MustGetDefaultBranch(repo.Name),
 				latestReleaseTime,
 				latestReleaseTag,
+				charts,
 				deps)
 			numComponents++
 

@@ -48,6 +48,9 @@ metadata:
         backstage.io/techdocs-ref: url:https://github.com/giantswarm/my-service/tree/main
         circleci.com/project-slug: github/giantswarm/my-service
         giantswarm.io/deployment-names: my-service,my-service-app
+        giantswarm.io/helmchart-app-versions: ',2.3.4'
+        giantswarm.io/helmchart-versions: 1.2.3,0.4.1
+        giantswarm.io/helmcharts: first-chart,second-chart
         giantswarm.io/latest-release-date: "0001-01-01T00:00:00Z"
         giantswarm.io/latest-release-tag: v1.2.3
         github.com/project-slug: giantswarm/my-service
@@ -57,6 +60,7 @@ metadata:
         quay.io/repository-slug: giantswarm/my-service
     tags:
         - flavor:app
+        - helmchart
         - language:go
     links:
         - url: https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=my-service&var-app=my-service-app&from=now-24h&to=now

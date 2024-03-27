@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	cmp "github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestLoadListShallow(t *testing.T) {

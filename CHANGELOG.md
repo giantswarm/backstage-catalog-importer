@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add annotations regarding Helm charts to exported component entities, in case the component provides one or several charts:
+  - `giantswarm.io/helmchart-app-versions`: a list of upstream app versions provided by the component's helm charts, separated by comma.
+  - `giantswarm.io/helmchart-versions`: a list of Helm chart versions provided by the component, separated by comma.
+  - `giantswarm.io/helmcharts`: a list of names of the Helm charts provided by the component, separated by comma.
+
 ## [0.11.2] - 2024-03-25
 
 ### Changed
