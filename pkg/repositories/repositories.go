@@ -6,6 +6,7 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -62,7 +63,7 @@ func New(c Config) (*Service, error) {
 		return nil, microerror.Maskf(invalidConfigError, "no Github repository name configured")
 	}
 	if c.GithubAuthToken == "" {
-		return nil, microerror.Maskf(invalidConfigError, "no Github token given (env variable GITHUB_TOKEN not set)")
+		log.Println("WARNING: No Github token given (env variable GITHUB_TOKEN not set)")
 	}
 
 	ts := oauth2.StaticTokenSource(
@@ -82,9 +83,11 @@ func New(c Config) (*Service, error) {
 		githubReleaseDetails:     make(map[string]GithubReleaseDetails),
 	}
 
-	err := s.loadGithubRepoDetails()
-	if err != nil {
-		return nil, err
+	if c.GithubAuthToken != "" {
+		err := s.loadGithubRepoDetails()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return s, nil
@@ -137,9 +140,11 @@ func (s *Service) loadGithubRepoDetails() error {
 	return nil
 }
 
+// Load details found in certain files in the repository.
 func (s *Service) loadGithubRepoContentDetails(name string) error {
 	details := GithubRepoContentDetails{}
 
+	// Detect CircleCI
 	_, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
 	if err == nil {
 		details.HasCircleCI = true
@@ -148,9 +153,26 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 		return err
 	}
 
+	// Detect README
 	_, _, resp, err = s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, "README.md", nil)
 	if err == nil {
 		details.HasReadme = true
+	} else if resp.StatusCode != http.StatusNotFound {
+		// 404 is a "not found" error, which is expected. Everything else is not expected.
+		return err
+	}
+
+	// Detect helm folder
+	_, directoryContent, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, "helm", nil)
+	if err == nil {
+		if directoryContent != nil {
+			details.HasHelmFolder = true
+			details.NumHelmCharts = len(directoryContent)
+			details.HelmChartNames = make([]string, len(directoryContent))
+			for i, item := range directoryContent {
+				details.HelmChartNames[i] = item.GetName()
+			}
+		}
 	} else if resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
@@ -161,6 +183,21 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	return nil
 }
 
+// Return the content of a source file in a repository as string.
+func (s *Service) LoadGitHubFile(name string, path string) (string, error) {
+	fileContent, _, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, path, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if fileContent == nil {
+		return "", microerror.Maskf(fileNotFoundError, "file %s not found in repository %s", path, name)
+	}
+
+	return fileContent.GetContent()
+}
+
+// Load tag and date of the projectz's latest release.
 func (s *Service) loadGithubReleaseDetails(name string) error {
 	latestRelease, response, err := s.githubClient.Repositories.GetLatestRelease(s.ctx, s.config.GithubOrganization, name)
 	if err != nil && response.StatusCode != http.StatusNotFound {
@@ -327,4 +364,28 @@ func (s *Service) GetHasReadme(name string) (bool, error) {
 	}
 
 	return s.githubRepoContentDetails[name].HasReadme, nil
+}
+
+// Returns whether the repo has a Helm chart.
+func (s *Service) GetNumHelmCharts(name string) (int, error) {
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
+		if err != nil {
+			return 0, microerror.Mask(err)
+		}
+	}
+
+	return s.githubRepoContentDetails[name].NumHelmCharts, nil
+}
+
+// Returns the name(s) of the repo's Helm chart(s).
+func (s *Service) GetHelmChartNames(name string) ([]string, error) {
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	return s.githubRepoContentDetails[name].HelmChartNames, nil
 }

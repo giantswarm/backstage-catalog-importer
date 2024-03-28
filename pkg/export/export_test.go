@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"helm.sh/helm/v3/pkg/chart"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
@@ -70,6 +72,21 @@ func TestServiceOutput(t *testing.T) {
 					"main",
 					time.Time{},
 					"v1.2.3",
+					[]*helmchart.Chart{
+						{
+							Metadata: chart.Metadata{
+								Name:    "first-chart",
+								Version: "1.2.3",
+							},
+						},
+						{
+							Metadata: chart.Metadata{
+								Name:       "second-chart",
+								Version:    "0.4.1",
+								AppVersion: "2.3.4",
+							},
+						},
+					},
 					[]string{"first-dependency", "second-dependency"}),
 			},
 		},
@@ -100,6 +117,7 @@ func TestServiceOutput(t *testing.T) {
 					"master",
 					time.Time{},
 					"",
+					nil,
 					[]string{"first-dependency", "second-dependency"}),
 			},
 		},

@@ -69,6 +69,13 @@ type GithubRepoContentDetails struct {
 
 	// Whether the repository has a README.md in the root directory.
 	HasReadme bool
+
+	// Whether the repository has a "helm" folder in the root directory.
+	HasHelmFolder bool
+
+	NumHelmCharts int
+
+	HelmChartNames []string
 }
 
 // Cache for info on releases of a repo.

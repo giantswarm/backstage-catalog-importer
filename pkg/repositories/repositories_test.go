@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	cmp "github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestLoadListShallow(t *testing.T) {
@@ -57,7 +57,7 @@ func TestLoadListShallow(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err = s.loadList(tt.path)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("LoadList() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("loadList() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 		})
