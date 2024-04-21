@@ -2,7 +2,7 @@ module github.com/giantswarm/backstage-catalog-importer
 
 go 1.21
 
-toolchain go1.22.0
+toolchain go1.22.2
 
 require (
 	github.com/giantswarm/microerror v0.4.1
