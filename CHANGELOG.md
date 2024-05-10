@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Introduce new `pkg/catalog/Component` type as an abstraction for a component entity.
+
+### Changed
+
+- Function `pkg/catalog/CreateComponentEntity` is now deprecated. We want to use the new `Component` type and its ToEntity method instead.
+
 ## [0.12.0] - 2024-03-28
 
 ### Added
