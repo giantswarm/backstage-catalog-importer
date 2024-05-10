@@ -143,7 +143,10 @@ func (c *Component) ToEntity() *Entity {
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindComponent,
 		Metadata: EntityMetadata{
+			Annotations: make(map[string]string),
 			Description: c.Description,
+			Labels:      make(map[string]string),
+			Links:       make([]EntityLink, 0),
 			Name:        c.Name,
 		},
 	}
