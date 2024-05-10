@@ -143,22 +143,20 @@ func (c *Component) ToEntity() *Entity {
 		APIVersion: "backstage.io/v1alpha1",
 		Kind:       EntityKindComponent,
 		Metadata: EntityMetadata{
-			Annotations: make(map[string]string),
 			Description: c.Description,
-			Labels:      make(map[string]string),
-			Links:       make([]EntityLink, 0),
 			Name:        c.Name,
-			Tags:        c.Tags,
 		},
 	}
 
 	if c.Annotations != nil {
+		e.Metadata.Annotations = make(map[string]string)
 		for k, v := range c.Annotations {
 			e.Metadata.Annotations[k] = v
 		}
 	}
 
 	if c.Labels != nil {
+		e.Metadata.Labels = make(map[string]string)
 		for k, v := range c.Labels {
 			e.Metadata.Labels[k] = v
 		}
@@ -166,6 +164,10 @@ func (c *Component) ToEntity() *Entity {
 
 	if c.Links != nil {
 		e.Metadata.Links = c.Links
+	}
+
+	if c.Tags != nil {
+		e.Metadata.Tags = c.Tags
 	}
 
 	if c.GithubProjectSlug != "" {
