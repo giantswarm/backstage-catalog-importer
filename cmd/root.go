@@ -8,7 +8,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/google/go-github/v61/github"
+	"github.com/google/go-github/v62/github"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
