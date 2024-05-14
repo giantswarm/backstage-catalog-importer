@@ -51,7 +51,6 @@ metadata:
         giantswarm.io/helmchart-app-versions: ',2.3.4'
         giantswarm.io/helmchart-versions: 1.2.3,0.4.1
         giantswarm.io/helmcharts: first-chart,second-chart
-        giantswarm.io/latest-release-date: "0001-01-01T00:00:00Z"
         giantswarm.io/latest-release-tag: v1.2.3
         github.com/project-slug: giantswarm/my-service
         github.com/team-slug: myorg/team-slug

@@ -20,7 +20,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "backstage-util",
+	Use:   "backstage-catalog-importer",
 	Short: "Giant Swarm tool to import data into backstage's catalog",
 	Run:   runRoot,
 }
