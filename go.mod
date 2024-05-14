@@ -7,7 +7,7 @@ toolchain go1.22.3
 require (
 	github.com/giantswarm/microerror v0.4.1
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-github/v61 v61.0.0
+	github.com/google/go-github/v62 v62.0.0
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	golang.org/x/oauth2 v0.20.0
