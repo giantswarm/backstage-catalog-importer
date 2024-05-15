@@ -114,6 +114,9 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 	team := ""
 	if val, ok := entry.Annotations["application.giantswarm.io/team"]; ok {
 		team = val
+		if !strings.HasPrefix(team, "team-") {
+			team = "team-" + team
+		}
 	}
 
 	// release time
@@ -123,7 +126,7 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 	}
 
 	// source URL
-	// Note: we assume `https://github/` as the host here, which works for
+	// Note: we assume `https://github.com/` as the host here, which works for
 	// Giant Swarm catalogs, but may not work for customer catalogs.
 	if entry.Home == "" {
 		return nil, fmt.Errorf("app %s has no source URL", entry.Name)
@@ -132,15 +135,12 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 
 	component, err := catalog.NewComponent(entry.Name,
 		catalog.WithDescription(entry.Description),
-		catalog.WithLatestReleaseTag(entry.Version),
-		catalog.WithTags(entry.Keywords...),
-		catalog.WithOwner(team),
-		catalog.WithLatestReleaseTime(releaseTime),
-		catalog.WithLatestReleaseTag(entry.Version),
 		catalog.WithGithubProjectSlug(githubSlug),
-		//catalog.WithLatestReleaseTime(entry.Created), TODO: parse time
-		// TODO: pass github project slug from "home" field
-		// TODO: pass github team slug from "application.giantswarm.io/team" annotation
+		catalog.WithLatestReleaseTag(entry.Version),
+		catalog.WithLatestReleaseTime(releaseTime),
+		catalog.WithOwner(team),
+		catalog.WithTags(entry.Keywords...),
+		catalog.WithType("service"),
 	)
 	if err != nil {
 		return nil, err
