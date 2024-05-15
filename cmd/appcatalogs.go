@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/appcatalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
@@ -69,6 +71,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 		log.Printf("Catalog generated at %s", index.Generated)
 
 		for appName := range index.Entries {
+			entriesCount++
 			if _, ok := apps[appName]; ok {
 				// App already seen, skip
 				continue
@@ -83,7 +86,8 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 
 			component, err := componentFromCatalogEntry(index.Entries[appName][0])
 			if err != nil {
-				log.Fatalf("Error: %v", err)
+				log.Printf("ERROR: Could not create component entity. %v", err)
+				continue
 			}
 
 			e := component.ToEntity()
@@ -95,21 +99,45 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	log.Printf("Collected %d unique apps in %d entries", len(apps), entriesCount)
+
 	err = componentExporter.WriteFile()
 	if err != nil {
 		log.Fatalf("Error writing components: %v", err)
 	}
-
-	log.Printf("Found %d unique apps in %d entries", len(apps), entriesCount)
-	log.Printf("TODO: Export result to %s", path)
+	log.Printf("Wrote file %s", componentExporter.TargetPath)
 }
 
 // Populates a catalog.Component from an appcatalog.Entry
 func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, error) {
+	// owner team
+	team := ""
+	if val, ok := entry.Annotations["application.giantswarm.io/team"]; ok {
+		team = val
+	}
+
+	// release time
+	releaseTime, err := time.Parse(time.RFC3339, entry.Created)
+	if err != nil {
+		return nil, err
+	}
+
+	// source URL
+	// Note: we assume `https://github/` as the host here, which works for
+	// Giant Swarm catalogs, but may not work for customer catalogs.
+	if entry.Home == "" {
+		return nil, fmt.Errorf("app %s has no source URL", entry.Name)
+	}
+	githubSlug := strings.TrimPrefix(entry.Home, "https://github.com/")
+
 	component, err := catalog.NewComponent(entry.Name,
 		catalog.WithDescription(entry.Description),
 		catalog.WithLatestReleaseTag(entry.Version),
 		catalog.WithTags(entry.Keywords...),
+		catalog.WithOwner(team),
+		catalog.WithLatestReleaseTime(releaseTime),
+		catalog.WithLatestReleaseTag(entry.Version),
+		catalog.WithGithubProjectSlug(githubSlug),
 		//catalog.WithLatestReleaseTime(entry.Created), TODO: parse time
 		// TODO: pass github project slug from "home" field
 		// TODO: pass github team slug from "application.giantswarm.io/team" annotation
