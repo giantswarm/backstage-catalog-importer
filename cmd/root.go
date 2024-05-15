@@ -38,6 +38,8 @@ const (
 
 func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", ".", "Output directory path")
+
+	rootCmd.AddCommand(appCatalogsCmd)
 }
 
 func Execute() {
