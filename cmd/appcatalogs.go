@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/giantswarm/backstage-catalog-importer/pkg/appcatalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
-	"github.com/spf13/cobra"
 )
 
 var appCatalogsCmd = &cobra.Command{
@@ -22,12 +23,16 @@ Apps are deduplicated by name. Apps with the same name, even in different catalo
 }
 
 const (
+	// Catalogs
 	clusterCatalogURL              = "https://giantswarm.github.io/cluster-catalog/index.yaml"
 	controlPlaneCatalogURL         = "https://giantswarm.github.io/control-plane-catalog/index.yaml"
 	defaultCatalogURL              = "https://giantswarm.github.io/default-catalog/index.yaml"
 	giantSwarmAzureCatalogURL      = "https://giantswarm.github.io/giantswarm-azure-catalog/index.yaml"
 	giantSwarmCatalogURL           = "https://giantswarm.github.io/giantswarm-catalog/index.yaml"
 	giantSwarmPlaygroundCatalogURL = "https://giantswarm.github.io/giantswarm-playground-catalog/index.yaml"
+
+	// Annotation keys
+	teamAnnotation = "application.giantswarm.io/team"
 )
 
 var defaultCatalogURLs = []string{
@@ -54,12 +59,12 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	// TODO: create exporter
 	componentExporter := export.New(export.Config{TargetPath: path + "/components.yaml"})
 
 	entriesCount := 0
 	apps := make(map[string]int)
 
+	// Iterate over catalogs
 	for _, url := range urls {
 		fmt.Printf("Reading catalog %s\n", url)
 
@@ -70,6 +75,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 
 		log.Printf("Catalog generated at %s", index.Generated)
 
+		// Iterate over apps in catalog
 		for appName := range index.Entries {
 			entriesCount++
 			if _, ok := apps[appName]; ok {
@@ -111,9 +117,10 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 // Populates a catalog.Component from an appcatalog.Entry
 func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, error) {
 	// owner team
-	team := ""
-	if val, ok := entry.Annotations["application.giantswarm.io/team"]; ok {
+	team := "unspecified"
+	if val, ok := entry.Annotations[teamAnnotation]; ok {
 		team = val
+		// Adding Giant Swarm product team prefix
 		if !strings.HasPrefix(team, "team-") {
 			team = "team-" + team
 		}
@@ -126,14 +133,16 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 	}
 
 	// source URL
-	// Note: we assume `https://github.com/` as the host here, which works for
-	// Giant Swarm catalogs, but may not work for customer catalogs.
-	if entry.Home == "" {
-		return nil, fmt.Errorf("app %s has no source URL", entry.Name)
+	// Note: This is very Giant Swarm specific. We assume `https://github.com/` as
+	// the host and "giantswarm" as the organization name. This works for all
+	// Giant Swarm catalogs, but will not work for customer catalogs.
+	githubSlug := "giantswarm/" + entry.Name
+	if entry.Home != "" {
+		githubSlug = strings.TrimPrefix(entry.Home, "https://github.com/")
 	}
-	githubSlug := strings.TrimPrefix(entry.Home, "https://github.com/")
 
 	component, err := catalog.NewComponent(entry.Name,
+		catalog.WithNamespace("giantswarm"),
 		catalog.WithDescription(entry.Description),
 		catalog.WithGithubProjectSlug(githubSlug),
 		catalog.WithLatestReleaseTag(entry.Version),
@@ -141,6 +150,7 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 		catalog.WithOwner(team),
 		catalog.WithTags(entry.Keywords...),
 		catalog.WithType("service"),
+		catalog.WithHasReadme(true), // we assume all apps have a README
 	)
 	if err != nil {
 		return nil, err

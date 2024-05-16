@@ -15,6 +15,7 @@ func NewComponent(name string, options ...Option) (*Component, error) {
 
 	c := &Component{
 		Name:      name,
+		Namespace: "default",
 		Type:      "unspecified",
 		Owner:     "unspecified",
 		Lifecycle: "production",
@@ -25,6 +26,12 @@ func NewComponent(name string, options ...Option) (*Component, error) {
 	}
 
 	return c, nil
+}
+
+func WithNamespace(namespace string) Option {
+	return func(c *Component) {
+		c.Namespace = namespace
+	}
 }
 
 func WithDescription(description string) Option {

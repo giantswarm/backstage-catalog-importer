@@ -13,6 +13,9 @@ type Component struct {
 	// Component name (required)
 	Name string
 
+	// Namespace, defaults to "default"
+	Namespace string
+
 	// Owner of the component. Defaults to "unspecified".
 	Owner string
 
@@ -148,6 +151,7 @@ func (c *Component) ToEntity() *Entity {
 			Labels:      make(map[string]string),
 			Links:       make([]EntityLink, 0),
 			Name:        c.Name,
+			Namespace:   c.Namespace,
 		},
 	}
 
