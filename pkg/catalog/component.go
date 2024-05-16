@@ -151,8 +151,11 @@ func (c *Component) ToEntity() *Entity {
 			Labels:      make(map[string]string),
 			Links:       make([]EntityLink, 0),
 			Name:        c.Name,
-			Namespace:   c.Namespace,
 		},
+	}
+
+	if c.Namespace != "default" {
+		e.Metadata.Namespace = c.Namespace
 	}
 
 	if c.Annotations != nil {

@@ -25,7 +25,6 @@ func TestComponent_ToEntity(t *testing.T) {
 				Kind:       EntityKindComponent,
 				Metadata: EntityMetadata{
 					Name:        "minimal",
-					Namespace:   "default",
 					Labels:      map[string]string{},
 					Annotations: map[string]string{},
 					Links:       []EntityLink{},
