@@ -137,9 +137,6 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 	// the host and "giantswarm" as the organization name. This works for all
 	// Giant Swarm catalogs, but will not work for customer catalogs.
 	githubSlug := "giantswarm/" + entry.Name
-	if entry.Home != "" {
-		githubSlug = strings.TrimPrefix(entry.Home, "https://github.com/")
-	}
 
 	component, err := catalog.NewComponent(entry.Name,
 		catalog.WithNamespace("giantswarm"),
