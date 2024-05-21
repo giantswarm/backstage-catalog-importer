@@ -143,6 +143,7 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 
 	component, err := catalog.NewComponent(entry.Name,
 		catalog.WithNamespace("giantswarm"),
+		catalog.WithTitle(entry.Name),
 		catalog.WithDescription(entry.Description),
 		catalog.WithGithubProjectSlug(githubSlug),
 		catalog.WithLatestReleaseTag(entry.Version),
