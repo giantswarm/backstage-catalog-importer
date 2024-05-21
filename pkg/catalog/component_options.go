@@ -40,6 +40,12 @@ func WithDescription(description string) Option {
 	}
 }
 
+func WithTitle(title string) Option {
+	return func(c *Component) {
+		c.Title = title
+	}
+}
+
 func WithGithubTeamSlug(team string) Option {
 	return func(c *Component) {
 		c.GithubTeamSlug = team

@@ -45,6 +45,7 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithDefaultBranch("master"),
 				WithDependsOn("first-dependency", "second-dependency"),
 				WithDescription("A full-fledged component"),
+				WithTitle("Full Fledged"),
 				WithGithubTeamSlug("my-team"),
 				WithHasReadme(true),
 				WithKubernetesID("my-k8s-id"),
@@ -86,6 +87,7 @@ func TestComponent_ToEntity(t *testing.T) {
 					},
 					Links: []EntityLink{},
 					Tags:  []string{"tag1", "tag2"},
+					Title: "Full Fledged",
 				},
 				Spec: ComponentSpec{
 					Type:      "component-type",
