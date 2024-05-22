@@ -117,13 +117,14 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 // Populates a catalog.Component from an appcatalog.Entry
 func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, error) {
 	// owner team
-	team := "unspecified"
-	if val, ok := entry.Annotations[teamAnnotation]; ok {
-		team = val
+	team := "group:giantswarm/unspecified"
+	if teamName, ok := entry.Annotations[teamAnnotation]; ok {
 		// Adding Giant Swarm product team prefix
-		if !strings.HasPrefix(team, "team-") {
-			team = "team-" + team
+		if !strings.HasPrefix(teamName, "team-") {
+			teamName = "team-" + teamName
 		}
+
+		team = "group:giantswarm/" + teamName
 	}
 
 	// release time
