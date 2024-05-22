@@ -133,11 +133,10 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 		return nil, err
 	}
 
-	// source URL
-	// Note: This is very Giant Swarm specific. We assume `https://github.com/` as
-	// the host and "giantswarm" as the organization name. This works for all
-	// Giant Swarm catalogs, but will not work for customer catalogs.
-	githubSlug := "giantswarm/" + entry.Name
+	githubSlug := detectGitHubSlug(&entry)
+	if githubSlug == "" {
+		return nil, fmt.Errorf("could not detect GitHub slug for app %s in app metadata", entry.Name)
+	}
 
 	component, err := catalog.NewComponent(entry.Name,
 		catalog.WithNamespace("giantswarm"),
@@ -156,4 +155,40 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 	}
 
 	return component, nil
+}
+
+// Guessing the GitHub slug from the app metadata
+//
+// Note: This is highly Giant Swarm specific.
+// Strategy:
+// - Find a URL starting with "https://github.com/giantswarm/" in the URLs
+// TODO:
+// - try the app name appended to https://github.com/giantswarm/
+// - try variations with/without -app suffix
+func detectGitHubSlug(entry *appcatalog.Entry) string {
+	prefix := "https://github.com/giantswarm/"
+
+	if strings.HasPrefix(entry.Home, prefix) {
+		return githubSlugFromURL(entry.Home)
+	}
+
+	for _, url := range entry.Sources {
+		if strings.HasPrefix(url, prefix) {
+			return githubSlugFromURL(url)
+		}
+	}
+
+	for _, url := range entry.Urls {
+		if strings.HasPrefix(url, prefix) {
+			return githubSlugFromURL(url)
+		}
+	}
+
+	return ""
+}
+
+func githubSlugFromURL(url string) string {
+	slug := strings.TrimPrefix(url, "https://github.com/")
+	slug = strings.TrimSuffix(slug, "/")
+	return slug
 }
