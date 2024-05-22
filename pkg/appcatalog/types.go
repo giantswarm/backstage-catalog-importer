@@ -17,6 +17,7 @@ type Entry struct {
 	Icon        string            `yaml:"icon"`
 	Keywords    []string          `yaml:"keywords"`
 	Name        string            `yaml:"name"`
+	Sources     []string          `yaml:"sources"`
 	Type        string            `yaml:"type"`
 	Urls        []string          `yaml:"urls"`
 	Version     string            `yaml:"version"`

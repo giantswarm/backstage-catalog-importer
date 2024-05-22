@@ -18,7 +18,7 @@ func TestRead(t *testing.T) {
 		{
 			name:       "giantswarm catalog",
 			path:       "testdata/giantswarm.yaml",
-			numEntries: 2,
+			numEntries: 3,
 			wantErr:    false,
 		},
 	}
