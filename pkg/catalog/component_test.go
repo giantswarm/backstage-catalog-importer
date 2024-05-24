@@ -45,11 +45,13 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithDefaultBranch("master"),
 				WithDependsOn("first-dependency", "second-dependency"),
 				WithDescription("A full-fledged component"),
+				WithTitle("Full Fledged"),
 				WithGithubTeamSlug("my-team"),
 				WithHasReadme(true),
 				WithKubernetesID("my-k8s-id"),
 				WithLatestReleaseTag("v5.0.1"),
 				WithLifecycle("deprecated"),
+				WithNamespace("my-namespace"),
 				WithOwner("my-owner"),
 				WithSystem("my-system"),
 				WithTags("tag1", "tag2"),
@@ -67,6 +69,7 @@ func TestComponent_ToEntity(t *testing.T) {
 				Kind:       EntityKindComponent,
 				Metadata: EntityMetadata{
 					Name:        "full-fledged",
+					Namespace:   "my-namespace",
 					Description: "A full-fledged component",
 					Labels:      map[string]string{"key": "value"},
 					Annotations: map[string]string{
@@ -84,6 +87,7 @@ func TestComponent_ToEntity(t *testing.T) {
 					},
 					Links: []EntityLink{},
 					Tags:  []string{"tag1", "tag2"},
+					Title: "Full Fledged",
 				},
 				Spec: ComponentSpec{
 					Type:      "component-type",
