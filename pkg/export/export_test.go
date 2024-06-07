@@ -32,20 +32,20 @@ func TestServiceOutput(t *testing.T) {
 			name:       "Group, users, and component",
 			goldenFile: "case01.golden",
 			entities: []bscatalog.Entity{
-				legacy.CreateGroupEntity(
+				legacy.CreateGroupEntity( //nolint:staticcheck
 					"myorg/team-slug",
 					"team-name",
 					"A simple team with simple people",
 					"area-everything",
 					[]string{"jane-doe", "second-member"},
 					16638849),
-				legacy.CreateUserEntity(
+				legacy.CreateUserEntity( //nolint:staticcheck
 					"jane-doe",
 					"jane@acme.org",
 					"Jane Doe",
 					"Experienced DevOps engineer, jack of all trades",
 					"https://avatars.githubusercontent.com/u/12345678?v=4"),
-				legacy.CreateComponentEntity(
+				legacy.CreateComponentEntity( //nolint:staticcheck
 					repositories.Repo{
 						Name:          "my-service",
 						ComponentType: "service",
@@ -95,7 +95,7 @@ func TestServiceOutput(t *testing.T) {
 			name:       "Component with individual deployment names",
 			goldenFile: "case02.golden",
 			entities: []bscatalog.Entity{
-				legacy.CreateComponentEntity(
+				legacy.CreateComponentEntity( //nolint:staticcheck
 					repositories.Repo{
 						Name:            "project-with-two-apps",
 						ComponentType:   "service",

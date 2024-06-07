@@ -167,7 +167,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				}
 			}
 
-			ent := legacy.CreateComponentEntity(
+			ent := legacy.CreateComponentEntity( //nolint:staticcheck
 				repo,
 				list.OwnerTeamName,
 				repoService.MustGetDescription(repo.Name),
@@ -219,7 +219,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			parentTeamName = team.GetParent().GetSlug()
 		}
 
-		entity := legacy.CreateGroupEntity(
+		entity := legacy.CreateGroupEntity( //nolint:staticcheck
 			team.GetSlug(),
 			team.GetName(),
 			team.GetDescription(),
@@ -253,7 +253,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.Fatalf("Error: %v", err)
 		}
 
-		entity := legacy.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL())
+		entity := legacy.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL()) //nolint:staticcheck
 
 		err = userExporter.AddEntity(&entity)
 		if err != nil {
