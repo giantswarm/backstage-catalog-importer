@@ -1,3 +1,4 @@
+// Package teams provides means to export GitHub teams to Backstage group entities.
 package teams
 
 import (
@@ -66,6 +67,15 @@ func (s *Service) GetAll() ([]*github.Team, error) {
 		opts.Page = resp.NextPage
 	}
 	return teams, nil
+}
+
+// Return one teams by its slug.
+func (s *Service) GetBySlug(slug string) (*github.Team, error) {
+	t, _, err := s.githubClient.Teams.GetTeamBySlug(s.ctx, s.config.GithubOrganization, slug)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 // Return member users for a team
