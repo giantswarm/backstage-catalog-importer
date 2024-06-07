@@ -11,6 +11,11 @@ Sources are:
 
 Sources get discovered dynamically.
 
+The tool covers two different use cases so far:
+
+1. **Giant Swarm dev portal**: export entities internal to Giant Swarm (various components, teams, users)
+2. **Customer catalogs**: export entities for a customer Backstage instance (components from app catalogs, and teams owning these components)
+
 ## GitHub repository discovery
 
 The tool processes all repository lists in the private folder https://github.com/giantswarm/github/tree/main/repositories.
