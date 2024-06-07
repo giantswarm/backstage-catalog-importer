@@ -5,15 +5,10 @@ import (
 	"io"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"helm.sh/helm/v3/pkg/chart"
 
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/legacy"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
 var (
@@ -32,94 +27,119 @@ func TestServiceOutput(t *testing.T) {
 			name:       "Group, users, and component",
 			goldenFile: "case01.golden",
 			entities: []bscatalog.Entity{
-				legacy.CreateGroupEntity( //nolint:staticcheck
-					"myorg/team-slug",
-					"team-name",
-					"A simple team with simple people",
-					"area-everything",
-					[]string{"jane-doe", "second-member"},
-					16638849),
-				legacy.CreateUserEntity( //nolint:staticcheck
-					"jane-doe",
-					"jane@acme.org",
-					"Jane Doe",
-					"Experienced DevOps engineer, jack of all trades",
-					"https://avatars.githubusercontent.com/u/12345678?v=4"),
-				legacy.CreateComponentEntity( //nolint:staticcheck
-					repositories.Repo{
-						Name:          "my-service",
-						ComponentType: "service",
-						System:        "everything-system",
-						Gen: repositories.RepoGen{
-							Flavors:                 []repositories.RepoFlavor{"app"},
-							Language:                "go",
-							InstallUpdateChart:      false,
-							EnableFloatingMajorTags: false,
+				{
+					APIVersion: bscatalog.APIVersion,
+					Kind:       bscatalog.EntityKindGroup,
+					Metadata: bscatalog.EntityMetadata{
+						Name:        "myorg/team-slug",
+						Description: "A simple team with simple people",
+						Annotations: map[string]string{
+							"grafana/dashboard-selector": "tags @> 'owner:myorg/team-slug'",
+							"opsgenie.com/team":          "myorg/team-slug",
 						},
+					},
+					Spec: bscatalog.GroupSpec{
+						Type: "team",
+						Profile: bscatalog.GroupProfile{
+							DisplayName: "team-name",
+							Picture:     "https://avatars.githubusercontent.com/t/16638849?s=116&v=4",
+						},
+						Parent:  "area-everything",
+						Members: []string{"jane-doe", "second-member"},
+					},
+				},
+				{
+					APIVersion: bscatalog.APIVersion,
+					Kind:       bscatalog.EntityKindUser,
+					Metadata: bscatalog.EntityMetadata{
+						Name:        "jane-doe",
+						Description: "Experienced DevOps engineer, jack of all trades",
+					},
+					Spec: bscatalog.UserSpec{
+						Profile: bscatalog.UserProfile{
+							Email:       "jane@acme.org",
+							DisplayName: "Jane Doe",
+							Picture:     "https://avatars.githubusercontent.com/u/12345678?v=4",
+						},
+					},
+				},
+				{
+					APIVersion: bscatalog.APIVersion,
+					Kind:       bscatalog.EntityKindComponent,
+					Metadata: bscatalog.EntityMetadata{
+						Name:        "my-service",
+						Description: "Awesome microservice",
+						Annotations: map[string]string{
+							"backstage.io/kubernetes-id":           "my-service",
+							"backstage.io/source-location":         "url:https://github.com/giantswarm/my-service",
+							"backstage.io/techdocs-ref":            "url:https://github.com/giantswarm/my-service/tree/main",
+							"circleci.com/project-slug":            "github/giantswarm/my-service",
+							"giantswarm.io/deployment-names":       "my-service,my-service-app",
+							"giantswarm.io/helmchart-app-versions": ",2.3.4",
+							"giantswarm.io/helmchart-versions":     "1.2.3,0.4.1",
+							"giantswarm.io/helmcharts":             "first-chart,second-chart",
+							"giantswarm.io/latest-release-tag":     "v1.2.3",
+							"github.com/project-slug":              "giantswarm/my-service",
+							"github.com/team-slug":                 "myorg/team-slug",
+							"opsgenie.com/component-selector":      "detailsPair(app:my-service) OR detailsPair(app:my-service-app)",
+							"opsgenie.com/team":                    "myorg/team-slug",
+							"quay.io/repository-slug":              "giantswarm/my-service",
+						},
+						Labels: map[string]string{
+							"giantswarm.io/flavor-app": "true",
+							"giantswarm.io/language":   "go",
+						},
+						Tags: []string{"flavor:app", "helmchart", "language:go"},
+						Links: []bscatalog.EntityLink{
+							{
+								URL:   "https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=my-service&var-app=my-service-app&from=now-24h&to=now",
+								Title: "General service metrics dashboard",
+								Icon:  "dashboard",
+								Type:  "grafana-dashboard",
+							},
+						},
+					},
+					Spec: bscatalog.ComponentSpec{
+						Type:      "service",
 						Lifecycle: "production",
-						Replacements: repositories.RepoReplacements{
-							ArchitectOrb: true,
-							Renovate:     true,
-							PreCommit:    true,
-						},
-						AppTestSuite: t,
+						Owner:     "myorg/team-slug",
+						System:    "everything-system",
+						DependsOn: []string{"component:first-dependency", "component:second-dependency"},
 					},
-					"myorg/team-slug",
-					"Awesome microservice",
-					"everything-system",
-					false,
-					true,
-					true,
-					"main",
-					time.Time{},
-					"v1.2.3",
-					[]*helmchart.Chart{
-						{
-							Metadata: chart.Metadata{
-								Name:    "first-chart",
-								Version: "1.2.3",
-							},
-						},
-						{
-							Metadata: chart.Metadata{
-								Name:       "second-chart",
-								Version:    "0.4.1",
-								AppVersion: "2.3.4",
-							},
-						},
-					},
-					[]string{"first-dependency", "second-dependency"}),
+				},
 			},
 		},
 		{
 			name:       "Component with individual deployment names",
 			goldenFile: "case02.golden",
 			entities: []bscatalog.Entity{
-				legacy.CreateComponentEntity( //nolint:staticcheck
-					repositories.Repo{
-						Name:            "project-with-two-apps",
-						ComponentType:   "service",
-						DeploymentNames: []string{"first-name", "second-name-app"},
-						System:          "everything-system",
-						Gen: repositories.RepoGen{
-							Flavors:  []repositories.RepoFlavor{"app", "generic"},
-							Language: "go",
+				{
+					APIVersion: bscatalog.APIVersion,
+					Kind:       bscatalog.EntityKindComponent,
+					Metadata: bscatalog.EntityMetadata{
+						Name:        "project-with-two-apps",
+						Description: "Project that includes two apps",
+						Annotations: map[string]string{
+							"backstage.io/kubernetes-id":      "project-with-two-apps",
+							"backstage.io/source-location":    "url:https://github.com/giantswarm/project-with-two-apps",
+							"backstage.io/techdocs-ref":       "url:https://github.com/giantswarm/project-with-two-apps/tree/master",
+							"circleci.com/project-slug":       "github/giantswarm/project-with-two-apps",
+							"giantswarm.io/deployment-names":  "first-name,second-name-app",
+							"github.com/project-slug":         "giantswarm/project-with-two-apps",
+							"github.com/team-slug":            "myorg/team-slug",
+							"opsgenie.com/component-selector": "detailsPair(app:first-name) OR detailsPair(app:second-name-app)",
+							"opsgenie.com/team":               "myorg/team-slug",
+							"quay.io/repository-slug":         "giantswarm/project-with-two-apps",
 						},
-						Lifecycle:    "production",
-						Replacements: repositories.RepoReplacements{},
-						AppTestSuite: t,
 					},
-					"myorg/team-slug",
-					"Project that includes two apps",
-					"everything-system",
-					false,
-					true,
-					true,
-					"master",
-					time.Time{},
-					"",
-					nil,
-					[]string{"first-dependency", "second-dependency"}),
+					Spec: bscatalog.ComponentSpec{
+						Type:      "service",
+						Lifecycle: "production",
+						Owner:     "myorg/team-slug",
+						System:    "everything-system",
+						DependsOn: []string{"component:first-dependency", "component:second-dependency"},
+					},
+				},
 			},
 		},
 	}

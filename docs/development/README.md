@@ -13,7 +13,7 @@ Our packages can be grouped into two main categories:
 
 ### Output generation
 
-- `catalog` - High level objects, which are turned into bscatalog entities. These are the glue between input and output.
+- `catalog` - High level objects, which are turned into `bscatalog` entities, but also support well-known annotations and labels. These are the glue between input and output.
 - `bscatalog` - Lower level Backstage catalog entities, which can be marshaled to YAML. There is a `v1alpha1` sub package for the current version of the entities API.
-- `export` - Handles the creation of export YAML files.
+- `export` - Handles the creation of export YAML files from `bscatalog.Entity` objects.
 - `legacy` - Functions that need a new home.

@@ -1,4 +1,4 @@
-// Package export takes data from various sources and writes it to a YAML file.
+// Package export takes bscatalog entities and writes them to YAML files.
 package export
 
 import (

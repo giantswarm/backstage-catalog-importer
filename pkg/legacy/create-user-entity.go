@@ -10,7 +10,7 @@ import (
 // Deprecated: Create a catalog.User struct and a ToEntity() method to use instead.
 func CreateUserEntity(name, email, displayName, description, avatarURL string) bscatalog.Entity {
 	e := bscatalog.Entity{
-		APIVersion: bscatalog.API_VERSION,
+		APIVersion: bscatalog.APIVersion,
 		Kind:       bscatalog.EntityKindUser,
 		Metadata: bscatalog.EntityMetadata{
 			Name: name,

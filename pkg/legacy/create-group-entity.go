@@ -14,7 +14,7 @@ import (
 func CreateGroupEntity(name, displayName, description, parent string, members []string, id int64) bscatalog.Entity {
 	sort.Strings(members)
 	e := bscatalog.Entity{
-		APIVersion: bscatalog.API_VERSION,
+		APIVersion: bscatalog.APIVersion,
 		Kind:       bscatalog.EntityKindGroup,
 		Metadata: bscatalog.EntityMetadata{
 			Name: name,

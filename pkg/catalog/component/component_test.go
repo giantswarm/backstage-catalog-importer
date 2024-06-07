@@ -23,7 +23,7 @@ func TestComponent_ToEntity(t *testing.T) {
 			componentName: "minimal",
 			options:       []Option{},
 			want: &bscatalog.Entity{
-				APIVersion: bscatalog.API_VERSION,
+				APIVersion: bscatalog.APIVersion,
 				Kind:       bscatalog.EntityKindComponent,
 				Metadata: bscatalog.EntityMetadata{
 					Name:        "minimal",
@@ -31,7 +31,7 @@ func TestComponent_ToEntity(t *testing.T) {
 					Annotations: map[string]string{},
 					Links:       []bscatalog.EntityLink{},
 				},
-				Spec: ComponentSpec{
+				Spec: bscatalog.ComponentSpec{
 					Type:      "unspecified",
 					Lifecycle: "production",
 					Owner:     "unspecified",
@@ -67,7 +67,7 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithLabels(map[string]string{"key": "value"}),
 			},
 			want: &bscatalog.Entity{
-				APIVersion: bscatalog.API_VERSION,
+				APIVersion: bscatalog.APIVersion,
 				Kind:       bscatalog.EntityKindComponent,
 				Metadata: bscatalog.EntityMetadata{
 					Name:        "full-fledged",
@@ -91,7 +91,7 @@ func TestComponent_ToEntity(t *testing.T) {
 					Tags:  []string{"tag1", "tag2"},
 					Title: "Full Fledged",
 				},
-				Spec: ComponentSpec{
+				Spec: bscatalog.ComponentSpec{
 					Type:      "component-type",
 					Lifecycle: "deprecated",
 					Owner:     "my-owner",
