@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
 )
 
 const separator = "---\n"
@@ -33,7 +33,7 @@ func New(config Config) *Service {
 }
 
 // Adds an entity to the export buffer
-func (s *Service) AddEntity(entity *catalog.Entity) error {
+func (s *Service) AddEntity(entity *bscatalog.Entity) error {
 	yamlBytes, err := yaml.Marshal(&entity)
 	if err != nil {
 		return err

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/appcatalog"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
 )
 
@@ -115,7 +115,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 }
 
 // Populates a catalog.Component from an appcatalog.Entry
-func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, error) {
+func componentFromCatalogEntry(entry appcatalog.Entry) (*component.Component, error) {
 	// owner team
 	team := "group:giantswarm/unspecified"
 	if teamName, ok := entry.Annotations[teamAnnotation]; ok {
@@ -138,17 +138,17 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 		return nil, fmt.Errorf("could not detect GitHub slug for app %s in app metadata", entry.Name)
 	}
 
-	component, err := catalog.NewComponent(entry.Name,
-		catalog.WithNamespace("giantswarm"),
-		catalog.WithTitle(entry.Name),
-		catalog.WithDescription(entry.Description),
-		catalog.WithGithubProjectSlug(githubSlug),
-		catalog.WithLatestReleaseTag(entry.Version),
-		catalog.WithLatestReleaseTime(releaseTime),
-		catalog.WithOwner(team),
-		catalog.WithTags(entry.Keywords...),
-		catalog.WithType("service"),
-		catalog.WithHasReadme(true), // we assume all apps have a README
+	component, err := component.New(entry.Name,
+		component.WithNamespace("giantswarm"),
+		component.WithTitle(entry.Name),
+		component.WithDescription(entry.Description),
+		component.WithGithubProjectSlug(githubSlug),
+		component.WithLatestReleaseTag(entry.Version),
+		component.WithLatestReleaseTime(releaseTime),
+		component.WithOwner(team),
+		component.WithTags(entry.Keywords...),
+		component.WithType("service"),
+		component.WithHasReadme(true), // we assume all apps have a README
 	)
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package catalog
+package v1alpha1
 
 // An Entity in the software catalog.
 type Entity struct {

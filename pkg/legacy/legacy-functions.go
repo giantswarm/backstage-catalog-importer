@@ -1,4 +1,5 @@
-package catalog
+// Package legacy contains deprecated functions that are being replaced soon.
+package legacy
 
 import (
 	"fmt"
@@ -7,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
@@ -14,7 +17,8 @@ import (
 // CreateComponentEntity is the deprecated way of generating a component entity.
 // It sets some vaules in a Giant Swarm specific way. We are replacing it, with
 // the goal to make this tool useful for more than just Giant Swarm.
-// Deprecated: Use the Component struct and its ToEntity() method instead.
+//
+// Deprecated: Use the catalog.Component struct and its ToEntity() method instead.
 func CreateComponentEntity(r repositories.Repo,
 	team string,
 	description string,
@@ -26,7 +30,7 @@ func CreateComponentEntity(r repositories.Repo,
 	latestReleaseTime time.Time,
 	latestReleaseTag string,
 	charts []*helmchart.Chart,
-	dependsOn []string) Entity {
+	dependsOn []string) bscatalog.Entity {
 
 	// Possible deployment names for resource discovery via the Giant Swarm plugin,
 	// Grafana dashboards, and OpsGenie alerts.
@@ -49,23 +53,23 @@ func CreateComponentEntity(r repositories.Repo,
 	}
 	opsGenieQuery := strings.Join(opsGenieQueryParts, " OR ")
 
-	c, err := NewComponent(r.Name,
-		WithDescription(description),
-		WithGithubProjectSlug(fmt.Sprintf("giantswarm/%s", r.Name)),
-		WithGithubTeamSlug(team),
-		WithOpsGenieTeam(strings.TrimPrefix(team, "team-")),
-		WithQuayRepositorySlug(fmt.Sprintf("giantswarm/%s", r.Name)),
-		WithLatestReleaseTag(latestReleaseTag),
-		WithLatestReleaseTime(latestReleaseTime),
-		WithCircleCiSlug(fmt.Sprintf("github/giantswarm/%s", r.Name)),
-		WithDefaultBranch(defaultBranch),
-		WithHasReadme(hasReadme),
-		WithDeploymentNames(deploymentNames...),
-		WithOpsGenieComponentSelector(opsGenieQuery),
-		WithSystem(system),
-		WithType(r.ComponentType),
-		WithOwner(team),
-		WithDependsOn(dependsOn...),
+	c, err := component.New(r.Name,
+		component.WithDescription(description),
+		component.WithGithubProjectSlug(fmt.Sprintf("giantswarm/%s", r.Name)),
+		component.WithGithubTeamSlug(team),
+		component.WithOpsGenieTeam(strings.TrimPrefix(team, "team-")),
+		component.WithQuayRepositorySlug(fmt.Sprintf("giantswarm/%s", r.Name)),
+		component.WithLatestReleaseTag(latestReleaseTag),
+		component.WithLatestReleaseTime(latestReleaseTime),
+		component.WithCircleCiSlug(fmt.Sprintf("github/giantswarm/%s", r.Name)),
+		component.WithDefaultBranch(defaultBranch),
+		component.WithHasReadme(hasReadme),
+		component.WithDeploymentNames(deploymentNames...),
+		component.WithOpsGenieComponentSelector(opsGenieQuery),
+		component.WithSystem(system),
+		component.WithType(r.ComponentType),
+		component.WithOwner(team),
+		component.WithDependsOn(dependsOn...),
 	)
 	if err != nil {
 		log.Fatalf("Could not create component: %s", err)
@@ -118,7 +122,7 @@ func CreateComponentEntity(r repositories.Repo,
 		for _, d := range deploymentNames {
 			urlParts = append(urlParts, fmt.Sprintf("var-app=%s", d))
 		}
-		c.AddLink(EntityLink{
+		c.AddLink(bscatalog.EntityLink{
 			URL:   fmt.Sprintf("https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&%s&from=now-24h&to=now", strings.Join(urlParts, "&")),
 			Title: "General service metrics dashboard",
 			Icon:  "dashboard",
@@ -131,12 +135,15 @@ func CreateComponentEntity(r repositories.Repo,
 	return *e
 }
 
-func CreateGroupEntity(name, displayName, description, parent string, members []string, id int64) Entity {
+// CreateGroupEntity is the deprecated way of generating a group entity.
+//
+// Deprecated: Use the catalog.Group struct and its ToEntity() method instead.
+func CreateGroupEntity(name, displayName, description, parent string, members []string, id int64) bscatalog.Entity {
 	sort.Strings(members)
-	e := Entity{
-		APIVersion: "backstage.io/v1alpha1",
-		Kind:       EntityKindGroup,
-		Metadata: EntityMetadata{
+	e := bscatalog.Entity{
+		APIVersion: bscatalog.API_VERSION,
+		Kind:       bscatalog.EntityKindGroup,
+		Metadata: bscatalog.EntityMetadata{
 			Name: name,
 			Annotations: map[string]string{
 				"grafana/dashboard-selector": fmt.Sprintf("tags @> 'owner:%s'", name),
@@ -146,10 +153,10 @@ func CreateGroupEntity(name, displayName, description, parent string, members []
 			},
 		},
 	}
-	spec := GroupSpec{
+	spec := bscatalog.GroupSpec{
 		Type:    "team",
 		Members: members,
-		Profile: GroupProfile{
+		Profile: bscatalog.GroupProfile{
 			Picture: fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", id),
 		},
 	}
@@ -169,18 +176,21 @@ func CreateGroupEntity(name, displayName, description, parent string, members []
 	return e
 }
 
-func CreateUserEntity(name, email, displayName, description, avatarURL string) Entity {
-	e := Entity{
-		APIVersion: "backstage.io/v1alpha1",
-		Kind:       EntityKindUser,
-		Metadata: EntityMetadata{
+// CreateUserEntity is the deprecated way of generating a user entity.
+//
+// Deprecated: Create a catalog.User struct and a ToEntity() method to use instead.
+func CreateUserEntity(name, email, displayName, description, avatarURL string) bscatalog.Entity {
+	e := bscatalog.Entity{
+		APIVersion: bscatalog.API_VERSION,
+		Kind:       bscatalog.EntityKindUser,
+		Metadata: bscatalog.EntityMetadata{
 			Name: name,
 		},
 	}
 
-	spec := UserSpec{
+	spec := bscatalog.UserSpec{
 		MemberOf: []string{},
-		Profile: UserProfile{
+		Profile: bscatalog.UserProfile{
 			Email: email,
 		},
 	}

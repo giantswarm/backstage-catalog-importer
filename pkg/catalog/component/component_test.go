@@ -1,10 +1,12 @@
-package catalog
+package component
 
 import (
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
 )
 
 func TestComponent_ToEntity(t *testing.T) {
@@ -13,21 +15,21 @@ func TestComponent_ToEntity(t *testing.T) {
 		name          string
 		componentName string
 		options       []Option
-		want          *Entity
+		want          *bscatalog.Entity
 		wantErr       bool
 	}{
 		{
 			name:          "Minimal",
 			componentName: "minimal",
 			options:       []Option{},
-			want: &Entity{
-				APIVersion: "backstage.io/v1alpha1",
-				Kind:       EntityKindComponent,
-				Metadata: EntityMetadata{
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.API_VERSION,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
 					Name:        "minimal",
 					Labels:      map[string]string{},
 					Annotations: map[string]string{},
-					Links:       []EntityLink{},
+					Links:       []bscatalog.EntityLink{},
 				},
 				Spec: ComponentSpec{
 					Type:      "unspecified",
@@ -64,10 +66,10 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithOpsGenieComponentSelector("ops-genie-selector"),
 				WithLabels(map[string]string{"key": "value"}),
 			},
-			want: &Entity{
-				APIVersion: "backstage.io/v1alpha1",
-				Kind:       EntityKindComponent,
-				Metadata: EntityMetadata{
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.API_VERSION,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
 					Name:        "full-fledged",
 					Namespace:   "my-namespace",
 					Description: "A full-fledged component",
@@ -85,7 +87,7 @@ func TestComponent_ToEntity(t *testing.T) {
 						"opsgenie.com/team":                 "my-ops-team",
 						"quay.io/repository-slug":           "namespace/quay-project",
 					},
-					Links: []EntityLink{},
+					Links: []bscatalog.EntityLink{},
 					Tags:  []string{"tag1", "tag2"},
 					Title: "Full Fledged",
 				},
@@ -102,7 +104,7 @@ func TestComponent_ToEntity(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			component, err := NewComponent(tt.componentName, tt.options...)
+			component, err := New(tt.componentName, tt.options...)
 			if err != nil && !tt.wantErr {
 				t.Errorf("NewComponent() error = %v, wantErr %v", err, tt.wantErr)
 				return

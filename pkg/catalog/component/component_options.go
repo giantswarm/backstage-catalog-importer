@@ -1,4 +1,4 @@
-package catalog
+package component
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 // Option is an option to configure a Component.
 type Option func(*Component)
 
-func NewComponent(name string, options ...Option) (*Component, error) {
+func New(name string, options ...Option) (*Component, error) {
 	if name == "" {
 		return nil, fmt.Errorf("name must not be empty")
 	}

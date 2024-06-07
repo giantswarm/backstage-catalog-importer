@@ -1,14 +1,16 @@
-package catalog
+package component
 
 import (
 	"fmt"
 	"sort"
 	"strings"
 	"time"
+
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
 )
 
 // Component holds our internal representation of something that we want
-// to export as a Component entity.
+// to export as a Backstage entity of type "component".
 type Component struct {
 	// Component name (required)
 	Name string
@@ -85,7 +87,7 @@ type Component struct {
 	// Extra annotations that are not covered by the fields above.
 	Annotations map[string]string
 
-	Links []EntityLink
+	Links []bscatalog.EntityLink
 
 	Spec ComponentSpec
 }
@@ -119,14 +121,18 @@ type ComponentSpec struct {
 	DependsOn []string `yaml:"dependsOn,omitempty"`
 }
 
+// Add a tag to the Component
 func (c *Component) AddTag(tag string) {
 	c.Tags = append(c.Tags, tag)
 }
 
-func (c *Component) AddLink(link EntityLink) {
+// Add an entity link to the Component
+func (c *Component) AddLink(link bscatalog.EntityLink) {
 	c.Links = append(c.Links, link)
 }
 
+// Set an annotation on the Component. This does not touch the existing annotations,
+// but overwrites the value if the key already exists.
 func (c *Component) SetAnnotation(key, value string) {
 	if c.Annotations == nil {
 		c.Annotations = make(map[string]string)
@@ -134,6 +140,8 @@ func (c *Component) SetAnnotation(key, value string) {
 	c.Annotations[key] = value
 }
 
+// Set a label on the Component. This does not touch the existing labels,
+// but overwrites the value if the key already exists.
 func (c *Component) SetLabel(key, value string) {
 	if c.Labels == nil {
 		c.Labels = make(map[string]string)
@@ -141,18 +149,18 @@ func (c *Component) SetLabel(key, value string) {
 	c.Labels[key] = value
 }
 
-// Returns an entity representation of the component.
-func (c *Component) ToEntity() *Entity {
+// Returns an entity representation of the Component.
+func (c *Component) ToEntity() *bscatalog.Entity {
 	sort.Strings(c.Tags)
 
-	e := &Entity{
-		APIVersion: "backstage.io/v1alpha1",
-		Kind:       EntityKindComponent,
-		Metadata: EntityMetadata{
+	e := &bscatalog.Entity{
+		APIVersion: bscatalog.API_VERSION,
+		Kind:       bscatalog.EntityKindComponent,
+		Metadata: bscatalog.EntityMetadata{
 			Annotations: make(map[string]string),
 			Description: c.Description,
 			Labels:      make(map[string]string),
-			Links:       make([]EntityLink, 0),
+			Links:       make([]bscatalog.EntityLink, 0),
 			Name:        c.Name,
 			Title:       c.Title,
 		},

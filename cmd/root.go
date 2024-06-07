@@ -12,9 +12,9 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/legacy"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/teams"
 )
@@ -167,7 +167,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				}
 			}
 
-			ent := catalog.CreateComponentEntity(
+			ent := legacy.CreateComponentEntity(
 				repo,
 				list.OwnerTeamName,
 				repoService.MustGetDescription(repo.Name),
@@ -219,7 +219,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			parentTeamName = team.GetParent().GetSlug()
 		}
 
-		entity := catalog.CreateGroupEntity(
+		entity := legacy.CreateGroupEntity(
 			team.GetSlug(),
 			team.GetName(),
 			team.GetDescription(),
@@ -253,7 +253,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.Fatalf("Error: %v", err)
 		}
 
-		entity := catalog.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL())
+		entity := legacy.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL())
 
 		err = userExporter.AddEntity(&entity)
 		if err != nil {

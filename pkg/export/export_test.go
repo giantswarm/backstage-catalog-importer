@@ -10,8 +10,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"helm.sh/helm/v3/pkg/chart"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/legacy"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
@@ -25,26 +26,26 @@ func TestServiceOutput(t *testing.T) {
 	tests := []struct {
 		name       string
 		goldenFile string
-		entities   []catalog.Entity
+		entities   []bscatalog.Entity
 	}{
 		{
 			name:       "Group, users, and component",
 			goldenFile: "case01.golden",
-			entities: []catalog.Entity{
-				catalog.CreateGroupEntity(
+			entities: []bscatalog.Entity{
+				legacy.CreateGroupEntity(
 					"myorg/team-slug",
 					"team-name",
 					"A simple team with simple people",
 					"area-everything",
 					[]string{"jane-doe", "second-member"},
 					16638849),
-				catalog.CreateUserEntity(
+				legacy.CreateUserEntity(
 					"jane-doe",
 					"jane@acme.org",
 					"Jane Doe",
 					"Experienced DevOps engineer, jack of all trades",
 					"https://avatars.githubusercontent.com/u/12345678?v=4"),
-				catalog.CreateComponentEntity(
+				legacy.CreateComponentEntity(
 					repositories.Repo{
 						Name:          "my-service",
 						ComponentType: "service",
@@ -93,8 +94,8 @@ func TestServiceOutput(t *testing.T) {
 		{
 			name:       "Component with individual deployment names",
 			goldenFile: "case02.golden",
-			entities: []catalog.Entity{
-				catalog.CreateComponentEntity(
+			entities: []bscatalog.Entity{
+				legacy.CreateComponentEntity(
 					repositories.Repo{
 						Name:            "project-with-two-apps",
 						ComponentType:   "service",
