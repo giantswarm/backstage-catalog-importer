@@ -1,10 +1,8 @@
-// Package legacy contains deprecated functions that are being replaced soon.
 package legacy
 
 import (
 	"fmt"
 	"log"
-	"sort"
 	"strings"
 	"time"
 
@@ -133,79 +131,4 @@ func CreateComponentEntity(r repositories.Repo,
 	e := c.ToEntity()
 
 	return *e
-}
-
-// CreateGroupEntity is the deprecated way of generating a group entity.
-//
-// Deprecated: Use the catalog.Group struct and its ToEntity() method instead.
-func CreateGroupEntity(name, displayName, description, parent string, members []string, id int64) bscatalog.Entity {
-	sort.Strings(members)
-	e := bscatalog.Entity{
-		APIVersion: bscatalog.API_VERSION,
-		Kind:       bscatalog.EntityKindGroup,
-		Metadata: bscatalog.EntityMetadata{
-			Name: name,
-			Annotations: map[string]string{
-				"grafana/dashboard-selector": fmt.Sprintf("tags @> 'owner:%s'", name),
-
-				// Like group name, but without "team-" prefix
-				"opsgenie.com/team": strings.TrimPrefix(name, "team-"),
-			},
-		},
-	}
-	spec := bscatalog.GroupSpec{
-		Type:    "team",
-		Members: members,
-		Profile: bscatalog.GroupProfile{
-			Picture: fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", id),
-		},
-	}
-
-	if description != "" {
-		e.Metadata.Description = description
-	}
-	if displayName != "" {
-		spec.Profile.DisplayName = displayName
-	}
-	if parent != "" {
-		spec.Parent = parent
-	}
-
-	e.Spec = spec
-
-	return e
-}
-
-// CreateUserEntity is the deprecated way of generating a user entity.
-//
-// Deprecated: Create a catalog.User struct and a ToEntity() method to use instead.
-func CreateUserEntity(name, email, displayName, description, avatarURL string) bscatalog.Entity {
-	e := bscatalog.Entity{
-		APIVersion: bscatalog.API_VERSION,
-		Kind:       bscatalog.EntityKindUser,
-		Metadata: bscatalog.EntityMetadata{
-			Name: name,
-		},
-	}
-
-	spec := bscatalog.UserSpec{
-		MemberOf: []string{},
-		Profile: bscatalog.UserProfile{
-			Email: email,
-		},
-	}
-
-	if description != "" {
-		e.Metadata.Description = description
-	}
-	if displayName != "" {
-		spec.Profile.DisplayName = displayName
-	}
-	if avatarURL != "" {
-		spec.Profile.Picture = avatarURL
-	}
-
-	e.Spec = spec
-
-	return e
 }
