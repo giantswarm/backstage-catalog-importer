@@ -1,32 +1,11 @@
 package component
 
 import (
-	"fmt"
 	"time"
 )
 
 // Option is an option to configure a Component.
 type Option func(*Component)
-
-func New(name string, options ...Option) (*Component, error) {
-	if name == "" {
-		return nil, fmt.Errorf("name must not be empty")
-	}
-
-	c := &Component{
-		Name:      name,
-		Namespace: "default",
-		Type:      "unspecified",
-		Owner:     "unspecified",
-		Lifecycle: "production",
-	}
-
-	for _, option := range options {
-		option(c)
-	}
-
-	return c, nil
-}
 
 func WithNamespace(namespace string) Option {
 	return func(c *Component) {
