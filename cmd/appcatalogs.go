@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/input/appcatalog"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmrepoindex"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
@@ -68,7 +68,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 	for _, url := range urls {
 		fmt.Printf("Reading catalog %s\n", url)
 
-		index, err := appcatalog.LoadFromURL(url)
+		index, err := helmrepoindex.LoadFromURL(url)
 		if err != nil {
 			log.Fatalf("Error loading app catalog from %s: %s", url, err)
 		}
@@ -114,8 +114,8 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 	log.Printf("Wrote file %s", componentExporter.TargetPath)
 }
 
-// Populates a catalog.Component from an appcatalog.Entry
-func componentFromCatalogEntry(entry appcatalog.Entry) (*component.Component, error) {
+// Populates a catalog.Component from an helmrepoindex.Entry
+func componentFromCatalogEntry(entry helmrepoindex.Entry) (*component.Component, error) {
 	// owner team
 	team := "group:giantswarm/unspecified"
 	if teamName, ok := entry.Annotations[teamAnnotation]; ok {
@@ -165,7 +165,7 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*component.Component, er
 // TODO:
 // - try the app name appended to https://github.com/giantswarm/
 // - try variations with/without -app suffix
-func detectGitHubSlug(entry *appcatalog.Entry) string {
+func detectGitHubSlug(entry *helmrepoindex.Entry) string {
 	prefix := "https://github.com/giantswarm/"
 
 	if strings.HasPrefix(entry.Home, prefix) {

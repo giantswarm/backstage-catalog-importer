@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/input/appcatalog"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmrepoindex"
 )
 
 func Test_githubSlugFromURL(t *testing.T) {
@@ -35,12 +35,12 @@ func Test_githubSlugFromURL(t *testing.T) {
 func Test_detectGitHubSlug(t *testing.T) {
 	tests := []struct {
 		name  string
-		entry *appcatalog.Entry
+		entry *helmrepoindex.Entry
 		want  string
 	}{
 		{
 			name: "nothing-found",
-			entry: &appcatalog.Entry{
+			entry: &helmrepoindex.Entry{
 				Home: "https://www.giantswarm.io/",
 				Sources: []string{
 					"https://codeberg.org/foo/bar",
@@ -53,7 +53,7 @@ func Test_detectGitHubSlug(t *testing.T) {
 		},
 		{
 			name: "url-found-in-home",
-			entry: &appcatalog.Entry{
+			entry: &helmrepoindex.Entry{
 				Home: "https://github.com/giantswarm/project-slug",
 				Sources: []string{
 					"https://codeberg.org/foo/bar",

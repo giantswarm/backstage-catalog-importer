@@ -7,7 +7,7 @@ Our packages can be grouped into two main categories:
 ### Input source reading
 
 - `input/repositories` - Provides means to read Giant Swarm's GitHub [repositories](https://github.com/giantswarm/github/tree/master/repositories) configuration, their GitHub API data, and some of their content from the GitHub API. This is highly Giant Swarm specific and must be untangled.
-- `input/appcatalog` - Provides means to parse Giant Swarm app platform catalogs and read apps from them.
+- `input/helmrepoindex` - Provides means to parse Giant Swarm app platform catalogs (which are Helm repository indizes) and read apps from them.
 - `input/teams` - Provides means to read GitHub teams and their members from the GitHub API.
 - `input/helmchart` - Simple helper to parse Helm chart YAML files published by Giant Swarm.
 
