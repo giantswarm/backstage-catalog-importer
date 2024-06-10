@@ -15,8 +15,8 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/legacy"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/legacy"
 )
 
 var rootCmd = &cobra.Command{
