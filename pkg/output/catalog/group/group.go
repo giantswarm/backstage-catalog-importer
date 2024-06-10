@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 // Option is an option to configure a Group.
@@ -51,13 +51,13 @@ func NewGroup(name string, options ...Option) (*Group, error) {
 }
 
 // Returns an entity representation of the component.
-func (c *Group) ToEntity() *catalog.Entity {
+func (c *Group) ToEntity() *bscatalog.Entity {
 	sort.Strings(c.MemberNames)
 	sort.Strings(c.ChildrenNames)
 
-	spec := catalog.GroupSpec{
+	spec := bscatalog.GroupSpec{
 		Type: c.Type,
-		Profile: catalog.GroupProfile{
+		Profile: bscatalog.GroupProfile{
 			DisplayName: c.Title,
 			Picture:     c.PictureURL,
 		},
@@ -66,10 +66,10 @@ func (c *Group) ToEntity() *catalog.Entity {
 		Members:  c.MemberNames,
 	}
 
-	e := &catalog.Entity{
+	e := &bscatalog.Entity{
 		APIVersion: "backstage.io/v1alpha1",
-		Kind:       catalog.EntityKindGroup,
-		Metadata: catalog.EntityMetadata{
+		Kind:       bscatalog.EntityKindGroup,
+		Metadata: bscatalog.EntityMetadata{
 			Name:        c.Name,
 			Description: c.Description,
 			Namespace:   c.Namespace,

@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 func TestGroup_ToEntity(t *testing.T) {
@@ -13,21 +13,21 @@ func TestGroup_ToEntity(t *testing.T) {
 		name      string
 		groupName string
 		options   []Option
-		want      *catalog.Entity
+		want      *bscatalog.Entity
 		wantErr   bool
 	}{
 		{
 			name:      "Minimal",
 			groupName: "minimal-group",
 			options:   []Option{},
-			want: &catalog.Entity{
+			want: &bscatalog.Entity{
 				APIVersion: "backstage.io/v1alpha1",
-				Kind:       catalog.EntityKindGroup,
-				Metadata: catalog.EntityMetadata{
+				Kind:       bscatalog.EntityKindGroup,
+				Metadata: bscatalog.EntityMetadata{
 					Name:      "minimal-group",
 					Namespace: "default",
 				},
-				Spec: catalog.GroupSpec{
+				Spec: bscatalog.GroupSpec{
 					Type: "team",
 				},
 			},
@@ -47,10 +47,10 @@ func TestGroup_ToEntity(t *testing.T) {
 				WithParentName("parent"),
 				WithMemberNames("member2", "member1"),
 			},
-			want: &catalog.Entity{
+			want: &bscatalog.Entity{
 				APIVersion: "backstage.io/v1alpha1",
-				Kind:       catalog.EntityKindGroup,
-				Metadata: catalog.EntityMetadata{
+				Kind:       bscatalog.EntityKindGroup,
+				Metadata: bscatalog.EntityMetadata{
 					Name:        "full-fledged-group",
 					Description: "A full-fledged group",
 					Title:       "Full Fledged",
@@ -60,9 +60,9 @@ func TestGroup_ToEntity(t *testing.T) {
 						"opsgenie.io/team-name":      "my-ops-team",
 					},
 				},
-				Spec: catalog.GroupSpec{
+				Spec: bscatalog.GroupSpec{
 					Type: "team",
-					Profile: catalog.GroupProfile{
+					Profile: bscatalog.GroupProfile{
 						DisplayName: "Full Fledged",
 						Picture:     "https://example.com/picture.jpg",
 					},
