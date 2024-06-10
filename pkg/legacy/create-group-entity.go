@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 // CreateGroupEntity is the deprecated way of generating a group entity.

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 // Returns an entity representation of the Component.

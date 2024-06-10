@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 )
 

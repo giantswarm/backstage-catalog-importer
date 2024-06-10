@@ -2,7 +2,7 @@
 package legacy
 
 import (
-	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 // CreateUserEntity is the deprecated way of generating a user entity.
