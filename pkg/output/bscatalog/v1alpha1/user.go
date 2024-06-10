@@ -1,4 +1,4 @@
-package catalog
+package v1alpha1
 
 // UserSpec contains the User standard spec fields.
 //

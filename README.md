@@ -1,23 +1,17 @@
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/giantswarm/backstage-catalog-importer/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/giantswarm/backstage-catalog-importer/tree/main)
+
 # Backstage catalog importer
 
-A utility to fill the catalog in the Giant Swarm developer portal.
+A Go CLI to generate Backstage catalog YAML for Backstage instances like the Giant Swarm developer portal. It is highly opinionated and tailored to our specific needs.
 
-## Usage
+A container image is available via
 
-Requires a Github personal access token (PTA) with permission to read repository content, teams, and user info for the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
+    gsoci.azurecr.io/giantswarm/backstage-catalog-importer:[tag]
 
-To run the export, execute
+See the [docs](https://github.com/giantswarm/backstage/tree/main/docs) folder for information on usage and development.
 
-```nohighlight
-go run main.go [--output output.yaml]
-```
+## The usual
 
-As a result, the file `output.yaml` in the current directory will provide the catalog content.
-
-## What's covered
-
-The following data will be exported/imported into the catalog:
-
-- All repositories referenced in the repositories lists in [giantswarm/github](https://github.com/giantswarm/github/tree/main/repositories) as _Component_ entities.
-- All teams of the configured Github organizaiton as _Group_ entities.
-- All members of the above teams as _User_ entities.
+- [Changelog](CHANGELOG.md)
+- [Security policy](SECURITY.md)
+- [License](LICENSE)

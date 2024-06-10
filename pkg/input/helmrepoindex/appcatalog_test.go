@@ -1,7 +1,7 @@
-// Package appcatalog provides a means to read information form a
-// Giant Swarm app catalog, which is technically a Helm repository
+// Package helmrepoindex provides a means to read information form a
+// Giant Swarm app catalog, which is technically a Helm repository index
 // with conventional metadata.
-package appcatalog
+package helmrepoindex
 
 import (
 	"os"

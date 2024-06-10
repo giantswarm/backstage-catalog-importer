@@ -1,4 +1,4 @@
-// Package export takes data from various sources and writes it to a YAML file.
+// Package export takes bscatalog entities and writes them to YAML files.
 package export
 
 import (
@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 const separator = "---\n"
@@ -33,7 +33,7 @@ func New(config Config) *Service {
 }
 
 // Adds an entity to the export buffer
-func (s *Service) AddEntity(entity *catalog.Entity) error {
+func (s *Service) AddEntity(entity *bscatalog.Entity) error {
 	yamlBytes, err := yaml.Marshal(&entity)
 	if err != nil {
 		return err
