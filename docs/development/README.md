@@ -1,4 +1,4 @@
-# Development docs
+# Development
 
 ## Package overview
 
