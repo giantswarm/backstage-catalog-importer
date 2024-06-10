@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/appcatalog"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/appcatalog"
 )
 
 func Test_githubSlugFromURL(t *testing.T) {

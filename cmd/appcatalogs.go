@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/appcatalog"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/appcatalog"
 )
 
 var appCatalogsCmd = &cobra.Command{
