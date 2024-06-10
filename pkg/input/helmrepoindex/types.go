@@ -1,4 +1,4 @@
-package appcatalog
+package helmrepoindex
 
 type Index struct {
 	APIVersion string             `yaml:"apiVersion"`

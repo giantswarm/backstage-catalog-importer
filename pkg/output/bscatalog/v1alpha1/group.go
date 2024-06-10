@@ -1,4 +1,4 @@
-package catalog
+package v1alpha1
 
 // GroupSpec contains the Group standard spec fields.
 //

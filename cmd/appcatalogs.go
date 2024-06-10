@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/appcatalog"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmrepoindex"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
 
 var appCatalogsCmd = &cobra.Command{
@@ -68,7 +68,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 	for _, url := range urls {
 		fmt.Printf("Reading catalog %s\n", url)
 
-		index, err := appcatalog.LoadFromURL(url)
+		index, err := helmrepoindex.LoadFromURL(url)
 		if err != nil {
 			log.Fatalf("Error loading app catalog from %s: %s", url, err)
 		}
@@ -114,8 +114,8 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 	log.Printf("Wrote file %s", componentExporter.TargetPath)
 }
 
-// Populates a catalog.Component from an appcatalog.Entry
-func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, error) {
+// Populates a catalog.Component from an helmrepoindex.Entry
+func componentFromCatalogEntry(entry helmrepoindex.Entry) (*component.Component, error) {
 	// owner team
 	team := "group:giantswarm/unspecified"
 	if teamName, ok := entry.Annotations[teamAnnotation]; ok {
@@ -138,17 +138,17 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 		return nil, fmt.Errorf("could not detect GitHub slug for app %s in app metadata", entry.Name)
 	}
 
-	component, err := catalog.NewComponent(entry.Name,
-		catalog.WithNamespace("giantswarm"),
-		catalog.WithTitle(entry.Name),
-		catalog.WithDescription(entry.Description),
-		catalog.WithGithubProjectSlug(githubSlug),
-		catalog.WithLatestReleaseTag(entry.Version),
-		catalog.WithLatestReleaseTime(releaseTime),
-		catalog.WithOwner(team),
-		catalog.WithTags(entry.Keywords...),
-		catalog.WithType("service"),
-		catalog.WithHasReadme(true), // we assume all apps have a README
+	component, err := component.New(entry.Name,
+		component.WithNamespace("giantswarm"),
+		component.WithTitle(entry.Name),
+		component.WithDescription(entry.Description),
+		component.WithGithubProjectSlug(githubSlug),
+		component.WithLatestReleaseTag(entry.Version),
+		component.WithLatestReleaseTime(releaseTime),
+		component.WithOwner(team),
+		component.WithTags(entry.Keywords...),
+		component.WithType("service"),
+		component.WithHasReadme(true), // we assume all apps have a README
 	)
 	if err != nil {
 		return nil, err
@@ -165,7 +165,7 @@ func componentFromCatalogEntry(entry appcatalog.Entry) (*catalog.Component, erro
 // TODO:
 // - try the app name appended to https://github.com/giantswarm/
 // - try variations with/without -app suffix
-func detectGitHubSlug(entry *appcatalog.Entry) string {
+func detectGitHubSlug(entry *helmrepoindex.Entry) string {
 	prefix := "https://github.com/giantswarm/"
 
 	if strings.HasPrefix(entry.Home, prefix) {
