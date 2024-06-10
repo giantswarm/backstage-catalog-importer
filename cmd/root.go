@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
-	"github.com/giantswarm/backstage-catalog-importer/pkg/export"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/legacy"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
 
 var rootCmd = &cobra.Command{
