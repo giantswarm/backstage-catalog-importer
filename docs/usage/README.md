@@ -19,3 +19,15 @@ The following data will be included in the generated catalog:
 - All repositories referenced in the repositories lists in [giantswarm/github](https://github.com/giantswarm/github/tree/main/repositories) as _Component_ entities.
 - All teams of the configured Github organizaiton as _Group_ entities.
 - All members of the above teams as _User_ entities.
+
+## Generate catalog files for customer catalogs
+
+This requires a Github personal access token (PTA) with permission to read teams in the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
+
+To run the export, execute
+
+```nohighlight
+backstage-catalog-importer appcatalogs [--output path-to-output-dir]
+```
+
+The result will be a `components.yaml` and a `groups.yaml` file in the output directory. Progress and warnings will be logged to the console.
