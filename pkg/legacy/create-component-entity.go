@@ -8,7 +8,7 @@ import (
 
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/bscatalog/v1alpha1"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/catalog/component"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/helmchart"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/repositories"
 )
 
