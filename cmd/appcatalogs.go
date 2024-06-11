@@ -3,13 +3,17 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/google/go-github/v62/github"
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmrepoindex"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/group"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
 
@@ -59,10 +63,25 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
+	token := os.Getenv("GITHUB_TOKEN")
+	if token == "" {
+		log.Fatal("Please set environment variable GITHUB_TOKEN to a personal GitHub access token (PAT).")
+	}
+
 	componentExporter := export.New(export.Config{TargetPath: path + "/components.yaml"})
+	groupExporter := export.New(export.Config{TargetPath: path + "/groups.yaml"})
+
+	teamsService, err := teams.New(teams.Config{
+		GithubOrganization: githubOrganization,
+		GithubAuthToken:    token,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	entriesCount := 0
 	apps := make(map[string]int)
+	teamSlugCount := make(map[string]int)
 
 	// Iterate over catalogs
 	for _, url := range urls {
@@ -96,6 +115,8 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 				continue
 			}
 
+			teamSlugCount[component.Owner]++
+
 			e := component.ToEntity()
 			err = componentExporter.AddEntity(e)
 			if err != nil {
@@ -107,11 +128,68 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 
 	log.Printf("Collected %d unique apps in %d entries", len(apps), entriesCount)
 
+	// Collect group/team data
+	slugs := make([]string, len(teamSlugCount))
+	i := 0
+	for s := range teamSlugCount {
+		s = strings.TrimPrefix(s, "group:"+githubOrganization+"/")
+		if s == "unspecified" || s == "" {
+			continue
+		}
+		slugs[i] = s
+		i++
+	}
+
 	err = componentExporter.WriteFile()
 	if err != nil {
-		log.Fatalf("Error writing components: %v", err)
+		log.Fatalf("ERROR writing components: %v", err)
 	}
 	log.Printf("Wrote file %s", componentExporter.TargetPath)
+
+	log.Printf("Collected %d unique team slugs", len(slugs))
+	log.Printf("Team slugs: %s", strings.Join(slugs, " "))
+
+	for _, slug := range slugs {
+		if slug == "" {
+			continue
+		}
+
+		team, err := teamsService.GetBySlug(slug)
+		if err != nil {
+			if e, ok := err.(*github.ErrorResponse); ok && e.Message == "Not Found" {
+				log.Printf("ERROR: Team %q not found on GitHub", slug)
+				continue
+			} else {
+				log.Fatalf("ERROR: %v", err)
+			}
+		}
+
+		group, err := groupFromTeam(team)
+		if err != nil {
+			log.Fatalf("ERROR: %v", err)
+		}
+
+		entity := group.ToEntity()
+		err = groupExporter.AddEntity(entity)
+		if err != nil {
+			log.Fatalf("ERROR: %v", err)
+		}
+	}
+
+	err = groupExporter.WriteFile()
+	if err != nil {
+		log.Fatalf("ERROR writing groups: %v", err)
+	}
+	log.Printf("Wrote file %s", groupExporter.TargetPath)
+}
+
+func groupFromTeam(team *github.Team) (*group.Group, error) {
+	return group.NewGroup(team.GetSlug(),
+		group.WithNamespace("giantswarm"),
+		group.WithDescription(team.GetDescription()),
+		group.WithTitle(team.GetName()),
+		group.WithPictureURL(fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", team.GetID())),
+	)
 }
 
 // Populates a catalog.Component from an helmrepoindex.Entry
