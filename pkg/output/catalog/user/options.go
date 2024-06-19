@@ -6,6 +6,12 @@ func WithNamespace(namespace string) Option {
 	}
 }
 
+func WithEmail(email string) Option {
+	return func(c *User) {
+		c.Email = email
+	}
+}
+
 func WithDescription(description string) Option {
 	return func(c *User) {
 		c.Description = description

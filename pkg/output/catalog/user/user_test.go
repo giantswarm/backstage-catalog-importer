@@ -37,6 +37,7 @@ func TestUser_ToEntity(t *testing.T) {
 			options: []Option{
 				WithNamespace("namespace"),
 				WithTitle("Full Fledged"),
+				WithEmail("mail@example.com"),
 				WithDescription("A full-fledged user"),
 				WithPictureURL("https://example.com/picture.jpg"),
 				WithGroups("group2", "group1"),
@@ -54,6 +55,7 @@ func TestUser_ToEntity(t *testing.T) {
 					Profile: bscatalog.UserProfile{
 						DisplayName: "Full Fledged",
 						Picture:     "https://example.com/picture.jpg",
+						Email:       "mail@example.com",
 					},
 					MemberOf: []string{"group1", "group2"},
 				},
