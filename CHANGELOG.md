@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Introduce new `pkg/catalog/Component` type as an abstraction for a component entity.
+- Introduce new `pkg/catalog/component/Component` type as an abstraction for a component entity.
 - Introduce new `pkg/catalog/group/Group` type as an abstraction for a group entity.
+- Introduce new `pkg/catalog/user/User` type as an abstraction for a user entity.
 - Add command `appcatalogs` to export Giant Swarm app catalogs.
+- Add command `users` to export Giant Swarm people.
 - Change groups export for customers to include members, ensure stable sorting.
 
 ### Changed
@@ -22,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Tool name in `--help` output is now correct.
 - The component annotation `giantswarm.io/latest-release-date` is no longer rendered if the value would be `0001-01-01T00:00:00Z`.
+
+### Removed
+
+- Moved the creation of a user catalog out of the root command (see `users` command instead).
 
 ## [0.12.0] - 2024-03-28
 
