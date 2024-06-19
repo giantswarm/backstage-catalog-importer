@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduce new `pkg/catalog/Component` type as an abstraction for a component entity.
 - Introduce new `pkg/catalog/group/Group` type as an abstraction for a group entity.
 - Add command `appcatalogs` to export Giant Swarm app catalogs.
+- Change groups export for customers to include members, ensure stable sorting.
 
 ### Changed
 
