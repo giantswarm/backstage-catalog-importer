@@ -93,7 +93,6 @@ func run(cmd *cobra.Command, args []string) error {
 			user.WithTitle(detailedUser.GetName()),
 			user.WithPictureURL(detailedUser.GetAvatarURL()),
 			user.WithDescription(detailedUser.GetBio()),
-			user.WithEmail(detailedUser.GetEmail()), // TODO: make conditional on internal flag
 		)
 		if err != nil {
 			log.Fatalf("Error: could not create user - %v", err)
