@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -147,6 +148,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 	log.Printf("Wrote file %s", componentExporter.TargetPath)
 
 	log.Printf("Collected %d unique team slugs", len(slugs))
+	slices.Sort(slugs)
 	log.Printf("Team slugs: %s", strings.Join(slugs, " "))
 
 	for _, slug := range slugs {
