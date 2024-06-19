@@ -166,7 +166,16 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		group, err := groupFromTeam(team)
+		groupMembers, err := teamsService.GetMembers(team.GetSlug())
+		if err != nil {
+			log.Fatalf("ERROR: %v", err)
+		}
+		memberNames := make([]string, len(groupMembers))
+		for i, member := range groupMembers {
+			memberNames[i] = member.GetLogin()
+		}
+
+		group, err := groupFromTeam(team, memberNames)
 		if err != nil {
 			log.Fatalf("ERROR: %v", err)
 		}
@@ -185,12 +194,13 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 	log.Printf("Wrote file %s", groupExporter.TargetPath)
 }
 
-func groupFromTeam(team *github.Team) (*group.Group, error) {
+func groupFromTeam(team *github.Team, members []string) (*group.Group, error) {
 	return group.NewGroup(team.GetSlug(),
 		group.WithNamespace("giantswarm"),
 		group.WithDescription(team.GetDescription()),
 		group.WithTitle(team.GetName()),
 		group.WithPictureURL(fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", team.GetID())),
+		group.WithMemberNames(members...),
 	)
 }
 
