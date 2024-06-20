@@ -32,9 +32,7 @@ TODO: This method is suited for Giant Swarm only. For customer catalogs, we need
 
 ## GitHub user discovery
 
-We read all users that are member of any of the teams we find through the team discovery method explained above.
-
-TODO: This method is suited for the Giant Swarm dev portal only. For customer catalogs, we need a different solution. First, we don't want to export information on users that are not relevant to the customer. Second, we may want to publish customer's users.
+We read all users that are member of the "giantswarm" GitHub org by default.
 
 ## Giant Swarm app catalog discovery
 

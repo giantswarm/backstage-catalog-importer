@@ -2,16 +2,13 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-	"sort"
 
-	"github.com/google/go-github/v62/github"
 	"github.com/spf13/cobra"
-	"golang.org/x/oauth2"
 
+	"github.com/giantswarm/backstage-catalog-importer/cmd/users"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
@@ -40,6 +37,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", ".", "Output directory path")
 
 	rootCmd.AddCommand(appCatalogsCmd)
+	rootCmd.AddCommand(users.Command)
 }
 
 func Execute() {
@@ -235,34 +233,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
-	// Export users
-	userNames := getMapKeys(userNamesMap)
-	log.Printf("Processing %d users", len(userNames))
-
-	for _, userSlug := range userNames {
-		// load user data from Github
-		user, _, err := client.Users.Get(ctx, userSlug)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-
-		entity := legacy.CreateUserEntity(userSlug, user.GetEmail(), user.GetName(), user.GetBio(), user.GetAvatarURL()) //nolint:staticcheck
-
-		err = userExporter.AddEntity(&entity)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-
-		numUsers++
-	}
-
 	err = componentExporter.WriteFile()
 	if err != nil {
 		log.Fatalf("Error writing components: %v", err)
@@ -270,10 +240,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	err = groupExporter.WriteFile()
 	if err != nil {
 		log.Fatalf("Error writing groups: %v", err)
-	}
-	err = userExporter.WriteFile()
-	if err != nil {
-		log.Fatalf("Error writing users: %v", err)
 	}
 
 	// Filter Go dependencies to those that are not in the catalog.
@@ -301,14 +267,4 @@ func runRoot(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n%d groups written to file %s with size %d bytes", numGroups, groupExporter.TargetPath, groupExporter.Len())
 	fmt.Printf("\n%d users written to file %s with size %d bytes", numUsers, userExporter.TargetPath, userExporter.Len())
 	fmt.Println("")
-}
-
-// Returns a sorted slice of keys.
-func getMapKeys(m map[string]bool) []string {
-	keys := []string{}
-	for key := range m {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	return keys
 }

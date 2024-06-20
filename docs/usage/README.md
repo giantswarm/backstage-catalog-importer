@@ -8,6 +8,7 @@ To run the export, execute
 
 ```nohighlight
 backstage-catalog-importer [--output path-to-output-dir]
+backstage-catalog-importer users --internal [--output path-to-output-dir]
 ```
 
 As a result, several YAML files will be written to the output directory. Progress and warnings will be logged to the console.
@@ -28,6 +29,7 @@ To run the export, execute
 
 ```nohighlight
 backstage-catalog-importer appcatalogs [--output path-to-output-dir]
+backstage-catalog-importer users [--output path-to-output-dir]
 ```
 
 The result will be a `components.yaml` and a `groups.yaml` file in the output directory. Progress and warnings will be logged to the console.
