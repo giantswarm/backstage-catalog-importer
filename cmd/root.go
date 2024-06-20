@@ -81,13 +81,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	userExporter := export.New(export.Config{TargetPath: path + "/users.yaml"})
 	groupExporter := export.New(export.Config{TargetPath: path + "/groups.yaml"})
 	componentExporter := export.New(export.Config{TargetPath: path + "/components.yaml"})
 
 	numComponents := 0
 	numGroups := 0
-	numUsers := 0
 
 	// Collect Go dependencies for later analysis
 	dependencies := make(map[string][]string)
@@ -189,9 +187,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// Collect user names for User entity creation.
-	userNamesMap := make(map[string]bool, 1)
-
 	// Export teams
 	teams, err := teamsService.GetAll()
 	if err != nil {
@@ -209,7 +204,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		for _, u := range members {
 			n := u.GetLogin()
 			memberNames = append(memberNames, n)
-			userNamesMap[n] = true
 		}
 
 		parentTeamName := ""
@@ -265,6 +259,5 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("\n%d components written to file %s with size %d bytes", numComponents, componentExporter.TargetPath, componentExporter.Len())
 	fmt.Printf("\n%d groups written to file %s with size %d bytes", numGroups, groupExporter.TargetPath, groupExporter.Len())
-	fmt.Printf("\n%d users written to file %s with size %d bytes", numUsers, userExporter.TargetPath, userExporter.Len())
 	fmt.Println("")
 }
