@@ -24,8 +24,7 @@ func TestUser_ToEntity(t *testing.T) {
 				APIVersion: "backstage.io/v1alpha1",
 				Kind:       bscatalog.EntityKindUser,
 				Metadata: bscatalog.EntityMetadata{
-					Name:      "minimal-user",
-					Namespace: "default",
+					Name: "minimal-user",
 				},
 				Spec: bscatalog.UserSpec{},
 			},

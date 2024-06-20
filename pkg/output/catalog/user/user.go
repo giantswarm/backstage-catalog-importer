@@ -80,5 +80,9 @@ func (c *User) ToEntity() *bscatalog.Entity {
 		Spec: spec,
 	}
 
+	if c.Namespace != "" && c.Namespace != defaultNamespace {
+		e.Metadata.Namespace = c.Namespace
+	}
+
 	return e
 }
