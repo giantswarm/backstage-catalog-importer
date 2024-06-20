@@ -24,8 +24,7 @@ func TestUser_ToEntity(t *testing.T) {
 				APIVersion: "backstage.io/v1alpha1",
 				Kind:       bscatalog.EntityKindUser,
 				Metadata: bscatalog.EntityMetadata{
-					Name:      "minimal-user",
-					Namespace: "default",
+					Name: "minimal-user",
 				},
 				Spec: bscatalog.UserSpec{},
 			},
@@ -37,6 +36,7 @@ func TestUser_ToEntity(t *testing.T) {
 			options: []Option{
 				WithNamespace("namespace"),
 				WithTitle("Full Fledged"),
+				WithDisplayName("Full Fledged"),
 				WithEmail("mail@example.com"),
 				WithDescription("A full-fledged user"),
 				WithPictureURL("https://example.com/picture.jpg"),

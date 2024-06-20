@@ -8,6 +8,10 @@ import (
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
+const (
+	defaultNamespace = "default"
+)
+
 // Option is an option to configure a User.
 type Option func(*User)
 
@@ -20,8 +24,12 @@ type User struct {
 	// Namespace, defaults to "default"
 	Namespace string
 
-	// Display title of the user
+	// Generic entity metadata title
+	// (not recomended to use, use DisplayName instead)
 	Title string
+
+	// Display name of the user
+	DisplayName string
 
 	Description string
 	Email       string
@@ -38,7 +46,7 @@ func New(name string, options ...Option) (*User, error) {
 
 	c := &User{
 		Name:      name,
-		Namespace: "default",
+		Namespace: defaultNamespace,
 	}
 
 	for _, option := range options {
@@ -54,7 +62,7 @@ func (c *User) ToEntity() *bscatalog.Entity {
 
 	spec := bscatalog.UserSpec{
 		Profile: bscatalog.UserProfile{
-			DisplayName: c.Title,
+			DisplayName: c.DisplayName,
 			Picture:     c.PictureURL,
 			Email:       c.Email,
 		},
@@ -67,10 +75,13 @@ func (c *User) ToEntity() *bscatalog.Entity {
 		Metadata: bscatalog.EntityMetadata{
 			Name:        c.Name,
 			Description: c.Description,
-			Namespace:   c.Namespace,
 			Title:       c.Title,
 		},
 		Spec: spec,
+	}
+
+	if c.Namespace != "" && c.Namespace != defaultNamespace {
+		e.Metadata.Namespace = c.Namespace
 	}
 
 	return e

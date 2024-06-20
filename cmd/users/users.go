@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"sort"
 
 	"github.com/google/go-github/v62/github"
 	"github.com/spf13/cobra"
@@ -83,6 +84,11 @@ func run(cmd *cobra.Command, args []string) error {
 		opt.Page = resp.NextPage
 	}
 
+	// Sort by user name
+	sort.Slice(allMembers, func(i, j int) bool {
+		return allMembers[i].GetLogin() < allMembers[j].GetLogin()
+	})
+
 	for _, githubUser := range allMembers {
 		detailedUser, _, err := client.Users.Get(ctx, githubUser.GetLogin())
 		if err != nil {
@@ -90,7 +96,7 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 
 		user, err := user.New(githubUser.GetLogin(),
-			user.WithTitle(detailedUser.GetName()),
+			user.WithDisplayName(detailedUser.GetName()),
 			user.WithPictureURL(detailedUser.GetAvatarURL()),
 			user.WithDescription(detailedUser.GetBio()),
 		)
