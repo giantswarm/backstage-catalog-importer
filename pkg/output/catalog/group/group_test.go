@@ -76,9 +76,9 @@ func TestGroup_ToEntity(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, err := NewGroup(tt.groupName, tt.options...)
+			c, err := New(tt.groupName, tt.options...)
 			if err != nil && !tt.wantErr {
-				t.Errorf("NewGroup() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			got := c.ToEntity()

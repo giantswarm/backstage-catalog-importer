@@ -32,7 +32,7 @@ type Group struct {
 	MemberNames              []string
 }
 
-func NewGroup(name string, options ...Option) (*Group, error) {
+func New(name string, options ...Option) (*Group, error) {
 	if name == "" {
 		return nil, fmt.Errorf("name must not be empty")
 	}

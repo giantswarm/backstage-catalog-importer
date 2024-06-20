@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	"github.com/giantswarm/backstage-catalog-importer/cmd/appcatalogs"
 	"github.com/giantswarm/backstage-catalog-importer/cmd/users"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/group"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/legacy"
 )
@@ -36,7 +39,7 @@ const (
 func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", ".", "Output directory path")
 
-	rootCmd.AddCommand(appCatalogsCmd)
+	rootCmd.AddCommand(appcatalogs.Command)
 	rootCmd.AddCommand(users.Command)
 }
 
@@ -211,17 +214,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 			parentTeamName = team.GetParent().GetSlug()
 		}
 
-		entity := legacy.CreateGroupEntity( //nolint:staticcheck
-			team.GetSlug(),
-			team.GetName(),
-			team.GetDescription(),
-			parentTeamName,
-			memberNames,
-			team.GetID())
+		group, err := group.New(team.GetSlug(),
+			group.WithTitle(team.GetName()),
+			group.WithDescription(team.GetDescription()),
+			group.WithPictureURL(fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", team.GetID())),
+			group.WithMemberNames(memberNames...),
+			group.WithParentName(parentTeamName),
+			group.WithGrafanaDashboardSelector(fmt.Sprintf("tags @> 'owner:%s'", team.GetSlug())),
+			group.WithOpsgenieTeamName(strings.TrimPrefix(team.GetSlug(), "team-")),
+		)
+		if err != nil {
+			log.Fatalf("Error: could not create group -- %v", err)
+		}
 
 		numGroups++
-
-		err = groupExporter.AddEntity(&entity)
+		entity := group.ToEntity()
+		err = groupExporter.AddEntity(entity)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
