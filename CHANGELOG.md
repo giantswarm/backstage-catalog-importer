@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Ensure stable sorting of `users` output by entity name, to ensure the same sorting as in v0.12.0 and earlier, when exported via the root command.
+- Only export a user's `.metadata.title` if the Title attribute is set. Only export `.spec.profile.displayName` if the DisplayName attribute is set.
+- Do not export the `.metadata.namespace` field for user entities if it is `"default"`.
+
+### Removed
+
 ## [0.13.0] - 2024-06-20
 
 **Breaking:** User catalog export has moved out of the root command.
