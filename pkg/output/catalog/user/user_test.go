@@ -37,6 +37,7 @@ func TestUser_ToEntity(t *testing.T) {
 			options: []Option{
 				WithNamespace("namespace"),
 				WithTitle("Full Fledged"),
+				WithDisplayName("Full Fledged"),
 				WithEmail("mail@example.com"),
 				WithDescription("A full-fledged user"),
 				WithPictureURL("https://example.com/picture.jpg"),

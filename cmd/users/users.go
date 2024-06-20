@@ -90,7 +90,7 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 
 		user, err := user.New(githubUser.GetLogin(),
-			user.WithTitle(detailedUser.GetName()),
+			user.WithDisplayName(detailedUser.GetName()),
 			user.WithPictureURL(detailedUser.GetAvatarURL()),
 			user.WithDescription(detailedUser.GetBio()),
 		)

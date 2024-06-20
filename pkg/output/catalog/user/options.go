@@ -18,6 +18,12 @@ func WithDescription(description string) Option {
 	}
 }
 
+func WithDisplayName(displayName string) Option {
+	return func(c *User) {
+		c.DisplayName = displayName
+	}
+}
+
 func WithTitle(title string) Option {
 	return func(c *User) {
 		c.Title = title
