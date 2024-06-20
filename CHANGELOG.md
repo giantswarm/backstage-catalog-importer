@@ -7,23 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2024-06-20
+
+**Breaking:** User catalog export has moved out of the root command.
+
 ### Added
 
+- Add command `appcatalogs` to export Giant Swarm app catalogs.
+- Add command `users` to export Giant Swarm people.
 - Introduce new `pkg/catalog/component/Component` type as an abstraction for a component entity.
 - Introduce new `pkg/catalog/group/Group` type as an abstraction for a group entity.
 - Introduce new `pkg/catalog/user/User` type as an abstraction for a user entity.
-- Add command `appcatalogs` to export Giant Swarm app catalogs.
-- Add command `users` to export Giant Swarm people.
-- Change groups export for customers to include members, ensure stable sorting.
 
 ### Changed
 
-- Function `pkg/catalog/CreateComponentEntity` is now deprecated. We want to use the new `Component` type and its ToEntity method instead.
+- The component annotation `giantswarm.io/latest-release-date` is no longer rendered if the value would be `0001-01-01T00:00:00Z`.
 
 ### Fixed
 
 - Tool name in `--help` output is now correct.
-- The component annotation `giantswarm.io/latest-release-date` is no longer rendered if the value would be `0001-01-01T00:00:00Z`.
 
 ### Removed
 
@@ -199,7 +201,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.11.2...v0.12.0
 [0.11.2]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.11.0...v0.11.1
