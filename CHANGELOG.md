@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Refactoring
+  - Deleted `legacy.CreateGroupEntity`
+  - Renamed `pkg.catalog.group.NewGroup` to `pkg.catalog.group.New`.
+  - Moved `appcatalogs` command into `cmd/appcatalogs` package.
+
 ## [0.13.1] - 2024-06-20
 
 ### Changed

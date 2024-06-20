@@ -1,4 +1,5 @@
-package cmd
+// Provides the 'appcatalogs' command to export Giant Swarm app catalogs as Backstage entities.
+package appcatalogs
 
 import (
 	"fmt"
@@ -18,7 +19,12 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
 
-var appCatalogsCmd = &cobra.Command{
+const (
+	// Name of the GitHub organization owning our teams and users.
+	githubOrganization = "giantswarm"
+)
+
+var Command = &cobra.Command{
 	Use:   "appcatalogs",
 	Short: "Export Giant Swarm app catalogs as Backstage entities",
 	Long: `The command takes a number of Giant Swarm app catalog URLs and exports one entity per unique app found.
@@ -50,7 +56,7 @@ var defaultCatalogURLs = []string{
 }
 
 func init() {
-	appCatalogsCmd.PersistentFlags().StringSliceP("url", "", defaultCatalogURLs, "App catalog urls")
+	Command.PersistentFlags().StringSliceP("url", "", defaultCatalogURLs, "App catalog urls")
 }
 
 func runAppCatalogs(cmd *cobra.Command, args []string) {
@@ -195,7 +201,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 }
 
 func groupFromTeam(team *github.Team, members []string) (*group.Group, error) {
-	return group.NewGroup(team.GetSlug(),
+	return group.New(team.GetSlug(),
 		group.WithNamespace("giantswarm"),
 		group.WithDescription(team.GetDescription()),
 		group.WithTitle(team.GetName()),
