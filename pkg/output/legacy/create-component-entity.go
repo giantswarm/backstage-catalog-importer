@@ -68,6 +68,7 @@ func CreateComponentEntity(r repositories.Repo,
 		component.WithType(r.ComponentType),
 		component.WithOwner(team),
 		component.WithDependsOn(dependsOn...),
+		component.WithLifecycle(string(r.Lifecycle)),
 	)
 	if err != nil {
 		log.Fatalf("Could not create component: %s", err)
