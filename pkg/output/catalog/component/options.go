@@ -99,7 +99,9 @@ func WithType(t string) Option {
 
 func WithLifecycle(lifecycle string) Option {
 	return func(c *Component) {
-		c.Lifecycle = lifecycle
+		if lifecycle != "" {
+			c.Lifecycle = lifecycle
+		}
 	}
 }
 

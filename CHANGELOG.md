@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Prevent setting component lifecycle to an empty value.
+
 ## [0.13.2] - 2024-06-21
 
 ### Fixed
