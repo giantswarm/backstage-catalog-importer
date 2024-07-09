@@ -95,6 +95,9 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 		GithubOrganization: githubOrganization,
 		GithubAuthToken:    token,
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Iterate over catalogs
 	for _, url := range urls {
