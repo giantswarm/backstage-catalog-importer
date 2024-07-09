@@ -234,6 +234,10 @@ func componentFromCatalogEntry(entry helmrepoindex.Entry) (*component.Component,
 		return nil, fmt.Errorf("could not detect GitHub slug for app %s in app metadata", entry.Name)
 	}
 
+	// deployment names
+	nameWithoutApp := strings.TrimSuffix(entry.Name, "-app")
+	nameWithApp := nameWithoutApp + "-app"
+
 	component, err := component.New(entry.Name,
 		component.WithNamespace("giantswarm"),
 		component.WithTitle(entry.Name),
@@ -243,6 +247,7 @@ func componentFromCatalogEntry(entry helmrepoindex.Entry) (*component.Component,
 		component.WithLatestReleaseTime(releaseTime),
 		component.WithOwner(team),
 		component.WithTags(entry.Keywords...),
+		component.WithDeploymentNames(nameWithoutApp, nameWithApp),
 		component.WithType("service"),
 		component.WithHasReadme(true), // we assume all apps have a README
 	)
