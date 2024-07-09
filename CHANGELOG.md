@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add deployment names to customer component entities.
+- Add techdocs-ref annotation to customer component entities.
 
 ## [0.13.3] - 2024-06-24
 
