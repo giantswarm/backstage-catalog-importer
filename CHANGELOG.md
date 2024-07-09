@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add deployment names to customer component entities.
 - Add techdocs-ref annotation to customer component entities.
 
+### Changed
+
+- Make sure that exported entities are always sorted by API version, kind, namespace, and name.
+
 ## [0.13.3] - 2024-06-24
 
 ### Fixed

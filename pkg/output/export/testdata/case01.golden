@@ -4,37 +4,6 @@
 
 ---
 apiVersion: backstage.io/v1alpha1
-kind: Group
-metadata:
-    name: myorg/team-slug
-    description: A simple team with simple people
-    annotations:
-        grafana/dashboard-selector: tags @> 'owner:myorg/team-slug'
-        opsgenie.com/team: myorg/team-slug
-spec:
-    type: team
-    profile:
-        displayName: team-name
-        picture: https://avatars.githubusercontent.com/t/16638849?s=116&v=4
-    children: []
-    parent: area-everything
-    members:
-        - jane-doe
-        - second-member
----
-apiVersion: backstage.io/v1alpha1
-kind: User
-metadata:
-    name: jane-doe
-    description: Experienced DevOps engineer, jack of all trades
-spec:
-    profile:
-        displayName: Jane Doe
-        email: jane@acme.org
-        picture: https://avatars.githubusercontent.com/u/12345678?v=4
-    memberOf: []
----
-apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
     name: my-service
@@ -74,3 +43,34 @@ spec:
     dependsOn:
         - component:first-dependency
         - component:second-dependency
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+    name: myorg/team-slug
+    description: A simple team with simple people
+    annotations:
+        grafana/dashboard-selector: tags @> 'owner:myorg/team-slug'
+        opsgenie.com/team: myorg/team-slug
+spec:
+    type: team
+    profile:
+        displayName: team-name
+        picture: https://avatars.githubusercontent.com/t/16638849?s=116&v=4
+    children: []
+    parent: area-everything
+    members:
+        - jane-doe
+        - second-member
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+    name: jane-doe
+    description: Experienced DevOps engineer, jack of all trades
+spec:
+    profile:
+        displayName: Jane Doe
+        email: jane@acme.org
+        picture: https://avatars.githubusercontent.com/u/12345678?v=4
+    memberOf: []
