@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-github/v62/github"
 	"github.com/spf13/cobra"
 
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/githubrepo"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmrepoindex"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
@@ -90,6 +91,14 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 	apps := make(map[string]int)
 	teamSlugCount := make(map[string]int)
 
+	repoService, err := githubrepo.New(githubrepo.Config{
+		GithubOrganization: githubOrganization,
+		GithubAuthToken:    token,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Iterate over catalogs
 	for _, url := range urls {
 		fmt.Printf("Reading catalog %s\n", url)
@@ -116,7 +125,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 
 			apps[appName]++
 
-			component, err := componentFromCatalogEntry(index.Entries[appName][0])
+			component, err := componentFromCatalogEntry(index.Entries[appName][0], repoService)
 			if err != nil {
 				log.Printf("ERROR: Could not create component entity. %v", err)
 				continue
@@ -211,7 +220,7 @@ func groupFromTeam(team *github.Team, members []string) (*group.Group, error) {
 }
 
 // Populates a catalog.Component from an helmrepoindex.Entry
-func componentFromCatalogEntry(entry helmrepoindex.Entry) (*component.Component, error) {
+func componentFromCatalogEntry(entry helmrepoindex.Entry, service *githubrepo.Service) (*component.Component, error) {
 	// owner team
 	team := "group:giantswarm/unspecified"
 	if teamName, ok := entry.Annotations[teamAnnotation]; ok {
@@ -234,6 +243,11 @@ func componentFromCatalogEntry(entry helmrepoindex.Entry) (*component.Component,
 		return nil, fmt.Errorf("could not detect GitHub slug for app %s in app metadata", entry.Name)
 	}
 
+	repoDetails, err := service.GetDetails(entry.Name)
+	if err != nil {
+		return nil, err
+	}
+
 	// deployment names
 	nameWithoutApp := strings.TrimSuffix(entry.Name, "-app")
 	nameWithApp := nameWithoutApp + "-app"
@@ -250,6 +264,7 @@ func componentFromCatalogEntry(entry helmrepoindex.Entry) (*component.Component,
 		component.WithDeploymentNames(nameWithoutApp, nameWithApp),
 		component.WithType("service"),
 		component.WithHasReadme(true), // we assume all apps have a README
+		component.WithDefaultBranch(repoDetails.DefaultBranch),
 	)
 	if err != nil {
 		return nil, err

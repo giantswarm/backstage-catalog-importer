@@ -10,6 +10,7 @@ Our packages can be grouped into two main categories:
 - `input/helmrepoindex` - Provides means to parse Giant Swarm app platform catalogs (which are Helm repository indizes) and read apps from them.
 - `input/teams` - Provides means to read GitHub teams and their members from the GitHub API.
 - `input/helmchart` - Simple helper to parse Helm chart YAML files published by Giant Swarm.
+- `input/githubrepo` - Functions to fetch data about individual Github repositories.
 
 ### Output generation
 
