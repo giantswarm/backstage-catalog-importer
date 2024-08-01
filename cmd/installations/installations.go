@@ -1,5 +1,5 @@
-// Provides the 'users' command to export a users catalog.
-package users
+// Provides the 'installations' command to export an installations catalog.
+package installations
 
 import (
 	"fmt"
