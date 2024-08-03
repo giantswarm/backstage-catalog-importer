@@ -1,0 +1,24 @@
+base: 'akita.inc.example.com'
+codename: 'akita'
+customer: 'acme'
+cmc_repository: 'acme-management-clusters'
+ccr_repository: 'acme-configs'
+escalation_matrix: |
+  Here is some information regarding how to escalate incidents
+accountEngineer: 'Jane Doe'
+accountEngineersHandle: 'ae-acme'
+slack:
+  support:
+    - 'support-acme-admin'
+pipeline: 'stable'
+provider: 'aws'
+aws: 
+  region: 'cn-northwest-1'
+  hostCluster:
+    account: '123456789012'
+    cloudtrailBucket: ''
+    guardDuty: false
+  guestCluster:
+    account: '123456789012'
+    cloudtrailBucket: ''
+    guardDuty: false

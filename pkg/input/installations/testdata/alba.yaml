@@ -1,0 +1,25 @@
+base: capi.aws.k8s.example.com
+codename: alba
+customer: acme
+cmc_repository: acme-management-clusters
+ccr_repository: acme-configs
+accountEngineer: 'Jane Doe'
+accountEngineersHandle: 'ae-acme'
+pipeline: stable
+provider: capa
+escalation_matrix: |
+  Here is some information regarding how to escalate incidents
+slack:
+  support:
+    - 'support-acme-admin'
+aws:
+  region: eu-west-1
+  hostCluster:
+    account: 123456789012
+    adminRoleARN: arn:aws:iam::123456789012:role/GiantSwarmAdmin
+    cloudtrailBucket: ''
+    guardDuty: false
+  guestCluster:
+    account: 123456789012
+    cloudtrailBucket: ''
+    guardDuty: false

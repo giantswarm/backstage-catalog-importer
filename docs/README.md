@@ -8,6 +8,7 @@ Sources are:
 - **GitHub teams**: these get exported as Group entities
 - **GitHub users**: these get exported as User entities
 - **Giant Swarm app catalogs**: these get exported as Component entities
+- **Giant Swarm installations**: these get exported as Resource entities
 
 Sources get discovered dynamically.
 
@@ -39,3 +40,7 @@ We read all users that are member of the "giantswarm" GitHub org by default.
 App catalog URLs are hard-coded. All of them are publicly accessible.
 
 TODO: We need flexibility to skip catalogs, and to add customer-specific catalogs (non-public), too.
+
+## Giant Swarm installation discovery
+
+Installations are read from a private GitHub repository. The resulting catalog is meant for use within Giant Swarm only.

@@ -1,0 +1,9 @@
+base: azuretest.gigantic.io
+codename: goose
+customer: giantswarm
+cmc_repository: 'giantswarm-management-clusters'
+ccr_repository: 'giantswarm-configs'
+accountEngineer: Team Phoenix
+accountEngineersHandle: 'support-phoenix'
+pipeline: ephemeral
+provider: capz
