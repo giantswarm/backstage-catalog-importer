@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The `installations` command also exports the base domain and account engineer name.
+
 ## [0.15.0] - 2024-08-03
 
 ### Added
