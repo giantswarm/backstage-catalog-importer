@@ -127,6 +127,16 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 		Spec: bscatalog.ComponentSpec{},
 	}
 
+	// Base domain
+	if ins.Base != "" {
+		r.Annotations["giantswarm.io/base"] = ins.Base
+	}
+
+	// Account engineer
+	if ins.AccountEngineer != "" {
+		r.Annotations["giantswarm.io/account-engineer"] = ins.AccountEngineer
+	}
+
 	// Escalation matrix
 	if ins.EscalationMatrix != "" {
 		r.Annotations["giantswarm.io/escalation-matrix"] = ins.EscalationMatrix
