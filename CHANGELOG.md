@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2024-08-09
+
 ### Changed
 
 - In the `installations` command, set the links for Happa and Grafana different for Vintage and CAPI.
@@ -257,7 +259,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.1...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.2...HEAD
+[0.15.2]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.13.3...v0.14.0
