@@ -99,7 +99,9 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 			"giantswarm.io/customer": ins.Customer,
 			"giantswarm.io/pipeline": ins.Pipeline,
 		},
-		Annotations: map[string]string{},
+		Annotations: map[string]string{
+			"backstage.io/source-location": fmt.Sprintf("url:https://github.com/giantswarm/installations/blob/master/%s/cluster.yaml", ins.Codename),
+		},
 		Links: []bscatalog.EntityLink{
 			{
 				URL:   fmt.Sprintf("https://github.com/giantswarm/%s", ins.CmcRepository),
@@ -112,16 +114,6 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 				Title: "Customer config (CCR)",
 				Icon:  "github",
 				Type:  "CCR",
-			},
-			{
-				URL:   fmt.Sprintf("https://grafana.g8s.%s/", ins.Base),
-				Title: "Grafana",
-				Icon:  "dashboard",
-			},
-			{
-				URL:   fmt.Sprintf("https://happa.g8s.%s/admin-login", ins.Base),
-				Title: "Happa",
-				Icon:  "dashboard",
 			},
 		},
 		Spec: bscatalog.ComponentSpec{},
@@ -140,6 +132,34 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 	// Escalation matrix
 	if ins.EscalationMatrix != "" {
 		r.Annotations["giantswarm.io/escalation-matrix"] = ins.EscalationMatrix
+	}
+
+	// Happa and Grafana link
+	if ins.Provider == "aws" || ins.Provider == "azure" || ins.Provider == "kvm" {
+		// Vintage
+		r.Links = append(r.Links, []bscatalog.EntityLink{
+			{
+				URL:   fmt.Sprintf("https://happa.g8s.%s/admin-login", ins.Base),
+				Title: "Happa",
+				Icon:  "giantswarm",
+			}, {
+				URL:   fmt.Sprintf("https://grafana.g8s.%s/", ins.Base),
+				Title: "Grafana",
+				Icon:  "grafana",
+			},
+		}...)
+	} else {
+		r.Links = append(r.Links, []bscatalog.EntityLink{
+			{
+				URL:   fmt.Sprintf("https://happa.%s.%s/admin-login", ins.Codename, ins.Base),
+				Title: "Happa",
+				Icon:  "giantswarm",
+			}, {
+				URL:   fmt.Sprintf("https://grafana.%s.%s/", ins.Codename, ins.Base),
+				Title: "Grafana",
+				Icon:  "grafana",
+			},
+		}...)
 	}
 
 	// AWS Console link
