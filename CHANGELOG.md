@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `installations` export now exports OpsGenie annotation to find alerts per installation.
+
 ## [0.15.2] - 2024-08-09
 
 ### Changed

@@ -100,7 +100,8 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 			"giantswarm.io/pipeline": ins.Pipeline,
 		},
 		Annotations: map[string]string{
-			"backstage.io/source-location": fmt.Sprintf("url:https://github.com/giantswarm/installations/blob/master/%s/cluster.yaml", ins.Codename),
+			"backstage.io/source-location":    fmt.Sprintf("url:https://github.com/giantswarm/installations/blob/master/%s/cluster.yaml", ins.Codename),
+			"opsgenie.com/component-selector": fmt.Sprintf("detailsPair(installation:%s)", ins.Codename),
 		},
 		Links: []bscatalog.EntityLink{
 			{
