@@ -39,6 +39,7 @@ func Test_parseInstallationInfo(t *testing.T) {
 				EscalationMatrix: "Here is some information regarding how to escalate incidents\n",
 				Pipeline:         "stable",
 				Provider:         "aws",
+				Region:           "cn-northwest-1",
 				Slack:            &SlackDetails{Support: []string{"support-acme-admin"}},
 			},
 			wantErr: false,
@@ -58,6 +59,7 @@ func Test_parseInstallationInfo(t *testing.T) {
 				Slack:                  &SlackDetails{Support: []string{"support-acme-admin"}},
 				Pipeline:               "stable",
 				Provider:               "capa",
+				Region:                 "eu-west-1",
 				Aws: &AwsDetails{
 					Region: "eu-west-1",
 					HostCluster: AwsIdentity{
@@ -84,6 +86,7 @@ func Test_parseInstallationInfo(t *testing.T) {
 				Customer:               "giantswarm",
 				Pipeline:               "ephemeral",
 				Provider:               "capz",
+				Region:                 "fantasy-region",
 			},
 			wantErr: false,
 		},

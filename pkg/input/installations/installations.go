@@ -134,5 +134,10 @@ func parseInstallationInfo(content []byte) (*Installation, error) {
 		return nil, err
 	}
 
+	// Copy region key to top position
+	if inst.Region == "" && inst.Aws.Region != "" {
+		inst.Region = inst.Aws.Region
+	}
+
 	return inst, nil
 }

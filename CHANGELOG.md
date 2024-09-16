@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- For installation resources, also read the region jey from the top level of the source file.
+
 ## [0.15.3] - 2024-08-12
 
 ### Added

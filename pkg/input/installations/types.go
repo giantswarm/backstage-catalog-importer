@@ -12,6 +12,7 @@ type Installation struct {
 	Slack                  *SlackDetails `yaml:"slack,omitempty"`
 	Pipeline               string        `yaml:"pipeline"`
 	Provider               string        `yaml:"provider"`
+	Region                 string        `yaml:"region"`
 	Aws                    *AwsDetails   `yaml:"aws,omitempty"`
 }
 
