@@ -125,6 +125,11 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 		r.Annotations["giantswarm.io/base"] = ins.Base
 	}
 
+	// Region
+	if ins.Region != "" {
+		r.Labels["giantswarm.io/region"] = ins.Region
+	}
+
 	// Account engineer
 	if ins.AccountEngineer != "" {
 		r.Annotations["giantswarm.io/account-engineer"] = ins.AccountEngineer
@@ -178,11 +183,6 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 				Title: "AWS Console (workload clusters)",
 				Icon:  "aws",
 			})
-		}
-
-		// Region
-		if ins.Aws.Region != "" {
-			r.Labels["giantswarm.io/region"] = ins.Aws.Region
 		}
 	}
 

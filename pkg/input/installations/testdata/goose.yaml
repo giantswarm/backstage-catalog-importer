@@ -7,3 +7,4 @@ accountEngineer: Team Phoenix
 accountEngineersHandle: 'support-phoenix'
 pipeline: ephemeral
 provider: capz
+region: fantasy-region
