@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a nil-pointer dereference in the `installations` command.
+
 ## [0.15.4] - 2024-09-17
 
 ### Changed
