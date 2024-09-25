@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -223,7 +222,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 			group.WithMemberNames(memberNames...),
 			group.WithParentName(parentTeamName),
 			group.WithGrafanaDashboardSelector(fmt.Sprintf("tags @> 'owner:%s'", team.GetSlug())),
-			group.WithOpsgenieTeamName(strings.TrimPrefix(team.GetSlug(), "team-")),
 		)
 		if err != nil {
 			log.Fatalf("Error: could not create group -- %v", err)

@@ -26,7 +26,6 @@ type Group struct {
 	Type                     string
 	PictureURL               string
 	GrafanaDashboardSelector string
-	OpsgenieTeamName         string
 	ChildrenNames            []string
 	ParentName               string
 	MemberNames              []string
@@ -81,9 +80,6 @@ func (c *Group) ToEntity() *bscatalog.Entity {
 	annotations := map[string]string{}
 	if c.GrafanaDashboardSelector != "" {
 		annotations["grafana/dashboard-selector"] = c.GrafanaDashboardSelector
-	}
-	if c.OpsgenieTeamName != "" {
-		annotations["opsgenie.io/team-name"] = c.OpsgenieTeamName
 	}
 
 	if len(annotations) > 0 {

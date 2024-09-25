@@ -35,7 +35,6 @@ func TestServiceOutput(t *testing.T) {
 						Description: "A simple team with simple people",
 						Annotations: map[string]string{
 							"grafana/dashboard-selector": "tags @> 'owner:myorg/team-slug'",
-							"opsgenie.com/team":          "myorg/team-slug",
 						},
 					},
 					Spec: bscatalog.GroupSpec{
@@ -81,8 +80,6 @@ func TestServiceOutput(t *testing.T) {
 							"giantswarm.io/latest-release-tag":     "v1.2.3",
 							"github.com/project-slug":              "giantswarm/my-service",
 							"github.com/team-slug":                 "myorg/team-slug",
-							"opsgenie.com/component-selector":      "detailsPair(app:my-service) OR detailsPair(app:my-service-app)",
-							"opsgenie.com/team":                    "myorg/team-slug",
 							"quay.io/repository-slug":              "giantswarm/my-service",
 						},
 						Labels: map[string]string{
@@ -120,16 +117,14 @@ func TestServiceOutput(t *testing.T) {
 						Name:        "project-with-two-apps",
 						Description: "Project that includes two apps",
 						Annotations: map[string]string{
-							"backstage.io/kubernetes-id":      "project-with-two-apps",
-							"backstage.io/source-location":    "url:https://github.com/giantswarm/project-with-two-apps",
-							"backstage.io/techdocs-ref":       "url:https://github.com/giantswarm/project-with-two-apps/tree/master",
-							"circleci.com/project-slug":       "github/giantswarm/project-with-two-apps",
-							"giantswarm.io/deployment-names":  "first-name,second-name-app",
-							"github.com/project-slug":         "giantswarm/project-with-two-apps",
-							"github.com/team-slug":            "myorg/team-slug",
-							"opsgenie.com/component-selector": "detailsPair(app:first-name) OR detailsPair(app:second-name-app)",
-							"opsgenie.com/team":               "myorg/team-slug",
-							"quay.io/repository-slug":         "giantswarm/project-with-two-apps",
+							"backstage.io/kubernetes-id":     "project-with-two-apps",
+							"backstage.io/source-location":   "url:https://github.com/giantswarm/project-with-two-apps",
+							"backstage.io/techdocs-ref":      "url:https://github.com/giantswarm/project-with-two-apps/tree/master",
+							"circleci.com/project-slug":      "github/giantswarm/project-with-two-apps",
+							"giantswarm.io/deployment-names": "first-name,second-name-app",
+							"github.com/project-slug":        "giantswarm/project-with-two-apps",
+							"github.com/team-slug":           "myorg/team-slug",
+							"quay.io/repository-slug":        "giantswarm/project-with-two-apps",
 						},
 					},
 					Spec: bscatalog.ComponentSpec{

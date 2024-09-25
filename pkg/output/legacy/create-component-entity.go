@@ -31,7 +31,7 @@ func CreateComponentEntity(r repositories.Repo,
 	dependsOn []string) bscatalog.Entity {
 
 	// Possible deployment names for resource discovery via the Giant Swarm plugin,
-	// Grafana dashboards, and OpsGenie alerts.
+	// and Grafana dashboards.
 	deploymentNames := r.DeploymentNames
 
 	// Default deployment names are REPONAME and REPONAME-app.
@@ -44,18 +44,10 @@ func CreateComponentEntity(r repositories.Repo,
 		}
 	}
 
-	// OpsGenie query
-	opsGenieQueryParts := []string{}
-	for _, d := range deploymentNames {
-		opsGenieQueryParts = append(opsGenieQueryParts, fmt.Sprintf("detailsPair(app:%s)", d))
-	}
-	opsGenieQuery := strings.Join(opsGenieQueryParts, " OR ")
-
 	c, err := component.New(r.Name,
 		component.WithDescription(description),
 		component.WithGithubProjectSlug(fmt.Sprintf("giantswarm/%s", r.Name)),
 		component.WithGithubTeamSlug(team),
-		component.WithOpsGenieTeam(strings.TrimPrefix(team, "team-")),
 		component.WithQuayRepositorySlug(fmt.Sprintf("giantswarm/%s", r.Name)),
 		component.WithLatestReleaseTag(latestReleaseTag),
 		component.WithLatestReleaseTime(latestReleaseTime),
@@ -63,7 +55,6 @@ func CreateComponentEntity(r repositories.Repo,
 		component.WithDefaultBranch(defaultBranch),
 		component.WithHasReadme(hasReadme),
 		component.WithDeploymentNames(deploymentNames...),
-		component.WithOpsGenieComponentSelector(opsGenieQuery),
 		component.WithSystem(system),
 		component.WithType(r.ComponentType),
 		component.WithOwner(team),

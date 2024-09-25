@@ -67,12 +67,6 @@ func WithLatestReleaseTag(latestReleaseTag string) Option {
 	}
 }
 
-func WithOpsGenieTeam(team string) Option {
-	return func(c *Component) {
-		c.OpsGenieTeam = team
-	}
-}
-
 func WithGithubProjectSlug(slug string) Option {
 	return func(c *Component) {
 		c.GithubProjectSlug = slug
@@ -102,12 +96,6 @@ func WithLifecycle(lifecycle string) Option {
 		if lifecycle != "" {
 			c.Lifecycle = lifecycle
 		}
-	}
-}
-
-func WithOpsGenieComponentSelector(selector string) Option {
-	return func(c *Component) {
-		c.OpsGenieComponentSelector = selector
 	}
 }
 

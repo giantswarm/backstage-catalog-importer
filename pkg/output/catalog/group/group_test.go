@@ -42,7 +42,6 @@ func TestGroup_ToEntity(t *testing.T) {
 				WithDescription("A full-fledged group"),
 				WithPictureURL("https://example.com/picture.jpg"),
 				WithGrafanaDashboardSelector("my-dashboard"),
-				WithOpsgenieTeamName("my-ops-team"),
 				WithChildrenNames("child2", "child1"),
 				WithParentName("parent"),
 				WithMemberNames("member2", "member1"),
@@ -57,7 +56,6 @@ func TestGroup_ToEntity(t *testing.T) {
 					Namespace:   "namespace",
 					Annotations: map[string]string{
 						"grafana/dashboard-selector": "my-dashboard",
-						"opsgenie.io/team-name":      "my-ops-team",
 					},
 				},
 				Spec: bscatalog.GroupSpec{
