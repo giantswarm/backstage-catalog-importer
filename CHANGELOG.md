@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2024-09-25
+
 ### Removed
 
 - Remove Opsgenie related annotations
@@ -281,7 +283,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.5...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.5...v0.16.0
 [0.15.5]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.4...v0.15.5
 [0.15.4]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.15.2...v0.15.3
