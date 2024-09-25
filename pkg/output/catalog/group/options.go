@@ -36,12 +36,6 @@ func WithGrafanaDashboardSelector(selector string) Option {
 	}
 }
 
-func WithOpsgenieTeamName(name string) Option {
-	return func(c *Group) {
-		c.OpsgenieTeamName = name
-	}
-}
-
 func WithChildrenNames(names ...string) Option {
 	return func(c *Group) {
 		c.ChildrenNames = names

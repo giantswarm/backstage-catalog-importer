@@ -65,12 +65,6 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 	if c.GithubTeamSlug != "" {
 		e.Metadata.Annotations["github.com/team-slug"] = c.GithubTeamSlug
 	}
-	if c.OpsGenieTeam != "" {
-		e.Metadata.Annotations["opsgenie.com/team"] = c.OpsGenieTeam
-	}
-	if c.OpsGenieComponentSelector != "" {
-		e.Metadata.Annotations["opsgenie.com/component-selector"] = c.OpsGenieComponentSelector
-	}
 	if c.LatestReleaseTag != "" {
 		e.Metadata.Annotations["giantswarm.io/latest-release-tag"] = c.LatestReleaseTag
 	}

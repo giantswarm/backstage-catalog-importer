@@ -16,8 +16,6 @@ metadata:
         giantswarm.io/deployment-names: first-name,second-name-app
         github.com/project-slug: giantswarm/project-with-two-apps
         github.com/team-slug: myorg/team-slug
-        opsgenie.com/component-selector: detailsPair(app:first-name) OR detailsPair(app:second-name-app)
-        opsgenie.com/team: myorg/team-slug
         quay.io/repository-slug: giantswarm/project-with-two-apps
 spec:
     type: service

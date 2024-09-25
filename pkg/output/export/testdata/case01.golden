@@ -23,8 +23,6 @@ metadata:
         giantswarm.io/latest-release-tag: v1.2.3
         github.com/project-slug: giantswarm/my-service
         github.com/team-slug: myorg/team-slug
-        opsgenie.com/component-selector: detailsPair(app:my-service) OR detailsPair(app:my-service-app)
-        opsgenie.com/team: myorg/team-slug
         quay.io/repository-slug: giantswarm/my-service
     tags:
         - flavor:app
@@ -51,7 +49,6 @@ metadata:
     description: A simple team with simple people
     annotations:
         grafana/dashboard-selector: tags @> 'owner:myorg/team-slug'
-        opsgenie.com/team: myorg/team-slug
 spec:
     type: team
     profile:

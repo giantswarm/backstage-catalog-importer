@@ -39,13 +39,6 @@ type Component struct {
 	// TODO: Specify whether organization name must be prefixed
 	GithubTeamSlug string
 
-	// Name of the OpsGenie team owning the component
-	OpsGenieTeam string
-
-	// OpsGenie lookup query to find alerts and incidents for one component,
-	// similar too 'detailsPair(app:myComponent)'
-	OpsGenieComponentSelector string
-
 	// System that the component belongs to
 	System string
 
