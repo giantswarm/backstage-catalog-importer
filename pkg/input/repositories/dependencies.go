@@ -22,6 +22,8 @@ type SbomPackage struct {
 }
 
 // Returns list of dependencies.
+//
+// Repository name is given by the `name` parameter.
 func (s *Service) GetDependencies(name string) ([]string, error) {
 	sbom, resp, err := s.githubClient.DependencyGraph.GetSBOM(s.ctx, s.config.GithubOrganization, name)
 	if err != nil {
@@ -36,11 +38,12 @@ func (s *Service) GetDependencies(name string) ([]string, error) {
 	}
 
 	names := []string{}
-	godepRegex := regexp.MustCompile("go:github.com/giantswarm/([^/]+).*")
+	godepRegex := regexp.MustCompile("github.com/giantswarm/([^/]+).*")
 
 	for _, item := range sbom.SBOM.Packages {
+		//log.Printf("DEBUG - SBOM name %q", *item.Name)
 		// We only want these:
-		// 'go:github.com/giantswarm/NAME'
+		// 'github.com/giantswarm/NAME'
 		matches := godepRegex.FindStringSubmatch(*item.Name)
 		if len(matches) > 0 {
 			names = append(names, matches[1])
