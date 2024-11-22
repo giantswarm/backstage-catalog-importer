@@ -38,6 +38,9 @@ type ListResult struct {
 	Repositories  []Repo
 }
 
+// A service to access information Giant Swarm stores about
+// GitHub repositories, as well as some additional details
+// fetched from the GitHub API.
 type Service struct {
 	config       Config
 	ctx          context.Context

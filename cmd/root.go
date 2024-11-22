@@ -161,6 +161,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				if err != nil {
 					log.Printf("WARN - %s: error fetching dependencies: %v", repo.Name, err)
 				}
+				log.Printf("DEBUG - found %d dependencies for repo %q", len(deps), repo.Name)
 
 				for _, d := range deps {
 					dependencies[d] = append(dependencies[d], fmt.Sprintf("used in [%s](https://github.com/%s/%s) owned by @%s/%s", repo.Name, githubOrganization, repo.Name, githubOrganization, list.OwnerTeamName))
