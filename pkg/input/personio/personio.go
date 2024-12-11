@@ -14,8 +14,8 @@ type Employee struct {
 	GithubHandle string
 }
 
-// Returns employee information from personio.
-func GetEmployees(ctx context.Context, clientID, clientSecret string) ([]Employee, error) {
+// Returns information on active employees from personio.
+func GetActiveEmployees(ctx context.Context, clientID, clientSecret string) ([]Employee, error) {
 	client, err := personiov1.NewClient(ctx, personiov1.DefaultBaseUrl, personiov1.Credentials{
 		ClientId:     clientID,
 		ClientSecret: clientSecret,
