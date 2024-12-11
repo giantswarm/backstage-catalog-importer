@@ -41,11 +41,17 @@ func TestUser_ToEntity(t *testing.T) {
 				WithDescription("A full-fledged user"),
 				WithPictureURL("https://example.com/picture.jpg"),
 				WithGroups("group2", "group1"),
+				WithGitHubHandle("github-handle"),
+				WithGitHubID(123),
 			},
 			want: &bscatalog.Entity{
 				APIVersion: "backstage.io/v1alpha1",
 				Kind:       bscatalog.EntityKindUser,
 				Metadata: bscatalog.EntityMetadata{
+					Annotations: map[string]string{
+						"github.com/user-id":    "123",
+						"github.com/user-login": "github-handle",
+					},
 					Name:        "full-fledged-user",
 					Description: "A full-fledged user",
 					Title:       "Full Fledged",

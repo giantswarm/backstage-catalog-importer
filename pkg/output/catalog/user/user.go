@@ -79,7 +79,6 @@ func (c *User) ToEntity() *bscatalog.Entity {
 			Name:        c.Name,
 			Description: c.Description,
 			Title:       c.Title,
-			Annotations: map[string]string{},
 		},
 		Spec: spec,
 	}
@@ -89,9 +88,15 @@ func (c *User) ToEntity() *bscatalog.Entity {
 	}
 
 	if c.GitHubID != 0 {
+		if e.Metadata.Annotations == nil {
+			e.Metadata.Annotations = make(map[string]string)
+		}
 		e.Metadata.Annotations["github.com/user-id"] = fmt.Sprintf("%d", c.GitHubID)
 	}
 	if c.GitHubHandle != "" {
+		if e.Metadata.Annotations == nil {
+			e.Metadata.Annotations = make(map[string]string)
+		}
 		e.Metadata.Annotations["github.com/user-login"] = c.GitHubHandle
 	}
 
