@@ -87,17 +87,17 @@ func (c *User) ToEntity() *bscatalog.Entity {
 		e.Metadata.Namespace = c.Namespace
 	}
 
-	if c.GitHubID != 0 {
+	if c.GitHubHandle != "" || c.GitHubID != 0 {
 		if e.Metadata.Annotations == nil {
 			e.Metadata.Annotations = make(map[string]string)
 		}
-		e.Metadata.Annotations["github.com/user-id"] = fmt.Sprintf("%d", c.GitHubID)
-	}
-	if c.GitHubHandle != "" {
-		if e.Metadata.Annotations == nil {
-			e.Metadata.Annotations = make(map[string]string)
+
+		if c.GitHubID != 0 {
+			e.Metadata.Annotations["github.com/user-id"] = fmt.Sprintf("%d", c.GitHubID)
 		}
-		e.Metadata.Annotations["github.com/user-login"] = c.GitHubHandle
+		if c.GitHubHandle != "" {
+			e.Metadata.Annotations["github.com/user-login"] = c.GitHubHandle
+		}
 	}
 
 	return e
