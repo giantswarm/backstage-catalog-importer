@@ -2,7 +2,6 @@ package personio
 
 import (
 	"context"
-	"log"
 	"sort"
 
 	personiov1 "github.com/giantswarm/personio-go/v1"
@@ -37,12 +36,6 @@ func GetEmployees(ctx context.Context, clientID, clientSecret string) ([]Employe
 			continue
 		}
 
-		log.Printf("Employee: %s %s email=%s github=%s",
-			*employee.GetStringAttribute("first_name"),
-			*employee.GetStringAttribute("last_name"),
-			*employee.GetStringAttribute("email"),
-			*employee.GetStringAttribute("dynamic_3196204"), // GitHub username
-		)
 		result = append(result, Employee{
 			FirstName:    *employee.GetStringAttribute("first_name"),
 			LastName:     *employee.GetStringAttribute("last_name"),
