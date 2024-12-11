@@ -18,7 +18,7 @@ type Option func(*User)
 // User holds our internal representation of something that we want
 // to export as a User entity.
 type User struct {
-	// User name (required)
+	// User identifier (required)
 	Name string
 
 	// Namespace, defaults to "default"
@@ -34,6 +34,9 @@ type User struct {
 	Description string
 	Email       string
 	PictureURL  string
+
+	GitHubHandle string
+	GitHubID     int64
 
 	// Names of groups the user is a member of
 	Groups []string
@@ -76,12 +79,20 @@ func (c *User) ToEntity() *bscatalog.Entity {
 			Name:        c.Name,
 			Description: c.Description,
 			Title:       c.Title,
+			Annotations: map[string]string{},
 		},
 		Spec: spec,
 	}
 
 	if c.Namespace != "" && c.Namespace != defaultNamespace {
 		e.Metadata.Namespace = c.Namespace
+	}
+
+	if c.GitHubID != 0 {
+		e.Metadata.Annotations["github.com/user-id"] = fmt.Sprintf("%d", c.GitHubID)
+	}
+	if c.GitHubHandle != "" {
+		e.Metadata.Annotations["github.com/user-login"] = c.GitHubHandle
 	}
 
 	return e

@@ -41,3 +41,15 @@ func WithGroups(names ...string) Option {
 		c.Groups = names
 	}
 }
+
+func WithGitHubHandle(handle string) Option {
+	return func(c *User) {
+		c.GitHubHandle = handle
+	}
+}
+
+func WithGitHubID(id int64) Option {
+	return func(c *User) {
+		c.GitHubID = id
+	}
+}
