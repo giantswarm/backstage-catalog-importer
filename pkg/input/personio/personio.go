@@ -32,6 +32,11 @@ func GetEmployees(ctx context.Context, clientID, clientSecret string) ([]Employe
 
 	var result []Employee
 	for _, employee := range employees {
+		// only return active employees
+		if *employee.GetStringAttribute("status") != "active" {
+			continue
+		}
+
 		log.Printf("Employee: %s %s email=%s github=%s",
 			*employee.GetStringAttribute("first_name"),
 			*employee.GetStringAttribute("last_name"),
