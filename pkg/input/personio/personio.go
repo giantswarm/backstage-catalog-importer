@@ -7,6 +7,13 @@ import (
 	personiov1 "github.com/giantswarm/personio-go/v1"
 )
 
+const (
+	githubHandleFieldName = "dynamic_3196204"
+	firstNameFieldName    = "first_name"
+	lastNameFieldName     = "last_name"
+	emailFieldName        = "email"
+)
+
 type Employee struct {
 	FirstName    string
 	LastName     string
@@ -37,10 +44,10 @@ func GetActiveEmployees(ctx context.Context, clientID, clientSecret string) ([]E
 		}
 
 		result = append(result, Employee{
-			FirstName:    *employee.GetStringAttribute("first_name"),
-			LastName:     *employee.GetStringAttribute("last_name"),
-			Email:        *employee.GetStringAttribute("email"),
-			GithubHandle: *employee.GetStringAttribute("dynamic_3196204"),
+			FirstName:    *employee.GetStringAttribute(firstNameFieldName),
+			LastName:     *employee.GetStringAttribute(lastNameFieldName),
+			Email:        *employee.GetStringAttribute(emailFieldName),
+			GithubHandle: *employee.GetStringAttribute(githubHandleFieldName),
 		})
 	}
 
