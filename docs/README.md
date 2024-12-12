@@ -31,9 +31,9 @@ To discover teams, we read all teams of the `giantswarm` organization from the G
 
 TODO: This method is suited for Giant Swarm only. For customer catalogs, we need a different solution. First, we don't want to export information on teams that are not relevant to the customer. Second, we may want to publish customer's teams.
 
-## GitHub user discovery
+## User discovery
 
-We read all users that are member of the "giantswarm" GitHub org by default.
+We export all Personio employee entries that have the `status` field set to `active`.
 
 ## Giant Swarm app catalog discovery
 

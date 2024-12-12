@@ -5,12 +5,12 @@ import (
 	"context"
 	"log"
 	"os"
-	"sort"
 
 	"github.com/google/go-github/v67/github"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/personio"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/user"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
@@ -24,18 +24,26 @@ var Command = &cobra.Command{
 
 const (
 	internalFlag = "internal"
-	orgFlag      = "org"
 	outputFlag   = "output"
 )
 
 func init() {
 	Command.Flags().BoolP(internalFlag, "i", false, "Create a Giant Swarm internal catalog, which includes email adresses.")
-	Command.Flags().String(orgFlag, "giantswarm", "GitHub organization to export users from")
-
 	Command.PersistentFlags().StringP(outputFlag, "o", ".", "Output directory path")
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	// Personio credentials
+	personioClientID := os.Getenv("PERSONIO_CLIENT_ID")
+	if personioClientID == "" {
+		log.Fatal("Please set environment variable PERSONIO_CLIENT_ID to the Personio client ID.")
+	}
+	personioClientSecret := os.Getenv("PERSONIO_CLIENT_SECRET")
+	if personioClientSecret == "" {
+		log.Fatal("Please set environment variable PERSONIO_CLIENT_SECRET to the Personio client secret.")
+	}
+
+	// GitHub credentials
 	token := os.Getenv("GITHUB_TOKEN")
 	if token == "" {
 		log.Fatal("Please set environment variable GITHUB_TOKEN to a personal GitHub access token (PAT).")
@@ -51,72 +59,57 @@ func run(cmd *cobra.Command, args []string) error {
 		log.Fatalf("Error: could not access 'output' flag - %s", err)
 	}
 
-	org, err := cmd.Flags().GetString(orgFlag)
-	if err != nil {
-		log.Fatalf("Error: could not access 'org' flag - %s", err)
-	}
+	ctx := context.Background()
 
 	// Github client
-	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
+	githubClient := github.NewClient(tc)
 
 	userExporter := export.New(export.Config{TargetPath: path + "/users.yaml"})
-	numUsers := 0
 
-	opt := &github.ListMembersOptions{
-		PublicOnly:  false,
-		ListOptions: github.ListOptions{PerPage: 100},
-	}
-	var allMembers []*github.User
-	for {
-		members, resp, err := client.Organizations.ListMembers(ctx, org, opt)
-		if err != nil {
-			log.Fatalf("Error: could not list organization members -- %v", err)
-		}
-		allMembers = append(allMembers, members...)
-		if resp.NextPage == 0 {
-			break
-		}
-		opt.Page = resp.NextPage
+	employees, err := personio.GetActiveEmployees(ctx, personioClientID, personioClientSecret)
+	if err != nil {
+		log.Fatalf("Error: could not get employees from Personio -- %v", err)
 	}
 
-	// Sort by user name
-	sort.Slice(allMembers, func(i, j int) bool {
-		return allMembers[i].GetLogin() < allMembers[j].GetLogin()
-	})
-
-	for _, githubUser := range allMembers {
-		detailedUser, _, err := client.Users.Get(ctx, githubUser.GetLogin())
+	for _, employee := range employees {
+		// Get Github details for each employee
+		if employee.GithubHandle == "" {
+			// If the user has no GitHub handle, we skip them
+			log.Printf("Warning: no GitHub handle found for %s %s (%s) -- skipping", employee.FirstName, employee.LastName, employee.Email)
+			continue
+		}
+		githubDetails, _, err := githubClient.Users.Get(ctx, employee.GithubHandle)
 		if err != nil {
 			log.Fatalf("Error: could not read detailed user entry -- %v", err)
 		}
 
-		user, err := user.New(githubUser.GetLogin(),
-			user.WithDisplayName(detailedUser.GetName()),
-			user.WithPictureURL(detailedUser.GetAvatarURL()),
-			user.WithDescription(detailedUser.GetBio()),
+		user, err := user.New(employee.GithubHandle,
+			user.WithPictureURL(githubDetails.GetAvatarURL()),
+			user.WithDescription(githubDetails.GetBio()),
+			user.WithEmail(employee.Email),
+			user.WithGitHubHandle(employee.GithubHandle),
+			user.WithGitHubID(githubDetails.GetID()),
 		)
 		if err != nil {
 			log.Fatalf("Error: could not create user - %v", err)
 		}
 
 		if internal {
-			// Email will only be published internally at Giant Swarm
-			user.Email = detailedUser.GetEmail()
+			user.DisplayName = employee.FirstName + " " + employee.LastName
 		} else {
 			// In customer catalogs, Giant Swarm entities use the "giantswarm" namespace
 			user.Namespace = "giantswarm"
+			user.DisplayName = githubDetails.GetName()
 		}
 
 		err = userExporter.AddEntity(user.ToEntity())
 		if err != nil {
 			log.Fatalf("Error: could not add user entity - %v", err)
 		}
-		numUsers++
 	}
 
 	err = userExporter.WriteFile()

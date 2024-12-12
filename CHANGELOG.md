@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- User export takes employee data from Personio into account
+
+### Removed
+
+- Removed `--org` flag from command `users`.
+
 ## [0.16.1] - 2024-11-22
 
 ### Fixed
