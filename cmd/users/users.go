@@ -36,11 +36,11 @@ func run(cmd *cobra.Command, args []string) error {
 	// Personio credentials
 	personioClientID := os.Getenv("PERSONIO_CLIENT_ID")
 	if personioClientID == "" {
-		log.Fatal("Please set environment variable PERSONIO_CLIENT_ID to a the Personio client ID.")
+		log.Fatal("Please set environment variable PERSONIO_CLIENT_ID to the Personio client ID.")
 	}
 	personioClientSecret := os.Getenv("PERSONIO_CLIENT_SECRET")
 	if personioClientSecret == "" {
-		log.Fatal("Please set environment variable PERSONIO_CLIENT_SECRET to a the Personio client secret.")
+		log.Fatal("Please set environment variable PERSONIO_CLIENT_SECRET to the Personio client secret.")
 	}
 
 	// GitHub credentials
