@@ -1,5 +1,7 @@
 package v1alpha1
 
+import "strings"
+
 // An Entity in the software catalog.
 type Entity struct {
 	// APIVersion is the version of specification format for this particular entity.
@@ -92,4 +94,21 @@ type EntityLink struct {
 
 	// Type is an optional value to categorize links into specific groups.
 	Type string `yaml:"type,omitempty"`
+}
+
+// NormalizeTags normalizes the tags of the entity. Tags may only use the characters
+// a-z, 0-9, and -
+func (e *EntityMetadata) NormalizeTags() {
+	if e.Tags == nil {
+		return
+	}
+
+	for i := range e.Tags {
+		e.Tags[i] = strings.ToLower(e.Tags[i])
+		e.Tags[i] = strings.TrimSpace(e.Tags[i])
+		e.Tags[i] = strings.ReplaceAll(e.Tags[i], " ", "-")
+		e.Tags[i] = strings.ReplaceAll(e.Tags[i], "_", "-")
+		e.Tags[i] = strings.ReplaceAll(e.Tags[i], "/", "-")
+		e.Tags[i] = strings.ReplaceAll(e.Tags[i], "+", "-")
+	}
 }

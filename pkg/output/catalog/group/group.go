@@ -86,5 +86,7 @@ func (c *Group) ToEntity() *bscatalog.Entity {
 		e.Metadata.Annotations = annotations
 	}
 
+	e.Metadata.NormalizeTags()
+
 	return e
 }
