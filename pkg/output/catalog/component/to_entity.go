@@ -101,6 +101,7 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 		spec.DependsOn = c.DependsOn
 	}
 
+	e.Metadata.NormalizeTags()
 	e.Spec = spec
 
 	return e

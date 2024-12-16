@@ -100,5 +100,7 @@ func (c *User) ToEntity() *bscatalog.Entity {
 		}
 	}
 
+	e.Metadata.NormalizeTags()
+
 	return e
 }

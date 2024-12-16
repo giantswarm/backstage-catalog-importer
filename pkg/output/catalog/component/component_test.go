@@ -62,7 +62,7 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithOwner("my-owner"),
 				WithQuayRepositorySlug("namespace/quay-project"),
 				WithSystem("my-system"),
-				WithTags("tag1", "tag2"),
+				WithTags("My furious tag 1", "SuperBad_2"),
 				WithTitle("Full Fledged"),
 				WithType("service"),
 			},
@@ -87,7 +87,7 @@ func TestComponent_ToEntity(t *testing.T) {
 						"quay.io/repository-slug":           "namespace/quay-project",
 					},
 					Links: []bscatalog.EntityLink{},
-					Tags:  []string{"tag1", "tag2"},
+					Tags:  []string{"my-furious-tag-1", "superbad-2"},
 					Title: "Full Fledged",
 				},
 				Spec: bscatalog.ComponentSpec{
