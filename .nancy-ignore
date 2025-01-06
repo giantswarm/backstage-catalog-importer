@@ -1,2 +1,2 @@
 # pkg:golang/helm.sh/helm/v3@v3.14.3
-CVE-2019-25210 until=2024-12-30
+CVE-2019-25210 until=2025-03-31
