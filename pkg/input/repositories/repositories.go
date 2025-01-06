@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v67/github"
+	"github.com/google/go-github/v68/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )
