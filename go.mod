@@ -1,6 +1,6 @@
 module github.com/giantswarm/backstage-catalog-importer
 
-go 1.22.0
+go 1.23.0
 
 toolchain go1.23.4
 
@@ -13,7 +13,7 @@ require (
 	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
 	golang.org/x/oauth2 v0.25.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.16.4
+	helm.sh/helm/v3 v3.17.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
