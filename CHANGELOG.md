@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `installations` command sets the `giantswarm.io/custom-ca` annotation if the installation data provides a custom CA certificate.
+
 ## [0.18.1] - 2025-01-22
 
 - Dependency update

@@ -124,6 +124,11 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 		r.Annotations["giantswarm.io/base"] = ins.Base
 	}
 
+	// Custom CA
+	if ins.CustomCA != "" {
+		r.Annotations["giantswarm.io/custom-ca"] = ins.CustomCA
+	}
+
 	// Region
 	if ins.Region != "" {
 		r.Labels["giantswarm.io/region"] = ins.Region
