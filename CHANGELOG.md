@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `installations` command sets the `giantswarm.io/custom-ca` annotation if the installation data provides a custom CA certificate.
 
+### Removed
+
+- The unused but exported function `GetInstallationFile` in `pkg/input/installations`.
+
 ## [0.18.1] - 2025-01-22
 
 - Dependency update
