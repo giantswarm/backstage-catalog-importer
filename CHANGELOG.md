@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-01-27
+
 ### Added
 
 - `installations` command sets the `giantswarm.io/custom-ca` annotation if the installation data provides a custom CA certificate.
+
+### Removed
+
+- The unused but exported function `GetInstallationFile` in `pkg/input/installations`.
 
 ## [0.18.1] - 2025-01-22
 
@@ -313,7 +319,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.18.1...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.18.1...v0.19.0
 [0.18.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.18.0...v0.18.1
 [0.18.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.16.1...v0.17.0
