@@ -14,6 +14,7 @@ type Installation struct {
 	Provider               string        `yaml:"provider"`
 	Region                 string        `yaml:"region"`
 	Aws                    *AwsDetails   `yaml:"aws,omitempty"`
+	CustomCA               string
 }
 
 type SlackDetails struct {

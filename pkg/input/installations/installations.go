@@ -3,7 +3,9 @@ package installations
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 	"path/filepath"
 	"slices"
 
@@ -18,6 +20,8 @@ var reservedNames = []string{".github", "docs", "default"}
 
 const (
 	clusterFile = "cluster.yaml"
+
+	caFile = "ca.pem"
 )
 
 type Config struct {
@@ -66,6 +70,7 @@ func New(c Config) (*Service, error) {
 
 // GetInstallations returns a slice of installations.
 func (s *Service) GetInstallations() ([]*Installation, error) {
+	// Get installations list
 	_, directoryContent, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, "/", nil)
 	if err != nil {
 		return nil, err
@@ -82,9 +87,18 @@ func (s *Service) GetInstallations() ([]*Installation, error) {
 		}
 	}
 
+	// Get default branch name from repo
+	repo, _, err := s.githubClient.Repositories.Get(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultBranch := repo.GetDefaultBranch()
+
 	ins := make([]*Installation, 0)
 
 	for _, path := range paths {
+		// Load cluster file
 		fullPath := filepath.Join(path, clusterFile)
 		fileContent, _, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, fullPath, nil)
 		if err != nil {
@@ -106,25 +120,22 @@ func (s *Service) GetInstallations() ([]*Installation, error) {
 			log.Fatalf("WARNING: error parsing content for file %s: %s", fullPath, err)
 		}
 
+		// Check if CA file exists
+		caFilePath := filepath.Join(path, caFile)
+		_, _, response, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, caFilePath, nil)
+		if err != nil {
+			if response.StatusCode != http.StatusNotFound {
+				return nil, err
+			}
+		}
+		if response != nil && response.StatusCode == http.StatusOK {
+			installation.CustomCA = fmt.Sprintf("https://github.com/%s/%s/blob/%s/%s", s.config.GithubOrganization, s.config.GithubRepositoryName, defaultBranch, caFilePath)
+		}
+
 		ins = append(ins, installation)
 	}
 
 	return ins, nil
-}
-
-// GetInstallationFile returns the content of a single installation file.
-func (s *Service) GetInstallationFile(name string) (string, error) {
-	path := name + "/" + clusterFile
-	fileContent, _, _, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, path, nil)
-	if err != nil {
-		return "", err
-	}
-
-	if fileContent == nil {
-		return "", microerror.Maskf(fileNotFoundError, "file %s not found in repository %s", path, name)
-	}
-
-	return fileContent.GetContent()
 }
 
 func parseInstallationInfo(content []byte) (*Installation, error) {
