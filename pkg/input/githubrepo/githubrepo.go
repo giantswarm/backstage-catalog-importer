@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v68/github"
+	"github.com/google/go-github/v69/github"
 	"golang.org/x/oauth2"
 )
 
