@@ -12,7 +12,7 @@ slack:
     - 'support-acme-admin'
 pipeline: 'stable'
 provider: 'aws'
-aws: 
+aws:
   region: 'cn-northwest-1'
   hostCluster:
     account: '123456789012'
