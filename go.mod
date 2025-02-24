@@ -7,7 +7,7 @@ toolchain go1.24.0
 require (
 	github.com/giantswarm/microerror v0.4.1
 	github.com/giantswarm/personio-go v0.6.0
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v69 v69.2.0
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
