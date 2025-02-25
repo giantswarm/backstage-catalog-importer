@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `installations` export now sets the `giantswarm.io/access-docs-markdown` annotation if extra access docs are provided in `docs/access.md` in the installation repository.
+
 ## [0.19.0] - 2025-01-27
 
 ### Added

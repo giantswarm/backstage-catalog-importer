@@ -16,11 +16,20 @@ import (
 )
 
 // Names we don't consider actual installations
-var reservedNames = []string{".github", "docs", "default"}
+var reservedNames = []string{
+	".github",
+	"docs",
+	"default",
+}
 
 const (
+	// Relative path of the file that proivides access instructions in Markdown format
+	accessFile = "docs/access.md"
+
+	// Name of the file that provides basic structured data on the installation
 	clusterFile = "cluster.yaml"
 
+	// Name of the file that provides the custom CA certificate for the installation (optional)
 	caFile = "ca.pem"
 )
 
@@ -130,6 +139,21 @@ func (s *Service) GetInstallations() ([]*Installation, error) {
 		}
 		if response != nil && response.StatusCode == http.StatusOK {
 			installation.CustomCA = fmt.Sprintf("https://github.com/%s/%s/blob/%s/%s", s.config.GithubOrganization, s.config.GithubRepositoryName, defaultBranch, caFilePath)
+		}
+
+		// Check if access file exists
+		accessFilePath := filepath.Join(path, accessFile)
+		fileContent, _, response, err = s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, accessFilePath, nil)
+		if err != nil {
+			if response.StatusCode != http.StatusNotFound {
+				return nil, err
+			}
+		}
+		if response != nil && response.StatusCode == http.StatusOK {
+			installation.AccessMarkdown, err = fileContent.GetContent()
+			if err != nil {
+				log.Fatalf("INFO: error fetching content for file %s in repository %s/%s: %s", fullPath, s.config.GithubOrganization, s.config.GithubRepositoryName, err)
+			}
 		}
 
 		ins = append(ins, installation)
