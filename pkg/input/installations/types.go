@@ -15,6 +15,7 @@ type Installation struct {
 	Region                 string        `yaml:"region"`
 	Aws                    *AwsDetails   `yaml:"aws,omitempty"`
 	CustomCA               string
+	AccessMarkdown         string
 }
 
 type SlackDetails struct {

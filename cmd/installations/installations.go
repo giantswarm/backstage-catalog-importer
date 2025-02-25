@@ -123,6 +123,10 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 	if ins.Base != "" {
 		r.Annotations["giantswarm.io/base"] = ins.Base
 	}
+	// Access docs
+	if ins.AccessMarkdown != "" {
+		r.Annotations["giantswarm.io/access-docs-markdown"] = ins.AccessMarkdown
+	}
 
 	// Custom CA
 	if ins.CustomCA != "" {
