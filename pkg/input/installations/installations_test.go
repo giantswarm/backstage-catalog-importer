@@ -18,7 +18,7 @@ func Test_parseInstallationInfo(t *testing.T) {
 	}{
 		{
 			name:      "akita",
-			inputPath: "testdata/akita.yaml",
+			inputPath: "testdata/akita/cluster.yaml",
 			want: &Installation{
 				AccountEngineer:        "Jane Doe",
 				AccountEngineersHandle: "ae-acme",
@@ -45,8 +45,8 @@ func Test_parseInstallationInfo(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "alba.yaml",
-			inputPath: "testdata/alba.yaml",
+			name:      "alba",
+			inputPath: "testdata/alba/cluster.yaml",
 			want: &Installation{
 				Base:                   "capi.aws.k8s.example.com",
 				Codename:               "alba",
@@ -74,8 +74,8 @@ func Test_parseInstallationInfo(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:      "goose.yaml",
-			inputPath: "testdata/goose.yaml",
+			name:      "goose",
+			inputPath: "testdata/goose/cluster.yaml",
 			want: &Installation{
 				AccountEngineer:        "Team Phoenix",
 				AccountEngineersHandle: "support-phoenix",
