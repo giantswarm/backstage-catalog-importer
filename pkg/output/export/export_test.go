@@ -165,7 +165,8 @@ func goldenValue(t *testing.T, goldenFile string, actual string, update bool) st
 	t.Helper()
 	goldenPath := "testdata/" + goldenFile
 
-	f, err := os.OpenFile(goldenPath, os.O_RDWR, 0644)
+	// #nosec G304 - goldenPath is a test file path
+	f, err := os.OpenFile(goldenPath, os.O_RDWR, 0600)
 	if err != nil {
 		t.Fatalf("Error opening file %s: %s", goldenPath, err)
 	}
