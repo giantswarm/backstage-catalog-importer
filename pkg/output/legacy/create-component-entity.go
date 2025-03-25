@@ -91,9 +91,9 @@ func CreateComponentEntity(r repositories.Repo,
 		versions := []string{}
 		appVersions := []string{}
 		for _, c := range charts {
-			names = append(names, c.Metadata.Name)
-			versions = append(versions, c.Metadata.Version)
-			appVersions = append(appVersions, c.Metadata.AppVersion)
+			names = append(names, c.Name)
+			versions = append(versions, c.Version)
+			appVersions = append(appVersions, c.AppVersion)
 		}
 
 		c.SetAnnotation("giantswarm.io/helmcharts", strings.Join(names, ","))

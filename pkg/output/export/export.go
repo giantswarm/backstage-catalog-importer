@@ -88,7 +88,7 @@ func (s *Service) WriteFile() error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	err = s.updateBuffer()
 	if err != nil {
