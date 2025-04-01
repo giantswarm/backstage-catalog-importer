@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -227,6 +228,7 @@ func (s *Service) loadGithubReleaseDetails(name string) error {
 // The file name is asserted in the format `<team_name>.yaml`, with all
 // repositories mentioned in it belonging to the team of that name.
 func (s *Service) loadList(path string) ([]Repo, error) {
+	path = filepath.Clean(path)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
