@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- In installation resource entities, more links are added. One additional Grafana link and one to Policy Reporter, both via Teleport.
+
 ## [0.20.0] - 2025-02-25
 
 ### Added
