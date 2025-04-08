@@ -165,13 +165,21 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 	} else {
 		r.Links = append(r.Links, []bscatalog.EntityLink{
 			{
+				URL:   fmt.Sprintf("https://grafana-%s.teleport.giantswarm.io", ins.Codename),
+				Title: "Grafana (via Teleport)",
+				Icon:  "grafana",
+			}, {
+				URL:   fmt.Sprintf("https://grafana.%s.%s/", ins.Codename, ins.Base),
+				Title: "Grafana (customer URL)",
+				Icon:  "grafana",
+			}, {
 				URL:   fmt.Sprintf("https://happa.%s.%s/admin-login", ins.Codename, ins.Base),
 				Title: "Happa",
 				Icon:  "giantswarm",
 			}, {
-				URL:   fmt.Sprintf("https://grafana.%s.%s/", ins.Codename, ins.Base),
-				Title: "Grafana",
-				Icon:  "grafana",
+				URL:   fmt.Sprintf("https://grafana-%s.teleport.giantswarm.io", ins.Codename),
+				Title: "Policy Reporter (via Teleport)",
+				Icon:  "dashboard",
 			},
 		}...)
 	}
