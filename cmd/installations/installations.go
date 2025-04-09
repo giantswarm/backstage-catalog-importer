@@ -177,7 +177,7 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 				Title: "Happa",
 				Icon:  "giantswarm",
 			}, {
-				URL:   fmt.Sprintf("https://grafana-%s.teleport.giantswarm.io", ins.Codename),
+				URL:   fmt.Sprintf("https://kyverno-%s.teleport.giantswarm.io", ins.Codename),
 				Title: "Policy Reporter (via Teleport)",
 				Icon:  "dashboard",
 			},
