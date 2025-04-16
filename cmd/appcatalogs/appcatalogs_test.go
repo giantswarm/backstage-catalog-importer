@@ -64,6 +64,14 @@ func Test_detectGitHubSlug(t *testing.T) {
 			},
 			want: "giantswarm/project-slug",
 		},
+		{
+			name: "url-found-in-home-wins-over-sources",
+			entry: &helmrepoindex.Entry{
+				Home:    "https://github.com/giantswarm/alloy-gateway-app",
+				Sources: []string{"https://github.com/giantswarm/other-project"},
+			},
+			want: "giantswarm/alloy-gateway-app",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
