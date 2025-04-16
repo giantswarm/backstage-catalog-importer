@@ -125,6 +125,7 @@ func runAppCatalogs(cmd *cobra.Command, args []string) {
 
 			apps[appName]++
 
+			// Get details from the first release entry (expected to be the latest)
 			component, err := componentFromCatalogEntry(index.Entries[appName][0], repoService)
 			if err != nil {
 				log.Printf("ERROR: Could not create component entity. %v", err)
@@ -243,7 +244,12 @@ func componentFromCatalogEntry(entry helmrepoindex.Entry, service *githubrepo.Se
 		return nil, fmt.Errorf("could not detect GitHub slug for app %s in app metadata", entry.Name)
 	}
 
-	repoDetails, err := service.GetDetails(entry.Name)
+	repoParts := strings.Split(githubSlug, "/")
+	if len(repoParts) < 2 {
+		return nil, fmt.Errorf("invalid GitHub slug %q for app %s in app metadata", githubSlug, entry.Name)
+	}
+
+	repoDetails, err := service.GetDetails(repoParts[1])
 	if err != nil {
 		return nil, err
 	}
