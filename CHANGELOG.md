@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The `appcatalogs` command now uses the repository slug found in chart URLs to find the repository for a chart.
+
 ## [0.21.1] - 2025-04-09
 
 ### Fixed
