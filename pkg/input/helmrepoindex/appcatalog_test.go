@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestRead(t *testing.T) {
+func TestLoad(t *testing.T) {
 	tests := []struct {
 		name       string
 		path       string
