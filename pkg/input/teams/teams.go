@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v71/github"
+	"github.com/google/go-github/v72/github"
 	"golang.org/x/oauth2"
 )
 
