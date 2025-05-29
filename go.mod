@@ -13,7 +13,7 @@ require (
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6
 	golang.org/x/oauth2 v0.30.0
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.18.0
+	helm.sh/helm/v3 v3.18.1
 	sigs.k8s.io/yaml v1.4.0
 )
 
