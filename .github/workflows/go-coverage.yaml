@@ -3,45 +3,12 @@ on:
   pull_request:
   push:
     branches:
-      - test-go-coverage-workflow # TODO: remove before merging
+      - reuse-workflow # TODO: remove before merging
       # It's important that the action also runs on merge to main
       - main
 
 jobs:
   coverage:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      with:
-        # default fetch-depth is insufficent to find previous coverage notes
-        fetch-depth: 10
-
-    - name: Create coverage report
-      uses: gwatts/go-coverage-action@2845595538a59d63d1bf55f109c14e104c6f7cb3 # v2.0.0
-      id: coverage
-      env:
-          GITHUB_TOKEN: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
-      with:
-        # Optional coverage threshold
-        # use fail-coverage to determine what should happen below this threshold
-        #coverage-threshold: 80
-        fail-coverage: 1
-
-        # collect coverage for all packages beyond the one under test
-        cover-pkg: ./...
-
-        # Ignore code-generated files when calculating coverage totals
-        #ignore-pattern: |
-        #  \.pb\.go$
-        #  \_string\.go$
-
-        # A url that the html report will be accessible at, once your
-        # workflow uploads it.  Used in the pull request comment.
-    #    report-url: https://artifacts.example.com/go-coverage/${{ github.ref_name}}.html
-
-    #- name: Upload coverage to s3
-    #  # ensure this runs regardless of whether the threshold is met using always()
-    #  if: always() && steps.coverage.outputs.report-pathname != ''
-    #  run: |
-    #    aws s3 cp ${{ steps.coverage.outputs.report-pathname }} s3://artifacts.example.com-bucket/go-coverage/${{ github.ref_name}}.html
+    uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@d49ddde7f3b5121940496dfd066f507a29deb1e5 # TODO: update to final commit before merging
+    secrets:
+      token: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
