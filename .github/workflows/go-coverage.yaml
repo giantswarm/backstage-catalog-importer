@@ -3,8 +3,7 @@ on:
   pull_request:
   push:
     branches:
-      - reuse-workflow # TODO: remove before merging
-      # It's important that the action also runs on merge to main
+      # Must run for the default branch!
       - main
 
 jobs:
