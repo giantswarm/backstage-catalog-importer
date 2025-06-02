@@ -8,6 +8,6 @@ on:
 
 jobs:
   coverage:
-    uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@d49ddde7f3b5121940496dfd066f507a29deb1e5 # TODO: update to final commit before merging
+    uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@6bacf73d582b8088d41b8eaec469c40c14398081
     secrets:
       token: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
