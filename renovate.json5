@@ -4,5 +4,7 @@
     "github>giantswarm/renovate-presets:default.json5",
     // Go specific config - https://github.com/giantswarm/renovate-presets/blob/main/lang-go.json5
     "github>giantswarm/renovate-presets:lang-go.json5",
+    // Experimental workflow update config
+    "github>giantswarm/renovate-presets:github-workflows.json5#add-workflows-config",
   ],
 }
