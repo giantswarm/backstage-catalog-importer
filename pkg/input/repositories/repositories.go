@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v72/github"
+	"github.com/google/go-github/v73/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )
