@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v73/github"
+	"github.com/google/go-github/v74/github"
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/githubrepo"
