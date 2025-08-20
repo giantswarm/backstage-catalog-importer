@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v74 v74.0.0
 	github.com/spf13/cobra v1.9.1
-	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
 	golang.org/x/oauth2 v0.30.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.18.5
