@@ -73,12 +73,6 @@ func WithGithubProjectSlug(slug string) Option {
 	}
 }
 
-func WithQuayRepositorySlug(slug string) Option {
-	return func(c *Component) {
-		c.QuayRepositorySlug = slug
-	}
-}
-
 func WithDeploymentNames(names ...string) Option {
 	return func(c *Component) {
 		c.DeploymentNames = names

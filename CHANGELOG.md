@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove creation of the `quay.io/repository-slug` annotation.
+
 ## [0.21.2] - 2025-04-17
 
 ### Fixed

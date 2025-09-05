@@ -59,9 +59,6 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 			e.Metadata.Annotations["backstage.io/techdocs-ref"] = fmt.Sprintf("url:https://github.com/%s/tree/%s", c.GithubProjectSlug, c.DefaultBranch)
 		}
 	}
-	if c.QuayRepositorySlug != "" {
-		e.Metadata.Annotations["quay.io/repository-slug"] = c.QuayRepositorySlug
-	}
 	if c.GithubTeamSlug != "" {
 		e.Metadata.Annotations["github.com/team-slug"] = c.GithubTeamSlug
 	}

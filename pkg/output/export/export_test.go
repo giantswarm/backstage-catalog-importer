@@ -80,7 +80,6 @@ func TestServiceOutput(t *testing.T) {
 							"giantswarm.io/latest-release-tag":     "v1.2.3",
 							"github.com/project-slug":              "giantswarm/my-service",
 							"github.com/team-slug":                 "myorg/team-slug",
-							"quay.io/repository-slug":              "giantswarm/my-service",
 						},
 						Labels: map[string]string{
 							"giantswarm.io/flavor-app": "true",
@@ -124,7 +123,6 @@ func TestServiceOutput(t *testing.T) {
 							"giantswarm.io/deployment-names": "first-name,second-name-app",
 							"github.com/project-slug":        "giantswarm/project-with-two-apps",
 							"github.com/team-slug":           "myorg/team-slug",
-							"quay.io/repository-slug":        "giantswarm/project-with-two-apps",
 						},
 					},
 					Spec: bscatalog.ComponentSpec{

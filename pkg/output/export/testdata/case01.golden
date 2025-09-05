@@ -23,7 +23,6 @@ metadata:
         giantswarm.io/latest-release-tag: v1.2.3
         github.com/project-slug: giantswarm/my-service
         github.com/team-slug: myorg/team-slug
-        quay.io/repository-slug: giantswarm/my-service
     tags:
         - flavor:app
         - helmchart
