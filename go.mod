@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v74 v74.0.0
 	github.com/spf13/cobra v1.10.1
 	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.18.6
 	sigs.k8s.io/yaml v1.6.0
