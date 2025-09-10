@@ -31,10 +31,6 @@ type Component struct {
 	// "<organization>/<repository>"
 	GithubProjectSlug string
 
-	// Name of the Quay repository of the component, in the form of
-	// "<namespace>/<repository>"
-	QuayRepositorySlug string
-
 	// Name of the GitHub team owning the component
 	// TODO: Specify whether organization name must be prefixed
 	GithubTeamSlug string
