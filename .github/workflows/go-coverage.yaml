@@ -8,6 +8,29 @@ on:
 
 jobs:
   coverage:
-    uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@main
-    secrets:
-      token: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed to comment on the pull request
+      pull-requests: write
+      # Needed to create a comment on the commit
+      contents: write
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          # default fetch-depth is insufficent to find previous coverage notes
+          fetch-depth: 10
+
+      - name: Create coverage report
+        uses: giantswarm/go-coverage-action@fix-missing-covdata
+        id: coverage
+        env:
+          GITHUB_TOKEN: "${{ secrets.token }}"
+        with:
+          # Optional coverage threshold
+          # use fail-coverage to determine what should happen below this threshold
+          #coverage-threshold: 80
+          fail-coverage: 1
+
+          # collect coverage for all packages beyond the one under test
+          cover-pkg: ./...
