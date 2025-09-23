@@ -8,7 +8,7 @@ require (
 	github.com/giantswarm/microerror v0.4.1
 	github.com/giantswarm/personio-go v0.6.0
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v74 v74.0.0
+	github.com/google/go-github/v75 v75.0.0
 	github.com/spf13/cobra v1.10.1
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621
 	golang.org/x/oauth2 v0.31.0
