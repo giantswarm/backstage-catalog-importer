@@ -6,7 +6,6 @@ on:
       # Must run for the default branch!
       - main
 
-
 jobs:
   coverage:
     uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@go-coverage-fix
