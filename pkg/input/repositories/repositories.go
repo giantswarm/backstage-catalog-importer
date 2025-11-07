@@ -15,8 +15,8 @@ import (
 
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v77/github"
-	"golang.org/x/oauth2"
 	"go.yaml.in/yaml/v3"
+	"golang.org/x/oauth2"
 )
 
 type Config struct {
