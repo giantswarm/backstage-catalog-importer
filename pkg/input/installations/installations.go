@@ -11,8 +11,8 @@ import (
 
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v77/github"
+	"go.yaml.in/yaml/v3"
 	"golang.org/x/oauth2"
-	"gopkg.in/yaml.v3"
 )
 
 // Names we don't consider actual installations

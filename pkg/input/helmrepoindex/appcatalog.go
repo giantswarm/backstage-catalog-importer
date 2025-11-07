@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // Load returns the repo.IndexFile representing the input YAML.
