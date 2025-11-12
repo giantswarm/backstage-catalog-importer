@@ -3,7 +3,7 @@ package helmchart
 import (
 	"regexp"
 
-	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v4/pkg/chart"
 	"sigs.k8s.io/yaml"
 )
 
