@@ -146,16 +146,11 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 	}
 
 	// Extract description from config if available
+	// Helm chart configs have description at the top level
 	description := fmt.Sprintf("OCI chart from %s", repo)
 	if configMap != nil {
-		if config, ok := configMap["config"].(map[string]interface{}); ok {
-			if labels, ok := config["Labels"].(map[string]interface{}); ok {
-				if desc, ok := labels["org.opencontainers.image.description"].(string); ok && desc != "" {
-					description = desc
-				} else if title, ok := labels["org.opencontainers.image.title"].(string); ok && title != "" {
-					description = title
-				}
-			}
+		if desc, ok := configMap["description"].(string); ok && desc != "" {
+			description = desc
 		}
 	}
 
@@ -166,28 +161,21 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 	componentOwner := fmt.Sprintf("group:%s/unspecified", namespace) // Default owner based on namespace
 
 	if configMap != nil {
-		if config, ok := configMap["config"].(map[string]interface{}); ok {
-			if labels, ok := config["Labels"].(map[string]interface{}); ok {
-				if ver, ok := labels["org.opencontainers.image.version"].(string); ok && ver != "" {
-					version = ver
-				}
+		// Extract version from top-level (Helm chart config structure)
+		if ver, ok := configMap["version"].(string); ok && ver != "" {
+			version = ver
+		}
 
-				// Extract team owner from Giant Swarm team annotation
-				if team, ok := labels["application.giantswarm.io/team"].(string); ok && team != "" {
-					componentOwner = formatTeamOwner(team, namespace)
-				}
+		// Extract icon from top-level (Helm chart config structure)
+		if icon, ok := configMap["icon"].(string); ok && icon != "" {
+			iconURL = icon
+		}
 
-				// Extract icon URL from Helm chart labels
-				// Common patterns for Helm chart icon in OCI labels
-				if icon, ok := labels["io.artifacthub.package.logo-url"].(string); ok && icon != "" {
-					iconURL = icon
-				} else if icon, ok := labels["org.opencontainers.image.url"].(string); ok && icon != "" {
-					// Sometimes the icon is stored in the general URL field
-					iconURL = icon
-				} else if icon, ok := labels["helm.sh/chart.icon"].(string); ok && icon != "" {
-					// Helm-specific icon label
-					iconURL = icon
-				}
+		// Extract team owner from annotations (Helm chart config structure)
+		// The annotations field contains Giant Swarm specific metadata
+		if annotations, ok := configMap["annotations"].(map[string]interface{}); ok {
+			if team, ok := annotations["application.giantswarm.io/team"].(string); ok && team != "" {
+				componentOwner = formatTeamOwner(team, namespace)
 			}
 		}
 
@@ -237,7 +225,7 @@ func formatTeamOwner(team, namespace string) string {
 	if !strings.HasPrefix(team, "team-") {
 		team = "team-" + team
 	}
-	
+
 	// Return the properly formatted owner string with the given namespace
 	return fmt.Sprintf("group:%s/%s", namespace, team)
 }

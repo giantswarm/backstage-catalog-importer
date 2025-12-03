@@ -89,7 +89,7 @@ func (r *Registry) ListRepositoryTags(ctx context.Context, repository string) ([
 	return tags, nil
 }
 
-// GetRepositoryManifest retrieves the manifest for a given repository and tag
+// GetRepositoryManifest retrieves the manifest config for a given repository and tag
 func (r *Registry) GetRepositoryManifest(ctx context.Context, repository, tag string) (map[string]interface{}, error) {
 	repo, err := r.registry.Repository(ctx, repository)
 	if err != nil {
@@ -106,12 +106,12 @@ func (r *Registry) GetRepositoryManifest(ctx context.Context, repository, tag st
 		)
 	}
 
-	configMap, err := fetchManifestConfig(ctx, repo, descriptor)
+	manifestConfig, err := fetchManifestConfig(ctx, repo, descriptor)
 	if err != nil {
 		return nil, microerror.Maskf(couldNotGetRepositoryManifestError, "error getting repository manifest: %v", err)
 	}
 
-	return configMap, nil
+	return manifestConfig, nil
 }
 
 // fetchManifestConfig fetches the config blob from a manifest and returns it as pretty JSON and parsed map

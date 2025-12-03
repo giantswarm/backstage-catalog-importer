@@ -58,13 +58,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			repo: "giantswarm/advanced-chart",
 			tag:  "v2.1.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Advanced Helm chart for testing",
-						"org.opencontainers.image.version":     "2.1.0",
-					},
-				},
-				"created": "2023-10-15T10:30:00Z",
+				"description": "Advanced Helm chart for testing",
+				"version":     "2.1.0",
+				"created":     "2023-10-15T10:30:00Z",
 			},
 			namespace:        "giantswarm",
 			componentType:    "library",
@@ -78,7 +74,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/oci-tag":        "v2.1.0",
 			},
 			wantLinks:          nil,
-			wantVersion:        "2.1.0", // Should use version from labels
+			wantVersion:        "2.1.0", // Should use version from config
 			wantOwner:          "group:giantswarm/unspecified",
 			wantCreatedTimeSet: true,
 			wantErr:            false,
@@ -106,26 +102,21 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantErr:            false,
 		},
 		{
-			name: "Chart with title fallback for description",
-			repo: "org/chart-with-title",
+			name: "Chart with description from config",
+			repo: "org/chart-with-description",
 			tag:  "v1.5.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.title": "My Awesome Chart",
-						// No description, should fall back to title
-					},
-				},
+				"description": "My Awesome Chart",
 			},
 			namespace:        "custom",
 			componentType:    "resource",
 			registryHostname: "gsoci.azurecr.io",
-			wantName:         "chart-with-title",
+			wantName:         "chart-with-description",
 			wantDescription:  "My Awesome Chart",
 			wantTags:         []string{"oci", "helm-chart"},
 			wantAnnotations: map[string]string{
 				"giantswarm.io/oci-registry":   "gsoci.azurecr.io",
-				"giantswarm.io/oci-repository": "org/chart-with-title",
+				"giantswarm.io/oci-repository": "org/chart-with-description",
 				"giantswarm.io/oci-tag":        "v1.5.0",
 			},
 			wantLinks:          nil,
@@ -139,13 +130,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			repo: "test/empty-metadata",
 			tag:  "v0.1.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "", // Empty description
-						"org.opencontainers.image.version":     "", // Empty version
-						"org.opencontainers.image.title":       "", // Empty title
-					},
-				},
+				"description": "", // Empty description
+				"version":     "", // Empty version
 			},
 			namespace:        "default",
 			componentType:    "service",
@@ -193,11 +179,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			repo: "internal/chart",
 			tag:  "v2.0.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Internal chart",
-					},
-				},
+				"description": "Internal chart",
 			},
 			namespace:        "internal",
 			componentType:    "service",
@@ -221,13 +203,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			repo: "org/team/subteam/complex-chart",
 			tag:  "v3.2.1",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Complex nested chart",
-						"org.opencontainers.image.version":     "3.2.1-beta",
-					},
-				},
-				"created": "2023-11-20T09:15:45Z",
+				"description": "Complex nested chart",
+				"version":     "3.2.1-beta",
+				"created":     "2023-11-20T09:15:45Z",
 			},
 			namespace:        "production",
 			componentType:    "library",
@@ -241,7 +219,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/oci-tag":        "v3.2.1",
 			},
 			wantLinks:          nil,
-			wantVersion:        "3.2.1-beta", // Should use version from labels
+			wantVersion:        "3.2.1-beta", // Should use version from config
 			wantOwner:          "group:production/unspecified",
 			wantCreatedTimeSet: true,
 			wantErr:            false,
@@ -295,22 +273,18 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantErr:            false,
 		},
 		{
-			name: "Chart with ArtifactHub icon",
+			name: "Chart with icon from config",
 			repo: "giantswarm/chart-with-icon",
 			tag:  "v1.0.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Chart with ArtifactHub icon",
-						"io.artifacthub.package.logo-url":      "https://example.com/icon.png",
-					},
-				},
+				"description": "Chart with icon",
+				"icon":        "https://example.com/icon.png",
 			},
 			namespace:        "default",
 			componentType:    "service",
 			registryHostname: "registry.example.com",
 			wantName:         "chart-with-icon",
-			wantDescription:  "Chart with ArtifactHub icon",
+			wantDescription:  "Chart with icon",
 			wantTags:         []string{"oci", "helm-chart"},
 			wantAnnotations: map[string]string{
 				"giantswarm.io/oci-registry":   "registry.example.com",
@@ -325,75 +299,13 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantErr:            false,
 		},
 		{
-			name: "Chart with Helm-specific icon",
-			repo: "giantswarm/helm-icon-chart",
-			tag:  "v2.0.0",
-			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Chart with Helm icon",
-						"helm.sh/chart.icon":                   "https://helm.example.com/logo.svg",
-					},
-				},
-			},
-			namespace:        "default",
-			componentType:    "service",
-			registryHostname: "gsoci.azurecr.io",
-			wantName:         "helm-icon-chart",
-			wantDescription:  "Chart with Helm icon",
-			wantTags:         []string{"oci", "helm-chart"},
-			wantAnnotations: map[string]string{
-				"giantswarm.io/oci-registry":   "gsoci.azurecr.io",
-				"giantswarm.io/oci-repository": "giantswarm/helm-icon-chart",
-				"giantswarm.io/oci-tag":        "v2.0.0",
-				"giantswarm.io/icon-url":       "https://helm.example.com/logo.svg",
-			},
-			wantLinks:          nil,
-			wantVersion:        "v2.0.0",
-			wantOwner:          "group:default/unspecified",
-			wantCreatedTimeSet: true,
-			wantErr:            false,
-		},
-		{
-			name: "Chart with OCI image URL as icon fallback",
-			repo: "giantswarm/oci-url-chart",
-			tag:  "v1.5.0",
-			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Chart with OCI URL icon",
-						"org.opencontainers.image.url":         "https://oci.example.com/icon.jpg",
-					},
-				},
-			},
-			namespace:        "default",
-			componentType:    "service",
-			registryHostname: "registry.example.com",
-			wantName:         "oci-url-chart",
-			wantDescription:  "Chart with OCI URL icon",
-			wantTags:         []string{"oci", "helm-chart"},
-			wantAnnotations: map[string]string{
-				"giantswarm.io/oci-registry":   "registry.example.com",
-				"giantswarm.io/oci-repository": "giantswarm/oci-url-chart",
-				"giantswarm.io/oci-tag":        "v1.5.0",
-				"giantswarm.io/icon-url":       "https://oci.example.com/icon.jpg",
-			},
-			wantLinks:          nil,
-			wantVersion:        "v1.5.0",
-			wantOwner:          "group:default/unspecified",
-			wantCreatedTimeSet: true,
-			wantErr:            false,
-		},
-		{
 			name: "Chart with team owner (without team- prefix)",
 			repo: "giantswarm/honeybadger-chart",
 			tag:  "v1.0.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Chart owned by honeybadger team",
-						"application.giantswarm.io/team":       "honeybadger",
-					},
+				"description": "Chart owned by honeybadger team",
+				"annotations": map[string]interface{}{
+					"application.giantswarm.io/team": "honeybadger",
 				},
 			},
 			namespace:        "default",
@@ -418,11 +330,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			repo: "giantswarm/atlas-chart",
 			tag:  "v2.0.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Chart owned by team-atlas",
-						"application.giantswarm.io/team":       "team-atlas",
-					},
+				"description": "Chart owned by team-atlas",
+				"annotations": map[string]interface{}{
+					"application.giantswarm.io/team": "team-atlas",
 				},
 			},
 			namespace:        "default",
@@ -447,11 +357,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			repo: "giantswarm/no-team-chart",
 			tag:  "v1.0.0",
 			configMap: map[string]interface{}{
-				"config": map[string]interface{}{
-					"Labels": map[string]interface{}{
-						"org.opencontainers.image.description": "Chart with empty team",
-						"application.giantswarm.io/team":       "",
-					},
+				"description": "Chart with empty team",
+				"annotations": map[string]interface{}{
+					"application.giantswarm.io/team": "",
 				},
 			},
 			namespace:        "default",

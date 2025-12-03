@@ -23,7 +23,7 @@ The following data will be included in the generated catalog:
 
 ## Generate catalog files for customer catalogs
 
-This requires a Github personal access token (PTA) with permission to read teams in the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
+This requires a Github personal access token (PAT) with permission to read teams in the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
 
 To run the export, execute
 
