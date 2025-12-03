@@ -8,11 +8,11 @@ require (
 	github.com/giantswarm/microerror v0.4.1
 	github.com/giantswarm/personio-go v0.6.0
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v78 v78.0.0
 	github.com/opencontainers/image-spec v1.1.1
+	github.com/google/go-github/v79 v79.0.0
 	github.com/spf13/cobra v1.10.1
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546
+	golang.org/x/exp v0.0.0-20251125195548-87e1e737ad39
 	golang.org/x/oauth2 v0.33.0
 	helm.sh/helm/v3 v3.19.2
 	oras.land/oras-go/v2 v2.6.0
