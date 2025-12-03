@@ -14,22 +14,23 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 	fixedTime, _ := time.Parse(time.RFC3339, "2023-10-15T10:30:00Z")
 
 	tests := []struct {
-		name               string
-		repo               string
-		tag                string
-		configMap          map[string]interface{}
-		namespace          string
-		componentType      string
-		registryHostname   string
-		wantName           string
-		wantDescription    string
-		wantTags           []string
-		wantAnnotations    map[string]string
-		wantLinks          []bscatalog.EntityLink
-		wantVersion        string
-		wantOwner          string
-		wantCreatedTimeSet bool
-		wantErr            bool
+		name                  string
+		repo                  string
+		tag                   string
+		configMap             map[string]interface{}
+		namespace             string
+		componentType         string
+		registryHostname      string
+		wantName              string
+		wantDescription       string
+		wantTags              []string
+		wantAnnotations       map[string]string
+		wantLinks             []bscatalog.EntityLink
+		wantVersion           string
+		wantOwner             string
+		wantGithubProjectSlug string
+		wantCreatedTimeSet    bool
+		wantErr               bool
 	}{
 		{
 			name:             "Simple OCI chart with minimal data",
@@ -379,6 +380,84 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantCreatedTimeSet: true,
 			wantErr:            false,
 		},
+		{
+			name: "Chart with GitHub home URL",
+			repo: "giantswarm/hello-world",
+			tag:  "v1.0.0",
+			configMap: map[string]interface{}{
+				"description": "Hello World chart",
+				"home":        "https://github.com/giantswarm/hello-world-app",
+			},
+			namespace:        "default",
+			componentType:    "service",
+			registryHostname: "gsoci.azurecr.io",
+			wantName:         "hello-world",
+			wantDescription:  "Hello World chart",
+			wantTags:         []string{"oci", "helm-chart"},
+			wantAnnotations: map[string]string{
+				"giantswarm.io/oci-registry":   "gsoci.azurecr.io",
+				"giantswarm.io/oci-repository": "giantswarm/hello-world",
+				"giantswarm.io/oci-tag":        "v1.0.0",
+			},
+			wantLinks:             nil,
+			wantVersion:           "v1.0.0",
+			wantOwner:             "group:default/unspecified",
+			wantGithubProjectSlug: "giantswarm/hello-world-app",
+			wantCreatedTimeSet:    true,
+			wantErr:               false,
+		},
+		{
+			name: "Chart with non-giantswarm GitHub home URL",
+			repo: "external/some-chart",
+			tag:  "v2.0.0",
+			configMap: map[string]interface{}{
+				"description": "External chart",
+				"home":        "https://github.com/external-org/some-chart",
+			},
+			namespace:        "default",
+			componentType:    "service",
+			registryHostname: "registry.example.com",
+			wantName:         "some-chart",
+			wantDescription:  "External chart",
+			wantTags:         []string{"oci", "helm-chart"},
+			wantAnnotations: map[string]string{
+				"giantswarm.io/oci-registry":   "registry.example.com",
+				"giantswarm.io/oci-repository": "external/some-chart",
+				"giantswarm.io/oci-tag":        "v2.0.0",
+			},
+			wantLinks:             nil,
+			wantVersion:           "v2.0.0",
+			wantOwner:             "group:default/unspecified",
+			wantGithubProjectSlug: "", // Should not be set for non-giantswarm URLs
+			wantCreatedTimeSet:    true,
+			wantErr:               false,
+		},
+		{
+			name: "Chart with non-GitHub home URL",
+			repo: "internal/chart",
+			tag:  "v1.0.0",
+			configMap: map[string]interface{}{
+				"description": "Internal chart",
+				"home":        "https://internal.example.com/charts/my-chart",
+			},
+			namespace:        "default",
+			componentType:    "service",
+			registryHostname: "registry.example.com",
+			wantName:         "chart",
+			wantDescription:  "Internal chart",
+			wantTags:         []string{"oci", "helm-chart"},
+			wantAnnotations: map[string]string{
+				"giantswarm.io/oci-registry":   "registry.example.com",
+				"giantswarm.io/oci-repository": "internal/chart",
+				"giantswarm.io/oci-tag":        "v1.0.0",
+			},
+			wantLinks:             nil,
+			wantVersion:           "v1.0.0",
+			wantOwner:             "group:default/unspecified",
+			wantGithubProjectSlug: "", // Should not be set for non-GitHub URLs
+			wantCreatedTimeSet:    true,
+			wantErr:               false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -440,6 +519,11 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			// Check version
 			if got.LatestReleaseTag != tt.wantVersion {
 				t.Errorf("createComponentFromOCIChart() LatestReleaseTag = %v, want %v", got.LatestReleaseTag, tt.wantVersion)
+			}
+
+			// Check GitHub project slug
+			if got.GithubProjectSlug != tt.wantGithubProjectSlug {
+				t.Errorf("createComponentFromOCIChart() GithubProjectSlug = %v, want %v", got.GithubProjectSlug, tt.wantGithubProjectSlug)
 			}
 
 			// Check that creation time is set

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -14,6 +15,12 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
+
+// exportStats tracks statistics about exported component entities.
+type exportStats struct {
+	total            int
+	annotationCounts map[string]int
+}
 
 var Command = &cobra.Command{
 	Use:   "charts <registry>",
@@ -79,7 +86,9 @@ func runCharts(cmd *cobra.Command, args []string) {
 	log.Printf("Found %d repositories with prefix '%s'", len(repositories), prefix)
 
 	componentExporter := export.New(export.Config{TargetPath: outputPath + "/charts.yaml"})
-	componentsCreated := 0
+	stats := &exportStats{
+		annotationCounts: make(map[string]int),
+	}
 
 	// Process each repository
 	for _, repo := range repositories {
@@ -121,7 +130,10 @@ func runCharts(cmd *cobra.Command, args []string) {
 			log.Fatalf("Error adding component entity: %v", err)
 		}
 
-		componentsCreated++
+		// Track statistics
+		stats.total++
+		stats.trackAnnotations(entity.Metadata.Annotations)
+
 		log.Printf("Created component: %s", comp.Name)
 	}
 
@@ -132,7 +144,10 @@ func runCharts(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Printf("\n%d components written to file %s with size %d bytes\n",
-		componentsCreated, componentExporter.TargetPath, componentExporter.Len())
+		stats.total, componentExporter.TargetPath, componentExporter.Len())
+
+	// Print statistics report
+	stats.printReport()
 }
 
 // createComponentFromOCIChart creates a Backstage component from OCI chart metadata
@@ -154,10 +169,11 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		}
 	}
 
-	// Extract version, creation time, icon, and team owner
+	// Extract version, creation time, icon, team owner, and GitHub project slug
 	version := tag
 	createdTime := time.Now() // Default to now if we can't extract creation time
 	var iconURL string
+	var githubProjectSlug string
 	componentOwner := fmt.Sprintf("group:%s/unspecified", namespace) // Default owner based on namespace
 
 	if configMap != nil {
@@ -169,6 +185,19 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		// Extract icon from top-level (Helm chart config structure)
 		if icon, ok := configMap["icon"].(string); ok && icon != "" {
 			iconURL = icon
+		}
+
+		// Extract GitHub project slug from home field (Helm chart config structure)
+		// Expected format: https://github.com/giantswarm/repository-name
+		if home, ok := configMap["home"].(string); ok && home != "" {
+			const githubGiantSwarmPrefix = "https://github.com/giantswarm/"
+			if strings.HasPrefix(home, githubGiantSwarmPrefix) {
+				// Extract "giantswarm/repository-name" from the URL
+				githubProjectSlug = "giantswarm/" + strings.TrimPrefix(home, githubGiantSwarmPrefix)
+			}
+		}
+		if githubProjectSlug == "" {
+			log.Printf("WARN: 'home' property is not a valid GitHub URL for %s:%s", repo, tag)
 		}
 
 		// Extract team owner from annotations (Helm chart config structure)
@@ -187,8 +216,8 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		}
 	}
 
-	// Create the component
-	comp, err := component.New(name,
+	// Build component options
+	componentOpts := []component.Option{
 		component.WithNamespace(namespace),
 		component.WithTitle(name),
 		component.WithDescription(description),
@@ -197,7 +226,15 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		component.WithLatestReleaseTag(version),
 		component.WithLatestReleaseTime(createdTime),
 		component.WithTags("oci", "helm-chart"),
-	)
+	}
+
+	// Add GitHub project slug if available
+	if githubProjectSlug != "" {
+		componentOpts = append(componentOpts, component.WithGithubProjectSlug(githubProjectSlug))
+	}
+
+	// Create the component
+	comp, err := component.New(name, componentOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -228,4 +265,44 @@ func formatTeamOwner(team, namespace string) string {
 
 	// Return the properly formatted owner string with the given namespace
 	return fmt.Sprintf("group:%s/%s", namespace, team)
+}
+
+// trackAnnotations counts each annotation key present in the entity.
+func (s *exportStats) trackAnnotations(annotations map[string]string) {
+	for key := range annotations {
+		s.annotationCounts[key]++
+	}
+}
+
+// printReport prints a summary of annotation coverage statistics.
+func (s *exportStats) printReport() {
+	if s.total == 0 {
+		return
+	}
+
+	fmt.Println()
+	fmt.Println("=== Annotation Statistics ===")
+	fmt.Println()
+
+	// Sort annotations by count (descending), then alphabetically
+	type annotationCount struct {
+		key   string
+		count int
+	}
+	var annotations []annotationCount
+	for key, count := range s.annotationCounts {
+		annotations = append(annotations, annotationCount{key, count})
+	}
+	sort.Slice(annotations, func(i, j int) bool {
+		if annotations[i].count != annotations[j].count {
+			return annotations[i].count > annotations[j].count
+		}
+		return annotations[i].key < annotations[j].key
+	})
+
+	for _, ac := range annotations {
+		pct := float64(ac.count) * 100 / float64(s.total)
+		fmt.Printf("  %-45s %3d / %d  (%5.1f%%)\n", ac.key+":", ac.count, s.total, pct)
+	}
+	fmt.Println()
 }
