@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/cmd/appcatalogs"
+	"github.com/giantswarm/backstage-catalog-importer/cmd/charts"
 	installations "github.com/giantswarm/backstage-catalog-importer/cmd/installations"
 	users "github.com/giantswarm/backstage-catalog-importer/cmd/users"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
@@ -40,6 +41,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", ".", "Output directory path")
 
 	rootCmd.AddCommand(appcatalogs.Command)
+	rootCmd.AddCommand(charts.Command)
 	rootCmd.AddCommand(installations.Command)
 	rootCmd.AddCommand(users.Command)
 }
