@@ -10,7 +10,7 @@ import (
 	"slices"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v79/github"
+	"github.com/google/go-github/v80/github"
 	"go.yaml.in/yaml/v3"
 	"golang.org/x/oauth2"
 )
