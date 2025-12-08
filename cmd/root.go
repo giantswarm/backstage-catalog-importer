@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -14,9 +15,10 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
+	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/group"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/output/legacy"
 )
 
 var rootCmd = &cobra.Command{
@@ -105,11 +107,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 
-			hasCircleCi, err := repoService.GetHasCircleCI(repo.Name)
-			if err != nil {
-				log.Fatalf("Error: %v", err)
-			}
-
 			hasReadme, err := repoService.GetHasReadme(repo.Name)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
@@ -167,22 +164,71 @@ func runRoot(cmd *cobra.Command, args []string) {
 				}
 			}
 
-			ent := legacy.CreateComponentEntity( //nolint:staticcheck
-				repo,
-				list.OwnerTeamName,
-				repoService.MustGetDescription(repo.Name),
-				repo.System,
-				isPrivate,
-				hasCircleCi,
-				hasReadme,
-				repoService.MustGetDefaultBranch(repo.Name),
-				latestReleaseTime,
-				latestReleaseTag,
-				charts,
-				deps)
+			// Prepare deployment names (default to <name> and <name>-app if not set).
+			deploymentNames := repo.DeploymentNames
+			if len(deploymentNames) == 0 {
+				name := strings.TrimSuffix(repo.Name, "-app")
+				nameWithAppSuffix := fmt.Sprintf("%s-app", name)
+				deploymentNames = []string{
+					name,
+					nameWithAppSuffix,
+				}
+			}
+
+			description := repoService.MustGetDescription(repo.Name)
+			defaultBranch := repoService.MustGetDefaultBranch(repo.Name)
+
+			genLanguage := ""
+			if repo.Gen.Language != "" && repo.Gen.Language != repositories.RepoLanguageGeneric {
+				genLanguage = string(repo.Gen.Language)
+			}
+
+			genFlavors := []string{}
+			for i, flavor := range repo.Gen.Flavors {
+				genFlavors[i] = string(flavor)
+			}
+
+			c, err := component.New(
+				repo.Name,
+				component.WithDefaultBranch(defaultBranch),
+				component.WithDependsOn(deps...),
+				component.WithDeploymentNames(deploymentNames...),
+				component.WithDescription(description),
+				component.WithFlavors(genFlavors...),
+				component.WithHasReadme(hasReadme),
+				component.WithHasReleases(latestReleaseTag != ""),
+				component.WithHelmCharts(charts...),
+				component.WithLanguage(genLanguage),
+				component.WithLatestReleaseTag(latestReleaseTag),
+				component.WithLatestReleaseTime(latestReleaseTime),
+				component.WithLifecycle(string(repo.Lifecycle)),
+				component.WithOwner(list.OwnerTeamName),
+				component.WithPrivate(isPrivate),
+				component.WithSystem(repo.System),
+				component.WithType(repo.ComponentType),
+			)
+			if err != nil {
+				log.Fatalf("Could not create component: %s", err)
+			}
+
+			// Grafana dashboard link for services.
+			if repo.ComponentType == "service" {
+				urlParts := []string{}
+				for _, d := range deploymentNames {
+					urlParts = append(urlParts, fmt.Sprintf("var-app=%s", d))
+				}
+				c.AddLink(bscatalog.EntityLink{
+					URL:   fmt.Sprintf("https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&%s&from=now-24h&to=now", strings.Join(urlParts, "&")),
+					Title: "General service metrics dashboard",
+					Icon:  "dashboard",
+					Type:  "grafana-dashboard",
+				})
+			}
+
+			entity := c.ToEntity()
 			numComponents++
 
-			err = componentExporter.AddEntity(&ent)
+			err = componentExporter.AddEntity(entity)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
 			}

@@ -6,12 +6,23 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 // TestComponent_ToEntity tests the ToEntity method of the Component struct.
 // This gives us the opportunity to use all setters and options.
 func TestComponent_ToEntity(t *testing.T) {
+	// Create mock helm charts for testing
+	mockChart1 := &helmchart.Chart{}
+	mockChart1.Name = "first-chart"
+	mockChart1.Version = "1.2.3"
+	mockChart1.AppVersion = ""
+
+	mockChart2 := &helmchart.Chart{}
+	mockChart2.Name = "second-chart"
+	mockChart2.Version = "0.4.1"
+	mockChart2.AppVersion = "2.3.4"
 
 	tests := []struct {
 		name          string
@@ -45,6 +56,10 @@ func TestComponent_ToEntity(t *testing.T) {
 			name:          "Fullfledged",
 			componentName: "full-fledged",
 			options: []Option{
+				WithLanguage("go"),
+				WithPrivate(true),
+				WithFlavors("app"),
+				WithHelmCharts(mockChart1, mockChart2),
 				WithCircleCiSlug("my-circleci-slug"),
 				WithDefaultBranch("master"),
 				WithDependsOn("first-dependency", "second-dependency"),
@@ -64,7 +79,6 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithTags("My furious tag 1", "SuperBad_2"),
 				WithTitle("Full Fledged"),
 				WithType("service"),
-				WithOciCharts("gsoci.azurecr.io/charts/giantswarm/my-chart", "gsoci.azurecr.io/charts/giantswarm/other-chart"),
 			},
 			want: &bscatalog.Entity{
 				APIVersion: bscatalog.APIVersion,
@@ -73,21 +87,27 @@ func TestComponent_ToEntity(t *testing.T) {
 					Name:        "full-fledged",
 					Namespace:   "my-namespace",
 					Description: "A full-fledged component",
-					Labels:      map[string]string{"key": "value"},
+					Labels: map[string]string{
+						"key":                      "value",
+						"giantswarm.io/language":   "go",
+						"giantswarm.io/flavor-app": "true",
+					},
 					Annotations: map[string]string{
-						"backstage.io/kubernetes-id":        "my-k8s-id",
-						"backstage.io/source-location":      "url:https://github.com/foo-org/my-project",
-						"backstage.io/techdocs-ref":         "url:https://github.com/foo-org/my-project/tree/master",
-						"circleci.com/project-slug":         "my-circleci-slug",
-						"giantswarm.io/deployment-names":    "name1,name2",
-						"giantswarm.io/latest-release-date": "2018-01-03T01:02:03Z",
-						"giantswarm.io/latest-release-tag":  "v5.0.1",
-						"github.com/project-slug":           "foo-org/my-project",
-						"github.com/team-slug":              "my-team",
-						"giantswarm.io/oci-charts":          "gsoci.azurecr.io/charts/giantswarm/my-chart,gsoci.azurecr.io/charts/giantswarm/other-chart",
+						"backstage.io/kubernetes-id":           "my-k8s-id",
+						"backstage.io/source-location":         "url:https://github.com/foo-org/my-project",
+						"backstage.io/techdocs-ref":            "url:https://github.com/foo-org/my-project/tree/master",
+						"circleci.com/project-slug":            "my-circleci-slug",
+						"giantswarm.io/deployment-names":       "name1,name2",
+						"giantswarm.io/latest-release-date":    "2018-01-03T01:02:03Z",
+						"giantswarm.io/latest-release-tag":     "v5.0.1",
+						"github.com/project-slug":              "foo-org/my-project",
+						"github.com/team-slug":                 "my-team",
+						"giantswarm.io/helmcharts":             "first-chart,second-chart",
+						"giantswarm.io/helmchart-versions":     "1.2.3,0.4.1",
+						"giantswarm.io/helmchart-app-versions": ",2.3.4",
 					},
 					Links: []bscatalog.EntityLink{},
-					Tags:  []string{"my-furious-tag-1", "superbad-2"},
+					Tags:  []string{"my-furious-tag-1", "superbad-2", "defaultbranch:master", "flavor:app", "helmchart", "private", "language:go"},
 					Title: "Full Fledged",
 				},
 				Spec: bscatalog.ComponentSpec{
@@ -131,11 +151,12 @@ func TestNew(t *testing.T) {
 			name: "Success",
 			args: args{name: "minimal"},
 			want: &Component{
-				Name:      "minimal",
-				Namespace: "default",
-				Owner:     "unspecified",
-				Type:      "unspecified",
-				Lifecycle: "production",
+				Name:        "minimal",
+				Namespace:   "default",
+				Owner:       "unspecified",
+				Type:        "unspecified",
+				Lifecycle:   "production",
+				HasReleases: true,
 			},
 		},
 		{
@@ -173,11 +194,12 @@ func TestGeneric(t *testing.T) {
 				return New("minimal")
 			},
 			want: &Component{
-				Name:      "minimal",
-				Namespace: "default",
-				Owner:     "unspecified",
-				Type:      "unspecified",
-				Lifecycle: "production",
+				Name:        "minimal",
+				Namespace:   "default",
+				Owner:       "unspecified",
+				Type:        "unspecified",
+				Lifecycle:   "production",
+				HasReleases: true,
 			},
 		},
 		{
@@ -202,11 +224,12 @@ func TestGeneric(t *testing.T) {
 				Links: []bscatalog.EntityLink{
 					{URL: "https://example.com", Title: "link1", Icon: "dashboard", Type: "dashboard"},
 				},
-				Name:      "minimal",
-				Namespace: "default",
-				Owner:     "unspecified",
-				Tags:      []string{"tag1"},
-				Type:      "unspecified",
+				Name:        "minimal",
+				Namespace:   "default",
+				Owner:       "unspecified",
+				Tags:        []string{"tag1"},
+				Type:        "unspecified",
+				HasReleases: true,
 			},
 		},
 	}
