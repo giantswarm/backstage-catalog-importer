@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,6 +35,28 @@ Arguments:
 	Args: cobra.ExactArgs(1),
 	Run:  runCharts,
 }
+
+const (
+	audienceOciAnnotation          = "io.giantswarm.application.audience"
+	audienceLegacyChartAnnnotation = "application.giantswarm.io/audience"
+	audienceBackstageAnnotation    = audienceLegacyChartAnnnotation
+
+	managedOciAnnotation         = "io.giantswarm.application.managed"
+	managedLegacyChartAnnotation = "application.giantswarm.io/managed"
+	managedBackstageAnnotation   = managedLegacyChartAnnotation
+
+	teamOciAnnotation         = "io.giantswarm.application.team"
+	teamLegacyChartAnnotation = "application.giantswarm.io/team"
+
+	iconBackstageAnnotation = "giantswarm.io/icon-url"
+
+	registryBackstageAnnotation   = "giantswarm.io/oci-registry"
+	repositoryBackstageAnnotation = "giantswarm.io/oci-repository"
+	tagBackstageAnnotation        = "giantswarm.io/oci-tag"
+
+	audienceAll        = "all"
+	audienceGiantSwarm = "giantswarm"
+)
 
 func init() {
 	Command.PersistentFlags().StringP("prefix", "p", "", "Repository prefix to filter charts (optional)")
@@ -176,6 +199,10 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 	var githubProjectSlug string
 	componentOwner := fmt.Sprintf("group:%s/unspecified", namespace) // Default owner based on namespace
 
+	// See https://github.com/giantswarm/roadmap/issues/4156#issuecomment-3589340419
+	managed := false
+	audience := audienceAll
+
 	if configMap != nil {
 		// Extract version from top-level (Helm chart config structure)
 		if ver, ok := configMap["version"].(string); ok && ver != "" {
@@ -203,8 +230,34 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		// Extract team owner from annotations (Helm chart config structure)
 		// The annotations field contains Giant Swarm specific metadata
 		if annotations, ok := configMap["annotations"].(map[string]interface{}); ok {
-			if team, ok := annotations["application.giantswarm.io/team"].(string); ok && team != "" {
+			if team, ok := annotations[teamOciAnnotation].(string); ok && team != "" {
 				componentOwner = formatTeamOwner(team, namespace)
+			} else if team, ok := annotations[teamLegacyChartAnnotation].(string); ok && team != "" {
+				componentOwner = formatTeamOwner(team, namespace)
+			}
+
+			if val, exists := annotations[managedOciAnnotation]; exists {
+				if managedValue, ok := val.(bool); ok {
+					managed = managedValue
+				} else {
+					log.Printf("WARN: '%s' annotation value is not a boolean for %s:%s", managedOciAnnotation, repo, tag)
+				}
+			} else if val, exists := annotations[managedLegacyChartAnnotation]; exists {
+				if managedValue, ok := val.(bool); ok {
+					managed = managedValue
+				} else {
+					log.Printf("WARN: '%s' annotation value is not a boolean for %s:%s", managedLegacyChartAnnotation, repo, tag)
+				}
+			}
+
+			if audienceValue, ok := annotations[audienceOciAnnotation].(string); ok {
+				audience = audienceValue
+			} else if audienceValue, ok := annotations[audienceLegacyChartAnnnotation].(string); ok {
+				audience = audienceValue
+			}
+			if audience != audienceAll && audience != audienceGiantSwarm {
+				log.Printf("WARN: audience annotation value '%s' is not a valid audience for %s:%s", audience, repo, tag)
+				audience = audienceAll // back to default
 			}
 		}
 
@@ -240,13 +293,15 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 	}
 
 	// Add OCI-specific annotations
-	comp.SetAnnotation("giantswarm.io/oci-registry", registryHostname)
-	comp.SetAnnotation("giantswarm.io/oci-repository", repo)
-	comp.SetAnnotation("giantswarm.io/oci-tag", tag)
+	comp.SetAnnotation(registryBackstageAnnotation, registryHostname)
+	comp.SetAnnotation(repositoryBackstageAnnotation, repo)
+	comp.SetAnnotation(tagBackstageAnnotation, tag)
+	comp.SetAnnotation(audienceBackstageAnnotation, audience)
+	comp.SetAnnotation(managedBackstageAnnotation, strconv.FormatBool(managed))
 
 	// Add icon URL if available
 	if iconURL != "" {
-		comp.SetAnnotation("giantswarm.io/icon-url", iconURL)
+		comp.SetAnnotation(iconBackstageAnnotation, iconURL)
 	}
 
 	return comp, nil
