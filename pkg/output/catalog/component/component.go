@@ -60,6 +60,10 @@ type Component struct {
 	// Names to use for Kubernetes resource lookup.
 	DeploymentNames []string
 
+	// OCI charts provided by the component,
+	// e.g. "gsoci.azurecr.io/charts/giantswarm/my-chart"
+	OciCharts []string
+
 	// Component type. Defaults to "unspecified".
 	Type string
 

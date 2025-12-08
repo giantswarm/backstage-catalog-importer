@@ -81,6 +81,10 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 			e.Metadata.Annotations["backstage.io/kubernetes-id"] = c.KubernetesID
 		}
 	}
+	if len(c.OciCharts) > 0 {
+		sort.Strings(c.OciCharts)
+		e.Metadata.Annotations["giantswarm.io/oci-charts"] = strings.Join(c.OciCharts, ",")
+	}
 
 	spec := bscatalog.ComponentSpec{
 		Type:      c.Type,

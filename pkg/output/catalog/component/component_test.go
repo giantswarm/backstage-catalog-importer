@@ -64,6 +64,7 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithTags("My furious tag 1", "SuperBad_2"),
 				WithTitle("Full Fledged"),
 				WithType("service"),
+				WithOciCharts("gsoci.azurecr.io/charts/giantswarm/my-chart", "gsoci.azurecr.io/charts/giantswarm/other-chart"),
 			},
 			want: &bscatalog.Entity{
 				APIVersion: bscatalog.APIVersion,
@@ -83,6 +84,7 @@ func TestComponent_ToEntity(t *testing.T) {
 						"giantswarm.io/latest-release-tag":  "v5.0.1",
 						"github.com/project-slug":           "foo-org/my-project",
 						"github.com/team-slug":              "my-team",
+						"giantswarm.io/oci-charts":          "gsoci.azurecr.io/charts/giantswarm/my-chart,gsoci.azurecr.io/charts/giantswarm/other-chart",
 					},
 					Links: []bscatalog.EntityLink{},
 					Tags:  []string{"my-furious-tag-1", "superbad-2"},

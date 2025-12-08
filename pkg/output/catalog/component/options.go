@@ -122,3 +122,9 @@ func WithOwner(owner string) Option {
 		c.Owner = owner
 	}
 }
+
+func WithOciCharts(charts ...string) Option {
+	return func(c *Component) {
+		c.OciCharts = charts
+	}
+}
