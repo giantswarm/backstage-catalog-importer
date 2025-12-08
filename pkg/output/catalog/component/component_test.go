@@ -120,6 +120,90 @@ func TestComponent_ToEntity(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:          "NoReleases",
+			componentName: "no-releases-component",
+			options: []Option{
+				WithHasReleases(false),
+				WithLanguage("python"),
+				WithFlavors("cli"),
+			},
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.APIVersion,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
+					Name: "no-releases-component",
+					Labels: map[string]string{
+						"giantswarm.io/language":   "python",
+						"giantswarm.io/flavor-cli": "true",
+					},
+					Annotations: map[string]string{},
+					Links:       []bscatalog.EntityLink{},
+					Tags:        []string{"flavor:cli", "no-releases", "language:python"},
+				},
+				Spec: bscatalog.ComponentSpec{
+					Type:      "unspecified",
+					Lifecycle: "production",
+					Owner:     "unspecified",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:          "ServiceWithoutKubernetesID",
+			componentName: "my-service",
+			options: []Option{
+				WithType("service"),
+			},
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.APIVersion,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
+					Name:   "my-service",
+					Labels: map[string]string{},
+					Annotations: map[string]string{
+						"backstage.io/kubernetes-id": "my-service",
+					},
+					Links: []bscatalog.EntityLink{},
+				},
+				Spec: bscatalog.ComponentSpec{
+					Type:      "service",
+					Lifecycle: "production",
+					Owner:     "unspecified",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name:          "WithCustomAnnotationsAndLinks",
+			componentName: "custom-component",
+			options:       []Option{},
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.APIVersion,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
+					Name:   "custom-component",
+					Labels: map[string]string{},
+					Annotations: map[string]string{
+						"custom.io/annotation": "custom-value",
+					},
+					Links: []bscatalog.EntityLink{
+						{
+							URL:   "https://custom.example.com",
+							Title: "Custom Link",
+							Icon:  "link",
+							Type:  "custom",
+						},
+					},
+				},
+				Spec: bscatalog.ComponentSpec{
+					Type:      "unspecified",
+					Lifecycle: "production",
+					Owner:     "unspecified",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -128,6 +212,18 @@ func TestComponent_ToEntity(t *testing.T) {
 				t.Errorf("NewComponent() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			// Apply custom modifications for specific test cases
+			if tt.name == "WithCustomAnnotationsAndLinks" {
+				component.SetAnnotation("custom.io/annotation", "custom-value")
+				component.AddLink(bscatalog.EntityLink{
+					URL:   "https://custom.example.com",
+					Title: "Custom Link",
+					Icon:  "link",
+					Type:  "custom",
+				})
+			}
+
 			got := component.ToEntity()
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("Component.ToEntity() mismatch (-want +got):\n%s", diff)
