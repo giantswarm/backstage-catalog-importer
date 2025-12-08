@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
@@ -48,6 +49,9 @@ type Component struct {
 	// Whether the component repository has a README file
 	HasReadme bool
 
+	// Whether the component repository is private.
+	IsPrivate bool
+
 	// Default branch of the component repository
 	DefaultBranch string
 
@@ -56,6 +60,9 @@ type Component struct {
 
 	// Tag of the latest release of the component
 	LatestReleaseTag string
+
+	// Whether the component has at least one release (used for tags).
+	HasReleases bool
 
 	// Names to use for Kubernetes resource lookup.
 	DeploymentNames []string
@@ -68,6 +75,15 @@ type Component struct {
 
 	// Names of components that this component depends on.
 	DependsOn []string
+
+	// Programming language of the component (optional, used for labels/tags).
+	Language string
+
+	// Flavors of the component (e.g. "app", "cli").
+	Flavors []string
+
+	// Helm charts provided by the component.
+	HelmCharts []*helmchart.Chart
 
 	Tags []string
 
@@ -87,11 +103,12 @@ func New(name string, options ...Option) (*Component, error) {
 	}
 
 	c := &Component{
-		Name:      name,
-		Namespace: "default",
-		Type:      "unspecified",
-		Owner:     "unspecified",
-		Lifecycle: "production",
+		Name:        name,
+		Namespace:   "default",
+		Type:        "unspecified",
+		Owner:       "unspecified",
+		Lifecycle:   "production",
+		HasReleases: true,
 	}
 
 	for _, option := range options {
