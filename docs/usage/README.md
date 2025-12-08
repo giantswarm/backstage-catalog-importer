@@ -28,7 +28,7 @@ This requires a Github personal access token (PAT) with permission to read teams
 To run the export, execute
 
 ```nohighlight
-backstage-catalog-importer appcatalogs [--output path-to-output-dir]
+backstage-catalog-importer charts gsoci.azurecr.io --prefix charts/giantswarm/ [--output path-to-output-dir]
 backstage-catalog-importer users [--output path-to-output-dir]
 ```
 
