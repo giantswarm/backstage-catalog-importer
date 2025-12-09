@@ -40,6 +40,9 @@ const (
 
 func init() {
 	rootCmd.PersistentFlags().StringP("output", "o", ".", "Output directory path")
+	rootCmd.Flags().StringP("chart-repo-prefix", "", "charts/giantswarm", "Prefix for chart repositories in the OCI registries")
+	rootCmd.Flags().StringP("public-oci-registry", "", "gsoci.azurecr.io", "Host name of the public OCI registry")
+	rootCmd.Flags().StringP("private-oci-registry", "", "gsociprivate.azurecr.io", "Host name of the private OCI registry")
 
 	rootCmd.AddCommand(appcatalogs.Command)
 	rootCmd.AddCommand(installations.Command)
@@ -55,6 +58,24 @@ func Execute() {
 
 func runRoot(cmd *cobra.Command, args []string) {
 	path, err := cmd.PersistentFlags().GetString("output")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	repoPrefix, err := cmd.Flags().GetString("chart-repo-prefix")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Remove leading and trailing slah if present
+	repoPrefix = strings.TrimPrefix(repoPrefix, "/")
+	repoPrefix = strings.TrimSuffix(repoPrefix, "/")
+
+	publicOciRegistry, err := cmd.Flags().GetString("public-oci-registry")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	privateOciRegistry, err := cmd.Flags().GetString("private-oci-registry")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,9 +123,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
 		for _, repo := range list.Repositories {
+
+			ociRegistry := publicOciRegistry
 			isPrivate, err := repoService.GetIsPrivate(repo.Name)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
+			}
+			if isPrivate {
+				ociRegistry = privateOciRegistry
 			}
 
 			hasReadme, err := repoService.GetHasReadme(repo.Name)
@@ -183,18 +209,21 @@ func runRoot(cmd *cobra.Command, args []string) {
 				genLanguage = string(repo.Gen.Language)
 			}
 
-			genFlavors := []string{}
+			genFlavors := make([]string, len(repo.Gen.Flavors))
 			for i, flavor := range repo.Gen.Flavors {
 				genFlavors[i] = string(flavor)
 			}
 
 			c, err := component.New(
 				repo.Name,
+				component.WithCircleCiSlug(fmt.Sprintf("github/%s/%s", githubOrganization, repo.Name)),
 				component.WithDefaultBranch(defaultBranch),
 				component.WithDependsOn(deps...),
 				component.WithDeploymentNames(deploymentNames...),
 				component.WithDescription(description),
 				component.WithFlavors(genFlavors...),
+				component.WithGithubProjectSlug(fmt.Sprintf("%s/%s", githubOrganization, repo.Name)),
+				component.WithGithubTeamSlug(list.OwnerTeamName),
 				component.WithHasReadme(hasReadme),
 				component.WithHasReleases(latestReleaseTag != ""),
 				component.WithHelmCharts(charts...),
@@ -206,6 +235,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 				component.WithPrivate(isPrivate),
 				component.WithSystem(repo.System),
 				component.WithType(repo.ComponentType),
+				component.WithOciRegistry(ociRegistry),
+				component.WithOciRepositoryPrefix(repoPrefix),
 			)
 			if err != nil {
 				log.Fatalf("Could not create component: %s", err)
