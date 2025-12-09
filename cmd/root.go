@@ -66,7 +66,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Remove leading and trailing slah if present
+	// Remove leading and trailing slash if present
 	repoPrefix = strings.TrimPrefix(repoPrefix, "/")
 	repoPrefix = strings.TrimSuffix(repoPrefix, "/")
 
