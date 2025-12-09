@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Change `giantswarm.io/helmchart` entity annotation for components, to include registry hostname and path, like `gsoci.azurecr.io/charts/giantswarm/hello-world`.
+- Change `giantswarm.io/helmcharts` entity annotation for components, to include registry hostname and path, like `gsoci.azurecr.io/charts/giantswarm/hello-world`.
 
 ## [0.22.0] - 2025-09-10
 
