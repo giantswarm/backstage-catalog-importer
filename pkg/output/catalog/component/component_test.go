@@ -109,7 +109,7 @@ func TestComponent_ToEntity(t *testing.T) {
 						"giantswarm.io/helmchart-app-versions": ",2.3.4",
 					},
 					Links: []bscatalog.EntityLink{},
-					Tags:  []string{"my-furious-tag-1", "superbad-2", "defaultbranch:master", "flavor:app", "helmchart", "private", "language:go"},
+					Tags:  []string{"defaultbranch:master", "flavor:app", "helmchart", "language:go", "my-furious-tag-1", "private", "superbad-2"},
 					Title: "Full Fledged",
 				},
 				Spec: bscatalog.ComponentSpec{
@@ -141,7 +141,7 @@ func TestComponent_ToEntity(t *testing.T) {
 					},
 					Annotations: map[string]string{},
 					Links:       []bscatalog.EntityLink{},
-					Tags:        []string{"flavor:cli", "no-releases", "language:python"},
+					Tags:        []string{"flavor:cli", "language:python", "no-releases"},
 				},
 				Spec: bscatalog.ComponentSpec{
 					Type:      "unspecified",
