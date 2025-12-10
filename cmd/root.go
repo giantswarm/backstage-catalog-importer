@@ -140,6 +140,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 			// Fetch Helm chart info if available.
 			var charts []*helmchart.Chart
+			var hasDeployableChart bool
 			{
 				numCharts, err := repoService.GetNumHelmCharts(repo.Name)
 				if err != nil {
@@ -160,6 +161,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 								log.Printf("WARN - %s - error parsing helm chart %s: %v", repo.Name, chartName, err)
 							} else {
 								charts = append(charts, chart)
+							}
+
+							if chart.Type == "application" || chart.Type == "" {
+								hasDeployableChart = true
 							}
 						}
 					}
@@ -240,6 +245,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 			)
 			if err != nil {
 				log.Fatalf("Could not create component: %s", err)
+			}
+
+			if hasDeployableChart {
+				c.AddTag("helmchart-deployable")
 			}
 
 			// Grafana dashboard link for services.
