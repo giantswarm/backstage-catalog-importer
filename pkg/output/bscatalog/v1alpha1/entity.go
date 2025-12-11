@@ -1,6 +1,9 @@
 package v1alpha1
 
-import "strings"
+import (
+	"sort"
+	"strings"
+)
 
 // An Entity in the software catalog.
 type Entity struct {
@@ -111,4 +114,7 @@ func (e *EntityMetadata) NormalizeTags() {
 		e.Tags[i] = strings.ReplaceAll(e.Tags[i], "/", "-")
 		e.Tags[i] = strings.ReplaceAll(e.Tags[i], "+", "-")
 	}
+
+	// sort the tags
+	sort.Strings(e.Tags)
 }

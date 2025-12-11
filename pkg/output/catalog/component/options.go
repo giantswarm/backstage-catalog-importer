@@ -154,3 +154,15 @@ func WithHelmCharts(charts ...*helmchart.Chart) Option {
 		c.HelmCharts = charts
 	}
 }
+
+func WithOciRegistry(registry string) Option {
+	return func(c *Component) {
+		c.OciRegistry = registry
+	}
+}
+
+func WithOciRepositoryPrefix(prefix string) Option {
+	return func(c *Component) {
+		c.OciRepositoryPrefix = prefix
+	}
+}

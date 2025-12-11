@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Change `giantswarm.io/helmcharts` entity annotation for components, to include registry hostname and path, like `gsoci.azurecr.io/charts/giantswarm/hello-world`.
+
+### Added
+
+- Add tag `helmchart-deployable` to component entity if component has a Helm chart of type application.
+
 ## [0.22.0] - 2025-09-10
 
 ### Removed

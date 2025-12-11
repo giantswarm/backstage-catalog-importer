@@ -85,6 +85,12 @@ type Component struct {
 	// Helm charts provided by the component.
 	HelmCharts []*helmchart.Chart
 
+	// OCI registry of the component
+	OciRegistry string
+
+	// OCI repository prefix of the component
+	OciRepositoryPrefix string
+
 	Tags []string
 
 	Labels map[string]string

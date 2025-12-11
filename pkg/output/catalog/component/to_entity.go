@@ -122,12 +122,15 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 		names := make([]string, len(c.HelmCharts))
 		versions := make([]string, len(c.HelmCharts))
 		appVersions := make([]string, len(c.HelmCharts))
+		fullChartNames := make([]string, len(c.HelmCharts))
 		for i, chart := range c.HelmCharts {
 			names[i] = chart.Name
 			versions[i] = chart.Version
 			appVersions[i] = chart.AppVersion
+			fullChartNames[i] = fmt.Sprintf("%s/%s/%s", c.OciRegistry, c.OciRepositoryPrefix, chart.Name)
 		}
-		e.Metadata.Annotations["giantswarm.io/helmcharts"] = strings.Join(names, ",")
+
+		e.Metadata.Annotations["giantswarm.io/helmcharts"] = strings.Join(fullChartNames, ",")
 		e.Metadata.Annotations["giantswarm.io/helmchart-versions"] = strings.Join(versions, ",")
 		e.Metadata.Annotations["giantswarm.io/helmchart-app-versions"] = strings.Join(appVersions, ",")
 	}

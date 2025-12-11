@@ -79,6 +79,8 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithTags("My furious tag 1", "SuperBad_2"),
 				WithTitle("Full Fledged"),
 				WithType("service"),
+				WithOciRegistry("gsoci.azurecr.io"),
+				WithOciRepositoryPrefix("charts/giantswarm"),
 			},
 			want: &bscatalog.Entity{
 				APIVersion: bscatalog.APIVersion,
@@ -102,12 +104,12 @@ func TestComponent_ToEntity(t *testing.T) {
 						"giantswarm.io/latest-release-tag":     "v5.0.1",
 						"github.com/project-slug":              "foo-org/my-project",
 						"github.com/team-slug":                 "my-team",
-						"giantswarm.io/helmcharts":             "first-chart,second-chart",
+						"giantswarm.io/helmcharts":             "gsoci.azurecr.io/charts/giantswarm/first-chart,gsoci.azurecr.io/charts/giantswarm/second-chart",
 						"giantswarm.io/helmchart-versions":     "1.2.3,0.4.1",
 						"giantswarm.io/helmchart-app-versions": ",2.3.4",
 					},
 					Links: []bscatalog.EntityLink{},
-					Tags:  []string{"my-furious-tag-1", "superbad-2", "defaultbranch:master", "flavor:app", "helmchart", "private", "language:go"},
+					Tags:  []string{"defaultbranch:master", "flavor:app", "helmchart", "language:go", "my-furious-tag-1", "private", "superbad-2"},
 					Title: "Full Fledged",
 				},
 				Spec: bscatalog.ComponentSpec{
@@ -139,7 +141,7 @@ func TestComponent_ToEntity(t *testing.T) {
 					},
 					Annotations: map[string]string{},
 					Links:       []bscatalog.EntityLink{},
-					Tags:        []string{"flavor:cli", "no-releases", "language:python"},
+					Tags:        []string{"flavor:cli", "language:python", "no-releases"},
 				},
 				Spec: bscatalog.ComponentSpec{
 					Type:      "unspecified",
