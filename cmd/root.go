@@ -161,10 +161,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 								log.Printf("WARN - %s - error parsing helm chart %s: %v", repo.Name, chartName, err)
 							} else {
 								charts = append(charts, chart)
-							}
-
-							if chart.Type == "application" || chart.Type == "" {
-								hasDeployableChart = true
+								if chart.Type == "application" || chart.Type == "" {
+									hasDeployableChart = true
+								}
 							}
 						}
 					}
