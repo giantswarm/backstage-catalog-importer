@@ -2,6 +2,8 @@ package component
 
 import (
 	"time"
+
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 )
 
 // Option is an option to configure a Component.
@@ -67,6 +69,12 @@ func WithLatestReleaseTag(latestReleaseTag string) Option {
 	}
 }
 
+func WithHasReleases(hasReleases bool) Option {
+	return func(c *Component) {
+		c.HasReleases = hasReleases
+	}
+}
+
 func WithGithubProjectSlug(slug string) Option {
 	return func(c *Component) {
 		c.GithubProjectSlug = slug
@@ -99,6 +107,24 @@ func WithDependsOn(dependsOn ...string) Option {
 	}
 }
 
+func WithLanguage(language string) Option {
+	return func(c *Component) {
+		c.Language = language
+	}
+}
+
+func WithPrivate(isPrivate bool) Option {
+	return func(c *Component) {
+		c.IsPrivate = isPrivate
+	}
+}
+
+func WithFlavors(flavors ...string) Option {
+	return func(c *Component) {
+		c.Flavors = flavors
+	}
+}
+
 func WithTags(tags ...string) Option {
 	return func(c *Component) {
 		c.Tags = tags
@@ -120,5 +146,23 @@ func WithKubernetesID(id string) Option {
 func WithOwner(owner string) Option {
 	return func(c *Component) {
 		c.Owner = owner
+	}
+}
+
+func WithHelmCharts(charts ...*helmchart.Chart) Option {
+	return func(c *Component) {
+		c.HelmCharts = charts
+	}
+}
+
+func WithOciRegistry(registry string) Option {
+	return func(c *Component) {
+		c.OciRegistry = registry
+	}
+}
+
+func WithOciRepositoryPrefix(prefix string) Option {
+	return func(c *Component) {
+		c.OciRepositoryPrefix = prefix
 	}
 }

@@ -11,7 +11,24 @@ import (
 
 // Returns an entity representation of the Component.
 func (c *Component) ToEntity() *bscatalog.Entity {
-	sort.Strings(c.Tags)
+	tags := make([]string, len(c.Tags))
+	copy(tags, c.Tags)
+	if c.IsPrivate {
+		tags = append(tags, "private")
+	}
+	if !c.HasReleases {
+		tags = append(tags, "no-releases")
+	}
+	if c.DefaultBranch == "master" {
+		tags = append(tags, "defaultbranch:master")
+	}
+	for _, flavor := range c.Flavors {
+		tags = append(tags, fmt.Sprintf("flavor:%s", flavor))
+	}
+	if len(c.HelmCharts) > 0 {
+		tags = append(tags, "helmchart")
+	}
+	sort.Strings(tags)
 
 	e := &bscatalog.Entity{
 		APIVersion: bscatalog.APIVersion,
@@ -44,12 +61,32 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 		}
 	}
 
+	if c.Language != "" {
+		if e.Metadata.Labels == nil {
+			e.Metadata.Labels = make(map[string]string)
+		}
+		e.Metadata.Labels["giantswarm.io/language"] = c.Language
+	}
+
+	if len(c.Flavors) > 0 {
+		if e.Metadata.Labels == nil {
+			e.Metadata.Labels = make(map[string]string)
+		}
+		for _, flavor := range c.Flavors {
+			e.Metadata.Labels[fmt.Sprintf("giantswarm.io/flavor-%s", flavor)] = "true"
+		}
+	}
+
 	if len(c.Links) > 0 {
 		e.Metadata.Links = c.Links
 	}
 
-	if c.Tags != nil {
-		e.Metadata.Tags = c.Tags
+	if len(tags) > 0 {
+		e.Metadata.Tags = tags
+	}
+
+	if c.Language != "" {
+		e.Metadata.Tags = append(e.Metadata.Tags, fmt.Sprintf("language:%s", c.Language))
 	}
 
 	if c.GithubProjectSlug != "" {
@@ -80,6 +117,22 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 		if c.KubernetesID != "" {
 			e.Metadata.Annotations["backstage.io/kubernetes-id"] = c.KubernetesID
 		}
+	}
+	if len(c.HelmCharts) > 0 {
+		names := make([]string, len(c.HelmCharts))
+		versions := make([]string, len(c.HelmCharts))
+		appVersions := make([]string, len(c.HelmCharts))
+		fullChartNames := make([]string, len(c.HelmCharts))
+		for i, chart := range c.HelmCharts {
+			names[i] = chart.Name
+			versions[i] = chart.Version
+			appVersions[i] = chart.AppVersion
+			fullChartNames[i] = fmt.Sprintf("%s/%s/%s", c.OciRegistry, c.OciRepositoryPrefix, chart.Name)
+		}
+
+		e.Metadata.Annotations["giantswarm.io/helmcharts"] = strings.Join(fullChartNames, ",")
+		e.Metadata.Annotations["giantswarm.io/helmchart-versions"] = strings.Join(versions, ",")
+		e.Metadata.Annotations["giantswarm.io/helmchart-app-versions"] = strings.Join(appVersions, ",")
 	}
 
 	spec := bscatalog.ComponentSpec{
