@@ -196,7 +196,7 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 				// Extract repository name from the URL and remove any trailing slashes
 				repoNameFromURL := strings.TrimPrefix(home, githubGiantSwarmPrefix)
 				repoNameFromURL = strings.TrimSuffix(repoNameFromURL, "/")
-				
+
 				// Build project slug and repository name
 				githubProjectSlug = "giantswarm/" + repoNameFromURL
 				githubRepoName = repoNameFromURL
