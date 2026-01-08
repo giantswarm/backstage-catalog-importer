@@ -15,6 +15,7 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/ociregistry"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
+	componentutil "github.com/giantswarm/backstage-catalog-importer/pkg/util/component"
 )
 
 // exportStats tracks statistics about exported component entities.
@@ -50,10 +51,6 @@ const (
 
 	iconBackstageAnnotation = "giantswarm.io/icon-url"
 
-	registryBackstageAnnotation   = "giantswarm.io/oci-registry"
-	repositoryBackstageAnnotation = "giantswarm.io/oci-repository"
-	tagBackstageAnnotation        = "giantswarm.io/oci-tag"
-
 	audienceAll        = "all"
 	audienceGiantSwarm = "giantswarm"
 )
@@ -62,6 +59,7 @@ func init() {
 	Command.PersistentFlags().StringP("prefix", "p", "", "Repository prefix to filter charts (optional)")
 	Command.PersistentFlags().StringP("namespace", "n", "default", "Backstage namespace for the components")
 	Command.PersistentFlags().StringP("type", "t", "service", "Component type")
+	Command.PersistentFlags().IntP("limit", "l", 0, "Limit the number of charts to process (0 = no limit, for testing)")
 }
 
 func runCharts(cmd *cobra.Command, args []string) {
@@ -79,6 +77,11 @@ func runCharts(cmd *cobra.Command, args []string) {
 	}
 
 	componentType, err := cmd.PersistentFlags().GetString("type")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	limit, err := cmd.PersistentFlags().GetInt("limit")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -107,6 +110,12 @@ func runCharts(cmd *cobra.Command, args []string) {
 	}
 
 	log.Printf("Found %d repositories with prefix '%s'", len(repositories), prefix)
+
+	// Apply limit if specified
+	if limit > 0 && len(repositories) > limit {
+		log.Printf("Limiting to first %d repositories (--limit flag)", limit)
+		repositories = repositories[:limit]
+	}
 
 	componentExporter := export.New(export.Config{TargetPath: outputPath + "/charts.yaml"})
 	stats := &exportStats{
@@ -175,13 +184,30 @@ func runCharts(cmd *cobra.Command, args []string) {
 
 // createComponentFromOCIChart creates a Backstage component from OCI chart metadata
 func createComponentFromOCIChart(repo string, tag string, configMap map[string]interface{}, namespace, componentType, registryHostname string) (*component.Component, error) {
-	// Extract component name from repository path
-	// Remove any org prefix and clean up the name
-	name := repo
-	if strings.Contains(repo, "/") {
-		parts := strings.Split(repo, "/")
-		name = parts[len(parts)-1]
+	// Extract GitHub project slug and repository name from home field (Helm chart config structure)
+	// Expected format: https://github.com/giantswarm/repository-name
+	var githubProjectSlug string
+	var githubRepoName string
+
+	if configMap != nil {
+		if home, ok := configMap["home"].(string); ok && home != "" {
+			const githubGiantSwarmPrefix = "https://github.com/giantswarm/"
+			if strings.HasPrefix(home, githubGiantSwarmPrefix) {
+				// Extract "giantswarm/repository-name" from the URL
+				githubProjectSlug = "giantswarm/" + strings.TrimPrefix(home, githubGiantSwarmPrefix)
+				// Extract just the repository name (last part after slash)
+				githubRepoName = strings.TrimPrefix(home, githubGiantSwarmPrefix)
+			}
+		}
 	}
+
+	// We require a valid GitHub repository to create the component
+	if githubProjectSlug == "" {
+		return nil, fmt.Errorf("cannot match chart to GitHub repository: 'home' field is missing or not a valid GitHub URL")
+	}
+
+	// Use the GitHub repository name as the component name
+	name := githubRepoName
 
 	// Extract description from config if available
 	// Helm chart configs have description at the top level
@@ -192,11 +218,12 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		}
 	}
 
-	// Extract version, creation time, icon, team owner, and GitHub project slug
-	version := tag
+	// Extract version, appVersion, creation time, icon, team owner, and chart type
+	chartVersion := tag
+	var appVersion string
+	var chartType string
 	createdTime := time.Now() // Default to now if we can't extract creation time
 	var iconURL string
-	var githubProjectSlug string
 	componentOwner := fmt.Sprintf("group:%s/unspecified", namespace) // Default owner based on namespace
 
 	// See https://github.com/giantswarm/roadmap/issues/4156#issuecomment-3589340419
@@ -206,25 +233,22 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 	if configMap != nil {
 		// Extract version from top-level (Helm chart config structure)
 		if ver, ok := configMap["version"].(string); ok && ver != "" {
-			version = ver
+			chartVersion = ver
+		}
+
+		// Extract appVersion from top-level (Helm chart config structure)
+		if appVer, ok := configMap["appVersion"].(string); ok && appVer != "" {
+			appVersion = appVer
+		}
+
+		// Extract chart type from top-level (Helm chart config structure)
+		if cType, ok := configMap["type"].(string); ok {
+			chartType = cType
 		}
 
 		// Extract icon from top-level (Helm chart config structure)
 		if icon, ok := configMap["icon"].(string); ok && icon != "" {
 			iconURL = icon
-		}
-
-		// Extract GitHub project slug from home field (Helm chart config structure)
-		// Expected format: https://github.com/giantswarm/repository-name
-		if home, ok := configMap["home"].(string); ok && home != "" {
-			const githubGiantSwarmPrefix = "https://github.com/giantswarm/"
-			if strings.HasPrefix(home, githubGiantSwarmPrefix) {
-				// Extract "giantswarm/repository-name" from the URL
-				githubProjectSlug = "giantswarm/" + strings.TrimPrefix(home, githubGiantSwarmPrefix)
-			}
-		}
-		if githubProjectSlug == "" {
-			log.Printf("WARN: 'home' property is not a valid GitHub URL for %s:%s", repo, tag)
 		}
 
 		// Extract team owner from annotations (Helm chart config structure)
@@ -277,6 +301,9 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		}
 	}
 
+	// Prepare deployment names using shared utility function
+	deploymentNames := componentutil.GenerateDeploymentNames(name)
+
 	// Build component options
 	componentOpts := []component.Option{
 		component.WithNamespace(namespace),
@@ -284,9 +311,10 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		component.WithDescription(description),
 		component.WithOwner(componentOwner),
 		component.WithType(componentType),
-		component.WithLatestReleaseTag(version),
+		component.WithLatestReleaseTag(chartVersion),
 		component.WithLatestReleaseTime(createdTime),
-		component.WithTags("oci", "helm-chart"),
+		component.WithDeploymentNames(deploymentNames...),
+		component.WithTags("helmchart"),
 	}
 
 	// Add GitHub project slug if available
@@ -300,16 +328,29 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		return nil, err
 	}
 
-	// Add OCI-specific annotations
-	comp.SetAnnotation(registryBackstageAnnotation, registryHostname)
-	comp.SetAnnotation(repositoryBackstageAnnotation, repo)
-	comp.SetAnnotation(tagBackstageAnnotation, tag)
+	// Add helmchart annotations
+	// Format: registry/repository (combining what was oci-registry and oci-repository)
+	helmchartPath := fmt.Sprintf("%s/%s", registryHostname, repo)
+	comp.SetAnnotation("giantswarm.io/helmcharts", helmchartPath)
+	comp.SetAnnotation("giantswarm.io/helmchart-versions", chartVersion)
+
+	// Add app version if available
+	if appVersion != "" {
+		comp.SetAnnotation("giantswarm.io/helmchart-app-versions", appVersion)
+	}
+
+	// Add audience and managed annotations
 	comp.SetAnnotation(audienceBackstageAnnotation, audience)
 	comp.SetAnnotation(managedBackstageAnnotation, strconv.FormatBool(managed))
 
 	// Add icon URL if available
 	if iconURL != "" {
 		comp.SetAnnotation(iconBackstageAnnotation, iconURL)
+	}
+
+	// Add helmchart-deployable tag if the chart is deployable
+	if componentutil.IsChartDeployable(chartType) {
+		comp.AddTag("helmchart-deployable")
 	}
 
 	return comp, nil
