@@ -237,16 +237,24 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 			}
 
 			if val, exists := annotations[managedOciAnnotation]; exists {
-				if managedValue, ok := val.(bool); ok {
-					managed = managedValue
+				if strVal, ok := val.(string); ok {
+					if managedValue, err := strconv.ParseBool(strVal); err == nil {
+						managed = managedValue
+					} else {
+						log.Printf("WARN: '%s' annotation value '%s' is not a valid boolean (expected 'true' or 'false') for %s:%s", managedOciAnnotation, strVal, repo, tag)
+					}
 				} else {
-					log.Printf("WARN: '%s' annotation value is not a boolean for %s:%s", managedOciAnnotation, repo, tag)
+					log.Printf("WARN: '%s' annotation value is not a string for %s:%s", managedOciAnnotation, repo, tag)
 				}
 			} else if val, exists := annotations[managedLegacyChartAnnotation]; exists {
-				if managedValue, ok := val.(bool); ok {
-					managed = managedValue
+				if strVal, ok := val.(string); ok {
+					if managedValue, err := strconv.ParseBool(strVal); err == nil {
+						managed = managedValue
+					} else {
+						log.Printf("WARN: '%s' annotation value '%s' is not a valid boolean (expected 'true' or 'false') for %s:%s", managedLegacyChartAnnotation, strVal, repo, tag)
+					}
 				} else {
-					log.Printf("WARN: '%s' annotation value is not a boolean for %s:%s", managedLegacyChartAnnotation, repo, tag)
+					log.Printf("WARN: '%s' annotation value is not a string for %s:%s", managedLegacyChartAnnotation, repo, tag)
 				}
 			}
 
