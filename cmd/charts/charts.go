@@ -193,10 +193,13 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 		if home, ok := configMap["home"].(string); ok && home != "" {
 			const githubGiantSwarmPrefix = "https://github.com/giantswarm/"
 			if strings.HasPrefix(home, githubGiantSwarmPrefix) {
-				// Extract "giantswarm/repository-name" from the URL
-				githubProjectSlug = "giantswarm/" + strings.TrimPrefix(home, githubGiantSwarmPrefix)
-				// Extract just the repository name (last part after slash)
-				githubRepoName = strings.TrimPrefix(home, githubGiantSwarmPrefix)
+				// Extract repository name from the URL and remove any trailing slashes
+				repoNameFromURL := strings.TrimPrefix(home, githubGiantSwarmPrefix)
+				repoNameFromURL = strings.TrimSuffix(repoNameFromURL, "/")
+
+				// Build project slug and repository name
+				githubProjectSlug = "giantswarm/" + repoNameFromURL
+				githubRepoName = repoNameFromURL
 			}
 		}
 	}
