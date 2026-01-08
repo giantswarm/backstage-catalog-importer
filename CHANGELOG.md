@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-01-08
+
 ### Added
 
 - Add `charts` command to generate a catalog based on an OCI registry.
@@ -369,7 +371,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.23.1...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.23.1...v0.24.0
 [0.23.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.23.0...v0.23.1
 [0.23.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.21.2...v0.22.0
