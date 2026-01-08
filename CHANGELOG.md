@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `charts` command to generate a catalog based on an OCI registry.
+
 ## [0.23.1] - 2025-12-15
 
 ### Fixed

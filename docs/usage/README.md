@@ -23,12 +23,12 @@ The following data will be included in the generated catalog:
 
 ## Generate catalog files for customer catalogs
 
-This requires a Github personal access token (PTA) with permission to read teams in the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
+This requires a Github personal access token (PAT) with permission to read teams in the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
 
 To run the export, execute
 
 ```nohighlight
-backstage-catalog-importer appcatalogs [--output path-to-output-dir]
+backstage-catalog-importer charts gsoci.azurecr.io --prefix charts/giantswarm/ [--output path-to-output-dir]
 backstage-catalog-importer users [--output path-to-output-dir]
 ```
 

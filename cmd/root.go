@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/cmd/appcatalogs"
+	"github.com/giantswarm/backstage-catalog-importer/cmd/charts"
 	installations "github.com/giantswarm/backstage-catalog-importer/cmd/installations"
 	users "github.com/giantswarm/backstage-catalog-importer/cmd/users"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
@@ -19,6 +20,7 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/group"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
+	componentutil "github.com/giantswarm/backstage-catalog-importer/pkg/util/component"
 )
 
 var rootCmd = &cobra.Command{
@@ -45,6 +47,7 @@ func init() {
 	rootCmd.Flags().StringP("private-oci-registry", "", "gsociprivate.azurecr.io", "Host name of the private OCI registry")
 
 	rootCmd.AddCommand(appcatalogs.Command)
+	rootCmd.AddCommand(charts.Command)
 	rootCmd.AddCommand(installations.Command)
 	rootCmd.AddCommand(users.Command)
 }
@@ -161,7 +164,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 								log.Printf("WARN - %s - error parsing helm chart %s: %v", repo.Name, chartName, err)
 							} else {
 								charts = append(charts, chart)
-								if chart.Type == "application" || chart.Type == "" {
+								if componentutil.IsChartDeployable(chart.Type) {
 									hasDeployableChart = true
 								}
 							}
@@ -197,12 +200,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			// Prepare deployment names (default to <name> and <name>-app if not set).
 			deploymentNames := repo.DeploymentNames
 			if len(deploymentNames) == 0 {
-				name := strings.TrimSuffix(repo.Name, "-app")
-				nameWithAppSuffix := fmt.Sprintf("%s-app", name)
-				deploymentNames = []string{
-					name,
-					nameWithAppSuffix,
-				}
+				deploymentNames = componentutil.GenerateDeploymentNames(repo.Name)
 			}
 
 			description := repoService.MustGetDescription(repo.Name)
