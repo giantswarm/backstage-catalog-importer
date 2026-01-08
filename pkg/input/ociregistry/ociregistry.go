@@ -121,7 +121,9 @@ func fetchManifestConfig(ctx context.Context, repo registry.Repository, manifest
 	if err != nil {
 		return nil, microerror.Maskf(couldNotGetRepositoryManifestError, "error fetching manifest: %v", err)
 	}
-	defer manifestReader.Close()
+	defer func() {
+		_ = manifestReader.Close()
+	}()
 
 	// Read the manifest content
 	manifestBytes, err := io.ReadAll(manifestReader)
@@ -141,7 +143,9 @@ func fetchManifestConfig(ctx context.Context, repo registry.Repository, manifest
 	if err != nil {
 		return nil, microerror.Maskf(couldNotFetchConfigBlobError, "error fetching config blob: %v", err)
 	}
-	defer configReader.Close()
+	defer func() {
+		_ = configReader.Close()
+	}()
 
 	// Read the config content
 	configBytes, err := io.ReadAll(configReader)
