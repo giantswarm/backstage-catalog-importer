@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/giantswarm/microerror"
@@ -49,7 +50,8 @@ func NewRegistry(ctx context.Context, config Config) (*Registry, error) {
 }
 
 // ListRepositories retrieves all repository names
-// starting with prefix from the registry
+// starting with prefix from the registry.
+// Results are sorted alphabetically for stable output.
 func (r *Registry) ListRepositories(ctx context.Context, prefix string) ([]string, error) {
 	var repos []string
 
@@ -66,10 +68,14 @@ func (r *Registry) ListRepositories(ctx context.Context, prefix string) ([]strin
 		return nil, err
 	}
 
+	// Sort for stable output
+	sort.Strings(repos)
+
 	return repos, nil
 }
 
-// ListRepositoryTags retrieves all tags for a given repository
+// ListRepositoryTags retrieves all tags for a given repository.
+// Results are sorted alphabetically for stable output.
 func (r *Registry) ListRepositoryTags(ctx context.Context, repository string) ([]string, error) {
 	var tags []string
 
@@ -85,6 +91,9 @@ func (r *Registry) ListRepositoryTags(ctx context.Context, repository string) ([
 	if err != nil {
 		return nil, microerror.Maskf(couldNotGetRepositoryTagsError, "error getting repository tags: %v", err)
 	}
+
+	// Sort for stable output
+	sort.Strings(tags)
 
 	return tags, nil
 }
