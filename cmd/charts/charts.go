@@ -143,14 +143,14 @@ func runCharts(cmd *cobra.Command, args []string) {
 		log.Printf("Using tag: %s", tag)
 
 		// Get manifest for metadata extraction
-		configMap, err := registry.GetRepositoryManifest(ctx, repo, tag)
+		manifestInfo, err := registry.GetRepositoryManifest(ctx, repo, tag)
 		if err != nil {
 			log.Printf("WARN: Failed to get manifest for %s:%s: %v", repo, tag, err)
 			continue
 		}
 
 		// Create component from repository and manifest data
-		comp, err := createComponentFromOCIChart(repo, tag, configMap, namespace, componentType, registryHostname)
+		comp, err := createComponentFromOCIChart(repo, tag, manifestInfo, namespace, componentType, registryHostname)
 		if err != nil {
 			log.Printf("WARN: Failed to create component for %s:%s: %v", repo, tag, err)
 			continue
@@ -183,7 +183,9 @@ func runCharts(cmd *cobra.Command, args []string) {
 }
 
 // createComponentFromOCIChart creates a Backstage component from OCI chart metadata
-func createComponentFromOCIChart(repo string, tag string, configMap map[string]interface{}, namespace, componentType, registryHostname string) (*component.Component, error) {
+func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregistry.ManifestInfo, namespace, componentType, registryHostname string) (*component.Component, error) {
+	configMap := manifestInfo.Config
+
 	// Extract GitHub project slug and repository name from home field (Helm chart config structure)
 	// Expected format: https://github.com/giantswarm/repository-name
 	var githubProjectSlug string
@@ -225,13 +227,24 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 	chartVersion := tag
 	var appVersion string
 	var chartType string
-	createdTime := time.Now() // Default to now if we can't extract creation time
+	createdTime := time.Time{} // Zero value, will be set from manifest annotations
 	var iconURL string
 	componentOwner := fmt.Sprintf("group:%s/unspecified", namespace) // Default owner based on namespace
 
 	// See https://github.com/giantswarm/roadmap/issues/4156#issuecomment-3589340419
 	managed := false
 	audience := audienceAll
+
+	// Extract creation time from OCI manifest annotations
+	if manifestInfo.Annotations != nil {
+		if created, ok := manifestInfo.Annotations["org.opencontainers.image.created"]; ok && created != "" {
+			if t, err := time.Parse(time.RFC3339, created); err == nil {
+				createdTime = t
+			} else {
+				log.Printf("WARN: Failed to parse org.opencontainers.image.created annotation '%s' for %s:%s: %v", created, repo, tag, err)
+			}
+		}
+	}
 
 	if configMap != nil {
 		// Extract version from top-level (Helm chart config structure)
@@ -293,13 +306,6 @@ func createComponentFromOCIChart(repo string, tag string, configMap map[string]i
 			if audience != audienceAll && audience != audienceGiantSwarm {
 				log.Printf("WARN: audience annotation value '%s' is not a valid audience for %s:%s", audience, repo, tag)
 				audience = audienceAll // back to default
-			}
-		}
-
-		// Try to extract creation time
-		if created, ok := configMap["created"].(string); ok {
-			if t, err := time.Parse(time.RFC3339, created); err == nil {
-				createdTime = t
 			}
 		}
 	}

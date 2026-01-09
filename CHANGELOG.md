@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `charts`: Remove trailing slash from some names
+- In the `charts` command, remove trailing slash from some names
+- In the `charts` command, set the `giantswarm.io/latest-release-date` annotation based on the OCI manifest instead
 
 ## [0.24.0] - 2026-01-08
 
