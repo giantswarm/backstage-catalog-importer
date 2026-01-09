@@ -248,6 +248,21 @@ func runRoot(cmd *cobra.Command, args []string) {
 				c.AddTag("helmchart-deployable")
 			}
 
+			if len(charts) > 0 {
+				// Determine the chart's audience annotation, and if 'all', add tag
+				audience := ""
+				for _, chart := range charts {
+					if chart.Annotations != nil {
+						if val, exists := chart.Annotations["io.giantswarm.application.audience"]; exists {
+							audience = val
+						}
+					}
+				}
+				if audience == "all" {
+					c.AddTag("helmchart-audience-all")
+				}
+			}
+
 			// Grafana dashboard link for services.
 			if repo.ComponentType == "service" {
 				urlParts := []string{}
