@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.24.1] - 2026-01-09
 
+### Added
+
+- Components catalog: add `helmchart-audience-all` tag if chart has `io.giantswarm.application.audience` annotation with value `all`.
+
 ### Fixed
 
 - In the `charts` command, remove trailing slash from some names
