@@ -6,18 +6,17 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/ociregistry"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
 func TestCreateComponentFromOCIChart(t *testing.T) {
-	// Fixed time for testing
-	fixedTime, _ := time.Parse(time.RFC3339, "2023-10-15T10:30:00Z")
-
 	tests := []struct {
 		name                  string
 		repo                  string
 		tag                   string
 		configMap             map[string]interface{}
+		manifestAnnotations   map[string]string
 		namespace             string
 		componentType         string
 		registryHostname      string
@@ -38,6 +37,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			tag:  "v1.0.0",
 			configMap: map[string]interface{}{
 				"home": "https://github.com/giantswarm/my-chart-app",
+			},
+			manifestAnnotations: map[string]string{
+				"org.opencontainers.image.created": "2026-01-05T15:31:04Z",
 			},
 			namespace:        "default",
 			componentType:    "service",
@@ -67,8 +69,10 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"version":     "2.1.0",
 				"appVersion":  "1.5.3",
 				"type":        "library",
-				"created":     "2023-10-15T10:30:00Z",
 				"home":        "https://github.com/giantswarm/advanced-chart-app",
+			},
+			manifestAnnotations: map[string]string{
+				"org.opencontainers.image.created": "2023-10-15T10:30:00Z",
 			},
 			namespace:        "giantswarm",
 			componentType:    "library",
@@ -102,6 +106,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 					"application.giantswarm.io/team": "honeybadger",
 				},
 			},
+			manifestAnnotations: map[string]string{
+				"org.opencontainers.image.created": "2024-03-20T12:00:00Z",
+			},
 			namespace:        "default",
 			componentType:    "service",
 			registryHostname: "registry.example.com",
@@ -132,6 +139,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"annotations": map[string]interface{}{
 					"application.giantswarm.io/team": "team-atlas",
 				},
+			},
+			manifestAnnotations: map[string]string{
+				"org.opencontainers.image.created": "2024-05-10T08:30:00Z",
 			},
 			namespace:        "default",
 			componentType:    "service",
@@ -164,6 +174,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 					"application.giantswarm.io/managed":  "true",
 				},
 			},
+			manifestAnnotations: map[string]string{
+				"org.opencontainers.image.created": "2024-11-01T16:45:00Z",
+			},
 			namespace:        "custom",
 			componentType:    "resource",
 			registryHostname: "gsoci.azurecr.io",
@@ -191,6 +204,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"description": "Hello World chart",
 				"home":        "https://github.com/giantswarm/hello-world-app",
 			},
+			manifestAnnotations: map[string]string{
+				"org.opencontainers.image.created": "2024-06-15T09:00:00Z",
+			},
 			namespace:        "default",
 			componentType:    "service",
 			registryHostname: "gsoci.azurecr.io",
@@ -217,6 +233,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			configMap: map[string]interface{}{
 				"description": "Documentation chart",
 				"home":        "https://github.com/giantswarm/docs/",
+			},
+			manifestAnnotations: map[string]string{
+				"org.opencontainers.image.created": "2023-12-15T10:00:00Z",
 			},
 			namespace:        "default",
 			componentType:    "service",
@@ -279,10 +298,14 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			manifestInfo := &ociregistry.ManifestInfo{
+				Config:      tt.configMap,
+				Annotations: tt.manifestAnnotations,
+			}
 			got, err := createComponentFromOCIChart(
 				tt.repo,
 				tt.tag,
-				tt.configMap,
+				manifestInfo,
 				tt.namespace,
 				tt.componentType,
 				tt.registryHostname,
@@ -343,16 +366,19 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				t.Errorf("createComponentFromOCIChart() GithubProjectSlug = %v, want %v", got.GithubProjectSlug, tt.wantGithubProjectSlug)
 			}
 
-			// Check that creation time is set
-			if tt.wantCreatedTimeSet && got.LatestReleaseTime.IsZero() {
-				t.Errorf("createComponentFromOCIChart() LatestReleaseTime should not be zero")
+			// Check that creation time is set when expected
+			if tt.wantCreatedTimeSet {
+				if got.LatestReleaseTime.IsZero() {
+					t.Errorf("createComponentFromOCIChart() LatestReleaseTime should not be zero")
+				}
 			}
 
-			// For test cases with specific created time, verify it's parsed correctly
-			if tt.configMap != nil {
-				if created, ok := tt.configMap["created"].(string); ok && created == "2023-10-15T10:30:00Z" {
-					if !got.LatestReleaseTime.Equal(fixedTime) {
-						t.Errorf("createComponentFromOCIChart() LatestReleaseTime = %v, want %v", got.LatestReleaseTime, fixedTime)
+			// For test cases with specific created time from manifest annotations, verify it's parsed correctly
+			if tt.manifestAnnotations != nil {
+				if created, ok := tt.manifestAnnotations["org.opencontainers.image.created"]; ok {
+					expectedTime, _ := time.Parse(time.RFC3339, created)
+					if !got.LatestReleaseTime.Equal(expectedTime) {
+						t.Errorf("createComponentFromOCIChart() LatestReleaseTime = %v, want %v", got.LatestReleaseTime, expectedTime)
 					}
 				}
 			}
@@ -427,10 +453,14 @@ func TestCreateComponentFromOCIChart_ErrorCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			manifestInfo := &ociregistry.ManifestInfo{
+				Config:      tt.configMap,
+				Annotations: nil,
+			}
 			_, err := createComponentFromOCIChart(
 				tt.repo,
 				tt.tag,
-				tt.configMap,
+				manifestInfo,
 				tt.namespace,
 				tt.componentType,
 				tt.registryHostname,

@@ -98,8 +98,14 @@ func (r *Registry) ListRepositoryTags(ctx context.Context, repository string) ([
 	return tags, nil
 }
 
-// GetRepositoryManifest retrieves the manifest config for a given repository and tag
-func (r *Registry) GetRepositoryManifest(ctx context.Context, repository, tag string) (map[string]interface{}, error) {
+// ManifestInfo contains both the config and manifest annotations
+type ManifestInfo struct {
+	Config      map[string]interface{}
+	Annotations map[string]string
+}
+
+// GetRepositoryManifest retrieves the manifest config and annotations for a given repository and tag
+func (r *Registry) GetRepositoryManifest(ctx context.Context, repository, tag string) (*ManifestInfo, error) {
 	repo, err := r.registry.Repository(ctx, repository)
 	if err != nil {
 		return nil, microerror.Maskf(couldNotGetRepositoryError, "error getting repository: %v", err)
@@ -115,16 +121,16 @@ func (r *Registry) GetRepositoryManifest(ctx context.Context, repository, tag st
 		)
 	}
 
-	manifestConfig, err := fetchManifestConfig(ctx, repo, descriptor)
+	manifestInfo, err := fetchManifestInfo(ctx, repo, descriptor)
 	if err != nil {
 		return nil, microerror.Maskf(couldNotGetRepositoryManifestError, "error getting repository manifest: %v", err)
 	}
 
-	return manifestConfig, nil
+	return manifestInfo, nil
 }
 
-// fetchManifestConfig fetches the config blob from a manifest and returns it as pretty JSON and parsed map
-func fetchManifestConfig(ctx context.Context, repo registry.Repository, manifestDescriptor v1.Descriptor) (map[string]interface{}, error) {
+// fetchManifestInfo fetches the config blob and annotations from a manifest
+func fetchManifestInfo(ctx context.Context, repo registry.Repository, manifestDescriptor v1.Descriptor) (*ManifestInfo, error) {
 	// Fetch the manifest
 	manifestReader, err := repo.Fetch(ctx, manifestDescriptor)
 	if err != nil {
@@ -168,5 +174,9 @@ func fetchManifestConfig(ctx context.Context, repo registry.Repository, manifest
 		return nil, microerror.Maskf(couldNotUnmarshalConfigError, "error unmarshalling config: %v", err)
 	}
 
-	return configMap, nil
+	// Return both config and manifest annotations
+	return &ManifestInfo{
+		Config:      configMap,
+		Annotations: manifest.Annotations,
+	}, nil
 }
