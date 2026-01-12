@@ -11,7 +11,7 @@ These guidelines apply to Go code and supplement any other general development i
 - Always fetch and fully understand the style guide before reviewing any code.
 - The Giant Swarm style guide linked above must always be considered definitive. ALL rules and provisions contained in the style guide MUST be met.
 - When applying the style guide, always list all instances of a particular issue, grouped by the finding type.
-- Use `go doc` to get information about a Go module's API
+
 
 <!--
 DO NOT EDIT. Generated with devctl.
