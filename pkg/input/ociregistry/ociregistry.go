@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/giantswarm/microerror"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"oras.land/oras-go/v2/registry"
@@ -75,7 +76,8 @@ func (r *Registry) ListRepositories(ctx context.Context, prefix string) ([]strin
 }
 
 // ListRepositoryTags retrieves all tags for a given repository.
-// Results are sorted alphabetically for stable output.
+// Results are sorted by semantic version (pre-releases before releases).
+// Tags that are not valid semver are sorted alphabetically after valid semver tags.
 func (r *Registry) ListRepositoryTags(ctx context.Context, repository string) ([]string, error) {
 	var tags []string
 
@@ -92,10 +94,38 @@ func (r *Registry) ListRepositoryTags(ctx context.Context, repository string) ([
 		return nil, microerror.Maskf(couldNotGetRepositoryTagsError, "error getting repository tags: %v", err)
 	}
 
-	// Sort for stable output
-	sort.Strings(tags)
+	// Sort by semver (pre-releases before releases), non-semver tags sorted alphabetically after
+	sortTagsBySemver(tags)
 
 	return tags, nil
+}
+
+// sortTagsBySemver sorts tags by semantic version in descending order. Making the latest release the first tag.
+// Pre-release versions (e.g., 1.0.0-alpha) sort after their corresponding release (1.0.0).
+// Tags that are not valid semver are sorted reverse alphabetically and placed after valid semver tags.
+
+func sortTagsBySemver(tags []string) {
+	sort.Slice(tags, func(i, j int) bool {
+		// Try to parse both tags as semver (with or without 'v' prefix)
+		vi, errI := semver.NewVersion(tags[i])
+		vj, errJ := semver.NewVersion(tags[j])
+
+		// Both valid semver: use semver comparison
+		if errI == nil && errJ == nil {
+			return vj.LessThan(vi)
+		}
+
+		// Only one is valid semver: valid semver comes first
+		if errI == nil {
+			return true
+		}
+		if errJ == nil {
+			return false
+		}
+
+		// Neither is valid semver: sort alphabetically
+		return tags[i] > tags[j]
+	})
 }
 
 // ManifestInfo contains both the config and manifest annotations
