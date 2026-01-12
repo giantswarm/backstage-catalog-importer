@@ -530,6 +530,99 @@ func TestFormatTeamOwner(t *testing.T) {
 	}
 }
 
+// TestShouldIncludeChart tests the chart filtering function
+func TestShouldIncludeChart(t *testing.T) {
+	tests := []struct {
+		name      string
+		configMap map[string]interface{}
+		want      bool
+	}{
+		{
+			name: "Chart with audience=all (OCI annotation) should be included",
+			configMap: map[string]interface{}{
+				"annotations": map[string]interface{}{
+					"io.giantswarm.application.audience": "all",
+				},
+			},
+			want: true,
+		},
+		{
+			name: "Chart with audience=all (legacy annotation) should be included",
+			configMap: map[string]interface{}{
+				"annotations": map[string]interface{}{
+					"application.giantswarm.io/audience": "all",
+				},
+			},
+			want: true,
+		},
+		{
+			name: "Chart with audience=giantswarm should be excluded",
+			configMap: map[string]interface{}{
+				"annotations": map[string]interface{}{
+					"io.giantswarm.application.audience": "giantswarm",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "Chart without audience annotation should be excluded",
+			configMap: map[string]interface{}{
+				"annotations": map[string]interface{}{
+					"application.giantswarm.io/team": "honeybadger",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "Chart without annotations field should be excluded",
+			configMap: map[string]interface{}{
+				"description": "Some chart",
+			},
+			want: false,
+		},
+		{
+			name:      "Chart with nil configMap should be excluded",
+			configMap: nil,
+			want:      false,
+		},
+		{
+			name: "Chart with empty annotations should be excluded",
+			configMap: map[string]interface{}{
+				"annotations": map[string]interface{}{},
+			},
+			want: false,
+		},
+		{
+			name: "Chart with invalid audience value should be excluded",
+			configMap: map[string]interface{}{
+				"annotations": map[string]interface{}{
+					"io.giantswarm.application.audience": "invalid",
+				},
+			},
+			want: false,
+		},
+		{
+			name: "Chart with OCI annotation takes precedence over legacy",
+			configMap: map[string]interface{}{
+				"annotations": map[string]interface{}{
+					"io.giantswarm.application.audience": "all",
+					"application.giantswarm.io/audience": "giantswarm",
+				},
+			},
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := shouldIncludeChart(tt.configMap)
+			if got != tt.want {
+				t.Errorf("shouldIncludeChart() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||

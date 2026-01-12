@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The `charts` command now only includes charts that have the annotation `io.giantswarm.application.audience` set to `"all"` in the config blob. Charts without this annotation or with a different value are excluded from the output.
+
 ## [0.24.1] - 2026-01-09
 
 ### Added
