@@ -24,6 +24,14 @@ func TestComponent_ToEntity(t *testing.T) {
 	mockChart2.Version = "0.4.1"
 	mockChart2.AppVersion = "2.3.4"
 
+	mockChartWithAudience := &helmchart.Chart{}
+	mockChartWithAudience.Name = "first-chart"
+	mockChartWithAudience.Version = "1.2.3"
+	mockChartWithAudience.AppVersion = ""
+	mockChartWithAudience.Annotations = map[string]string{
+		"io.giantswarm.application.audience": "all",
+	}
+
 	tests := []struct {
 		name          string
 		componentName string
@@ -206,6 +214,36 @@ func TestComponent_ToEntity(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:          "WithHelmChartAudienceAll",
+			componentName: "chart-audience-component",
+			options: []Option{
+				WithHelmCharts(mockChartWithAudience),
+				WithOciRegistry("gsoci.azurecr.io"),
+				WithOciRepositoryPrefix("charts/giantswarm"),
+			},
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.APIVersion,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
+					Name:   "chart-audience-component",
+					Labels: map[string]string{},
+					Annotations: map[string]string{
+						"giantswarm.io/helmcharts":             "gsoci.azurecr.io/charts/giantswarm/first-chart",
+						"giantswarm.io/helmchart-versions":     "1.2.3",
+						"giantswarm.io/helmchart-app-versions": "",
+					},
+					Links: []bscatalog.EntityLink{},
+					Tags:  []string{"helmchart", "helmchart-audience-all"},
+				},
+				Spec: bscatalog.ComponentSpec{
+					Type:      "unspecified",
+					Lifecycle: "production",
+					Owner:     "unspecified",
+				},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -224,6 +262,21 @@ func TestComponent_ToEntity(t *testing.T) {
 					Icon:  "link",
 					Type:  "custom",
 				})
+			}
+			if tt.name == "WithHelmChartAudienceAll" {
+				// Simulate the logic from root.go (lines 251-264)
+				// Determine the chart's audience annotation, and if 'all', add tag
+				audience := ""
+				for _, chart := range component.HelmCharts {
+					if chart.Annotations != nil {
+						if val, exists := chart.Annotations["io.giantswarm.application.audience"]; exists {
+							audience = val
+						}
+					}
+				}
+				if audience == "all" {
+					component.AddTag("helmchart-audience-all")
+				}
 			}
 
 			got := component.ToEntity()
