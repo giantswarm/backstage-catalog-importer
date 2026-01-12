@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.2] - 2026-01-12
+
 ### Changed
 
 - The `charts` command now only includes charts that have the annotation `io.giantswarm.application.audience` set to `"all"` in the config blob. Charts without this annotation or with a different value are excluded from the output.
@@ -386,7 +388,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.24.1...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.24.2...HEAD
+[0.24.2]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.24.1...v0.24.2
 [0.24.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.24.0...v0.24.1
 [0.24.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.23.1...v0.24.0
 [0.23.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.23.0...v0.23.1
