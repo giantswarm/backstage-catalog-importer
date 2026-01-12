@@ -249,7 +249,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 			}
 
 			if len(charts) > 0 {
-				// Determine the chart's audience annotation, and if 'all', add tag
+				// Determine the chart's audience annotation, and if 'all', add tag.
+				// (This ignores the rare case where a repo may have more than one chart with different audience annotations.)
 				audience := ""
 				for _, chart := range charts {
 					if chart.Annotations != nil {
