@@ -31,6 +31,8 @@ var Command = &cobra.Command{
 
 Charts are discovered by listing repositories with a specified prefix and extracting metadata from their manifests.
 
+Only charts with the annotation io.giantswarm.application.audience set to "all" in the config blob are included in the output.
+
 Arguments:
   registry    OCI registry hostname (e.g., gsoci.azurecr.io)`,
 	Args: cobra.ExactArgs(1),
@@ -146,6 +148,12 @@ func runCharts(cmd *cobra.Command, args []string) {
 		manifestInfo, err := registry.GetRepositoryManifest(ctx, repo, tag)
 		if err != nil {
 			log.Printf("WARN: Failed to get manifest for %s:%s: %v", repo, tag, err)
+			continue
+		}
+
+		// Filter charts: only include charts with audience annotation set to "all"
+		if !shouldIncludeChart(manifestInfo.Config) {
+			log.Printf("Skipping chart %s:%s (audience annotation is not 'all')", repo, tag)
 			continue
 		}
 
@@ -363,6 +371,35 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 	}
 
 	return comp, nil
+}
+
+// shouldIncludeChart checks if a chart should be included in the output based on
+// the audience annotation in the config blob. Only charts with
+// io.giantswarm.application.audience set to "all" are included.
+func shouldIncludeChart(configMap map[string]interface{}) bool {
+	if configMap == nil {
+		return false
+	}
+
+	// Extract annotations from config blob
+	annotations, ok := configMap["annotations"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+
+	// Check for OCI annotation first, then legacy annotation
+	var audienceValue string
+	if val, ok := annotations[audienceOciAnnotation].(string); ok {
+		audienceValue = val
+	} else if val, ok := annotations[audienceLegacyChartAnnnotation].(string); ok {
+		audienceValue = val
+	} else {
+		// No audience annotation found, exclude the chart
+		return false
+	}
+
+	// Only include charts with audience set to "all"
+	return audienceValue == audienceAll
 }
 
 // formatTeamOwner formats a team name to the proper Backstage owner format using the given namespace
