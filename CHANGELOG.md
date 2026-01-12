@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.24.2] - 2026-01-12
 
+### Added
+
+- Components with a chart that has the audience annotation set to all will be tagged as `helmchart-audience-all`
+
 ### Changed
 
 - The `charts` command now only includes charts that have the annotation `io.giantswarm.application.audience` set to `"all"` in the config blob. Charts without this annotation or with a different value are excluded from the output.
