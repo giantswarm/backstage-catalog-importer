@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Repository tags are now sorted by semantic version in descending order, with the latest release first. This fixes an issue where unreleased changes would be published in the catalog.
+
 ## [0.24.2] - 2026-01-12
 
 ### Added
