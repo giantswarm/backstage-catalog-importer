@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/cmd/charts"
+	"github.com/giantswarm/backstage-catalog-importer/cmd/crd"
 	installations "github.com/giantswarm/backstage-catalog-importer/cmd/installations"
 	users "github.com/giantswarm/backstage-catalog-importer/cmd/users"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
@@ -49,6 +50,7 @@ func init() {
 	rootCmd.Flags().StringP("private-oci-registry", "", "gsociprivate.azurecr.io", "Host name of the private OCI registry")
 
 	rootCmd.AddCommand(charts.Command)
+	rootCmd.AddCommand(crd.Command)
 	rootCmd.AddCommand(installations.Command)
 	rootCmd.AddCommand(users.Command)
 }

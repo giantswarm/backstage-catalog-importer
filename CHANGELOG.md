@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Components catalog: add `giantswarm.io/icon-url` annotation based on the icon URL from Chart.yaml. When a repo has multiple charts with different icons, the icon from the first chart (alphabetically by name) is used.
+- Add `crd` command to generate Backstage API entities from Kubernetes Custom Resource Definitions (CRDs). The command reads a YAML config file specifying CRD URLs with their owner, lifecycle, and system metadata, fetches the CRDs from GitHub, and outputs API entities with the full CRD embedded in `spec.definition`.
 
 ## [0.25.0] - 2026-01-20
 
