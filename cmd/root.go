@@ -37,6 +37,9 @@ const (
 
 	// Directory path within githubManagementRepository holding repo metadata YAML files.
 	repositoriesPath = "repositories"
+
+	// Backstage annotation key for component icon URL.
+	iconBackstageAnnotation = "giantswarm.io/icon-url"
 )
 
 func init() {
@@ -260,6 +263,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 				if audience == "all" {
 					c.AddTag("helmchart-audience-all")
 				}
+
+				// Set icon URL annotation if available
+				iconURL := selectIconURL(repo.Name, charts)
+				if iconURL != "" {
+					c.SetAnnotation(iconBackstageAnnotation, iconURL)
+				}
 			}
 
 			// Grafana dashboard link for services.
@@ -365,4 +374,38 @@ func runRoot(cmd *cobra.Command, args []string) {
 	fmt.Printf("\n%d components written to file %s with size %d bytes", numComponents, componentExporter.TargetPath, componentExporter.Len())
 	fmt.Printf("\n%d groups written to file %s with size %d bytes", numGroups, groupExporter.TargetPath, groupExporter.Len())
 	fmt.Println("")
+}
+
+// selectIconURL extracts and selects an icon URL from the given charts.
+// If multiple charts have different icon URLs, the icon from the first chart
+// (alphabetically by name) is used, and a warning is logged.
+// Returns an empty string if no icon URL is found.
+func selectIconURL(repoName string, charts []*helmchart.Chart) string {
+	if len(charts) == 0 {
+		return ""
+	}
+
+	// Find first chart with an icon (alphabetically by name)
+	var firstChart *helmchart.Chart
+	for _, chart := range charts {
+		if chart != nil && chart.Icon != "" {
+			if firstChart == nil || chart.Name < firstChart.Name {
+				firstChart = chart
+			}
+		}
+	}
+
+	if firstChart == nil {
+		return ""
+	}
+
+	// Check if there are multiple different icons and warn
+	for _, chart := range charts {
+		if chart != nil && chart.Icon != "" && chart.Icon != firstChart.Icon {
+			log.Printf("WARN - %s - multiple charts have different icon URLs, using icon from chart %q", repoName, firstChart.Name)
+			break
+		}
+	}
+
+	return firstChart.Icon
 }

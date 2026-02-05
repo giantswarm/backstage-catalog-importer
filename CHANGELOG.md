@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Components catalog: add `giantswarm.io/icon-url` annotation based on the icon URL from Chart.yaml. When a repo has multiple charts with different icons, the icon from the first chart (alphabetically by name) is used.
+
 ## [0.25.0] - 2026-01-20
 
 ### Changed
