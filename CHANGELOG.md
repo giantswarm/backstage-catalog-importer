@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `crd` command to generate Backstage API entities from Kubernetes Custom Resource Definitions (CRDs). The command reads a YAML config file specifying CRD URLs with their owner, lifecycle, and system metadata, fetches the CRDs from GitHub, and outputs API entities with the full CRD embedded in `spec.definition`.
+
 ## [0.25.0] - 2026-01-20
 
 ### Changed

@@ -29,7 +29,20 @@ To run the export, execute
 
 ```nohighlight
 backstage-catalog-importer charts gsoci.azurecr.io --prefix charts/giantswarm/ [--output path-to-output-dir]
+
+cat <<EOF | backstage-catalog-importer crd -
+- url: https://github.com/giantswarm/apiextensions-application/blob/main/config/crd/application.giantswarm.io_apps.yaml
+  owner: group:giantswarm/team-honeybadger
+  lifecycle: production
+  system: app-platform
+- url: https://github.com/giantswarm/apiextensions-application/blob/main/config/crd/application.giantswarm.io_catalogs.yaml
+  owner: group:giantswarm/team-honeybadger
+  lifecycle: deprecated
+  system: app-platform
+EOF
+
 backstage-catalog-importer users [--output path-to-output-dir]
+
 ```
 
 The result will be a `components.yaml` and a `groups.yaml` file in the output directory. Progress and warnings will be logged to the console.
