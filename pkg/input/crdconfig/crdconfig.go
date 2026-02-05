@@ -63,7 +63,7 @@ func (s *Service) Load() ([]Item, error) {
 		if err != nil {
 			return nil, microerror.Maskf(fileNotFoundError, "failed to open config file: %v", err)
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 		reader = file
 	}
 
