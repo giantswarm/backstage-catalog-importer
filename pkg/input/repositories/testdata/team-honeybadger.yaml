@@ -165,7 +165,6 @@
     renovate: true
 - name: config
   gen:
-    enableFloatingMajorTags: true
     flavours:
     - generic
     language: generic
@@ -331,7 +330,6 @@
     flavours:
     - cli
     language: go
-    enableFloatingMajorTags: true
   replace:
     architect-orb: true
     renovate: true
@@ -346,7 +344,6 @@
     renovate: true
 - name: install-binary-action
   gen:
-    enableFloatingMajorTags: true
     flavours:
     - generic
     language: generic
@@ -514,7 +511,6 @@
     flavours:
     - cli
     language: go
-    enableFloatingMajorTags: true
   replace:
     architect-orb: true
     renovate: true
@@ -538,7 +534,6 @@
     renovate: true
 - name: subtree-util
   gen:
-    enableFloatingMajorTags: true
     flavours:
     - generic
     language: generic

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove the `EnableFloatingMajorTags` field from repositories configuration struct, as we no longer set this field.
+
 ## [0.26.0] - 2026-02-05
 
 ### Added
