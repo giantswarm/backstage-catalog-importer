@@ -98,9 +98,8 @@ func TestLoadList(t *testing.T) {
 				{
 					Name: "generic-go",
 					Gen: RepoGen{
-						Flavors:                 []RepoFlavor{RepoFlavorGeneric},
-						Language:                RepoLanguageGo,
-						EnableFloatingMajorTags: true,
+						Flavors:  []RepoFlavor{RepoFlavorGeneric},
+						Language: RepoLanguageGo,
 					},
 					Lifecycle: "deprecated",
 					Replacements: RepoReplacements{

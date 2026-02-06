@@ -14,7 +14,6 @@
     - generic
     language: go
     installUpdateChart: false
-    enableFloatingMajorTags: true
   lifecycle: deprecated
   replace:
     architect-orb: false

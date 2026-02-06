@@ -31,10 +31,9 @@ const (
 )
 
 type RepoGen struct {
-	Flavors                 []RepoFlavor `yaml:"flavours"`
-	Language                RepoLanguage `yaml:"language"`
-	InstallUpdateChart      bool         `yaml:"installUpdateChart"`
-	EnableFloatingMajorTags bool         `yaml:"enableFloatingMajorTags"`
+	Flavors            []RepoFlavor `yaml:"flavours"`
+	Language           RepoLanguage `yaml:"language"`
+	InstallUpdateChart bool         `yaml:"installUpdateChart"`
 }
 
 type RepoReplacements struct {
