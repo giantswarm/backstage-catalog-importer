@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Mention required Personio API scopes to use import feature
+
 ### Removed
 
 - Remove the `EnableFloatingMajorTags` field from repositories configuration struct, as we no longer set this field.

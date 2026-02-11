@@ -35,6 +35,13 @@ TODO: This method is suited for Giant Swarm only. For customer catalogs, we need
 
 We export all Personio employee entries that have the `status` field set to `active`.
 
+This requires `PERSONIO_CLIENT_ID` and `PERSONIO_CLIENT_SECRET` to be configured for an API token with the following minimal scope:
+- `dynamic_3196204` (employee GitHub handle)
+- `first_name`
+- `last_name`
+- `email`
+- `status`
+
 ## Giant Swarm app catalog discovery
 
 App catalog URLs are hard-coded. All of them are publicly accessible.
