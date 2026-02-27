@@ -6,10 +6,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/google/go-github/v84/github"
 	"github.com/spf13/cobra"
-	"golang.org/x/oauth2"
 
+	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/personio"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/user"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
@@ -61,12 +60,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
 
-	// Github client
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	githubClient := github.NewClient(tc)
+	githubClient := httpclient.NewGitHubClient(token)
 
 	userExporter := export.New(export.Config{TargetPath: path + "/users.yaml"})
 
@@ -79,7 +73,7 @@ func run(cmd *cobra.Command, args []string) error {
 		// Get Github details for each employee
 		if employee.GithubHandle == "" {
 			// If the user has no GitHub handle, we skip them
-			log.Printf("Warning: no GitHub handle found for %s %s (%s) -- skipping", employee.FirstName, employee.LastName, employee.Email)
+			log.Printf("Warning: no GitHub handle found for %q %q (%q) -- skipping", employee.FirstName, employee.LastName, employee.Email) //nolint:gosec // G706: values come from Personio API, not user input
 			continue
 		}
 		githubDetails, _, err := githubClient.Users.Get(ctx, employee.GithubHandle)

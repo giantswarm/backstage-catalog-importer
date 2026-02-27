@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Mention required Personio API scopes to use import feature
+- Add HTTP retry logic with exponential backoff for GitHub API calls, reducing intermittent CI failures caused by transient 5xx errors.
+- Enable built-in retry support for OCI registry calls.
 
 ### Removed
 

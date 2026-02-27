@@ -14,6 +14,7 @@ import (
 	"oras.land/oras-go/v2/registry"
 	"oras.land/oras-go/v2/registry/remote"
 	"oras.land/oras-go/v2/registry/remote/auth"
+	"oras.land/oras-go/v2/registry/remote/retry"
 )
 
 type Registry struct {
@@ -39,7 +40,7 @@ func NewRegistry(ctx context.Context, config Config) (*Registry, error) {
 
 	// Configure for anonymous access
 	reg.Client = &auth.Client{
-		Client: nil, // Use default HTTP client
+		Client: retry.DefaultClient,
 		Cache:  auth.NewCache(),
 	}
 	reg.PlainHTTP = false // Use HTTPS
