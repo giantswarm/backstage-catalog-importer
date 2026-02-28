@@ -13,7 +13,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
+	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa
 	golang.org/x/oauth2 v0.34.0
 	helm.sh/helm/v3 v3.20.0
 	oras.land/oras-go/v2 v2.6.0
