@@ -9,7 +9,7 @@ require (
 	github.com/giantswarm/microerror v0.4.1
 	github.com/giantswarm/personio-go v0.6.0
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-github/v82 v82.0.0
+	github.com/google/go-github/v84 v84.0.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v3 v3.0.4
