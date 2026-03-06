@@ -16,7 +16,8 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v84/github"
 	"go.yaml.in/yaml/v3"
-	"golang.org/x/oauth2"
+
+	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
 )
 
 type Config struct {
@@ -70,13 +71,8 @@ func New(c Config) (*Service, error) {
 		log.Println("WARNING: No Github token given (env variable GITHUB_TOKEN not set)")
 	}
 
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: c.GithubAuthToken},
-	)
-
 	ctx := context.Background()
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
+	client := httpclient.NewGitHubClient(c.GithubAuthToken)
 
 	s := &Service{
 		config:                   c,

@@ -8,14 +8,15 @@ import (
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v84/github"
 	"go.yaml.in/yaml/v3"
-	"golang.org/x/oauth2"
+
+	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
 )
 
 // Config holds the service configuration.
 type Config struct {
 	// AuthToken is the GitHub authentication token.
 	// If empty, unauthenticated requests will be made (lower rate limits).
-	AuthToken string
+	AuthToken string `json:"-"` //nolint:gosec // G117: not serialized, used only in-process
 }
 
 // Service provides GitHub URL fetching functionality.
@@ -27,17 +28,7 @@ type Service struct {
 // New creates a new GitHub URL fetching service.
 func New(c Config) (*Service, error) {
 	ctx := context.Background()
-
-	var client *github.Client
-	if c.AuthToken != "" {
-		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: c.AuthToken},
-		)
-		tc := oauth2.NewClient(ctx, ts)
-		client = github.NewClient(tc)
-	} else {
-		client = github.NewClient(nil)
-	}
+	client := httpclient.NewGitHubClient(c.AuthToken)
 
 	return &Service{
 		client: client,
