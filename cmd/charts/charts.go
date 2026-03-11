@@ -345,6 +345,10 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		return nil, err
 	}
 
+	// Set techdocs-ref annotation pointing to the repo root on main branch
+	comp.SetAnnotation("backstage.io/techdocs-ref",
+		fmt.Sprintf("url:https://github.com/%s/tree/%s", githubProjectSlug, "main"))
+
 	// Add helmchart annotations
 	// Format: registry/repository (combining what was oci-registry and oci-repository)
 	helmchartPath := fmt.Sprintf("%s/%s", registryHostname, repo)
