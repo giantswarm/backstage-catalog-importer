@@ -50,6 +50,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantAnnotations: map[string]string{
 				"application.giantswarm.io/audience": "all",
 				"application.giantswarm.io/managed":  "false",
+				"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/my-chart-app/tree/main",
 				"giantswarm.io/helmcharts":           "registry.example.com/giantswarm/my-chart",
 				"giantswarm.io/helmchart-versions":   "v1.0.0",
 			},
@@ -83,6 +84,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantAnnotations: map[string]string{
 				"application.giantswarm.io/audience":   "all",
 				"application.giantswarm.io/managed":    "false",
+				"backstage.io/techdocs-ref":            "url:https://github.com/giantswarm/advanced-chart-app/tree/main",
 				"giantswarm.io/helmcharts":             "localhost:5000/giantswarm/advanced-chart",
 				"giantswarm.io/helmchart-versions":     "2.1.0",
 				"giantswarm.io/helmchart-app-versions": "1.5.3",
@@ -118,6 +120,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantAnnotations: map[string]string{
 				"application.giantswarm.io/audience": "all",
 				"application.giantswarm.io/managed":  "false",
+				"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/chart-with-icon-app/tree/main",
 				"giantswarm.io/helmcharts":           "registry.example.com/giantswarm/chart-with-icon",
 				"giantswarm.io/helmchart-versions":   "v1.0.0",
 				"giantswarm.io/icon-url":             "https://example.com/icon.png",
@@ -152,6 +155,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantAnnotations: map[string]string{
 				"application.giantswarm.io/audience": "all",
 				"application.giantswarm.io/managed":  "false",
+				"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/atlas-chart-app/tree/main",
 				"giantswarm.io/helmcharts":           "registry.example.com/giantswarm/atlas-chart",
 				"giantswarm.io/helmchart-versions":   "v2.0.0",
 			},
@@ -186,6 +190,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantAnnotations: map[string]string{
 				"application.giantswarm.io/audience": "giantswarm",
 				"application.giantswarm.io/managed":  "true",
+				"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/managed-chart-app/tree/main",
 				"giantswarm.io/helmcharts":           "gsoci.azurecr.io/giantswarm/managed-chart",
 				"giantswarm.io/helmchart-versions":   "v1.5.0",
 			},
@@ -216,6 +221,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantAnnotations: map[string]string{
 				"application.giantswarm.io/audience": "all",
 				"application.giantswarm.io/managed":  "false",
+				"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/hello-world-app/tree/main",
 				"giantswarm.io/helmcharts":           "gsoci.azurecr.io/giantswarm/hello-world",
 				"giantswarm.io/helmchart-versions":   "v1.0.0",
 			},
@@ -246,6 +252,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			wantAnnotations: map[string]string{
 				"application.giantswarm.io/audience": "all",
 				"application.giantswarm.io/managed":  "false",
+				"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/docs/tree/main",
 				"giantswarm.io/helmcharts":           "gsoci.azurecr.io/giantswarm/docs-app",
 				"giantswarm.io/helmchart-versions":   "v2.3.100",
 			},
