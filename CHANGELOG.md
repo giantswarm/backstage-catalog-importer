@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-03-12
+
 ### Fixed
 
 - Stop overriding namespace to `giantswarm` for Giant Swarm users in customer catalogs. The namespace should be determined by the default logic, not hardcoded.
@@ -432,7 +434,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.2...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.3...HEAD
+[0.26.3]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.2...v0.26.3
 [0.26.2]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.1...v0.26.2
 [0.26.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.0...v0.26.1
 [0.26.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.25.0...v0.26.0
