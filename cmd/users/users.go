@@ -95,8 +95,6 @@ func run(cmd *cobra.Command, args []string) error {
 		if internal {
 			user.DisplayName = employee.FirstName + " " + employee.LastName
 		} else {
-			// In customer catalogs, Giant Swarm entities use the "giantswarm" namespace
-			user.Namespace = "giantswarm"
 			user.DisplayName = githubDetails.GetName()
 		}
 

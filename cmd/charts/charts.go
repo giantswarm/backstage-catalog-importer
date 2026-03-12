@@ -237,7 +237,7 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 	var chartType string
 	createdTime := time.Time{} // Zero value, will be set from manifest annotations
 	var iconURL string
-	componentOwner := fmt.Sprintf("group:%s/unspecified", namespace) // Default owner based on namespace
+	componentOwner := "group:unspecified" // Default owner
 
 	// See https://github.com/giantswarm/roadmap/issues/4156#issuecomment-3589340419
 	managed := false
@@ -279,9 +279,9 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		// The annotations field contains Giant Swarm specific metadata
 		if annotations, ok := configMap["annotations"].(map[string]interface{}); ok {
 			if team, ok := annotations[teamOciAnnotation].(string); ok && team != "" {
-				componentOwner = formatTeamOwner(team, namespace)
+				componentOwner = formatTeamOwner(team)
 			} else if team, ok := annotations[teamLegacyChartAnnotation].(string); ok && team != "" {
-				componentOwner = formatTeamOwner(team, namespace)
+				componentOwner = formatTeamOwner(team)
 			}
 
 			if val, exists := annotations[managedOciAnnotation]; exists {
@@ -406,19 +406,18 @@ func shouldIncludeChart(configMap map[string]interface{}) bool {
 	return audienceValue == audienceAll
 }
 
-// formatTeamOwner formats a team name to the proper Backstage owner format using the given namespace
+// formatTeamOwner formats a team name to the proper Backstage owner format.
 // Examples:
-//   - "honeybadger", "giantswarm" -> "group:giantswarm/team-honeybadger"
-//   - "team-atlas", "default" -> "group:default/team-atlas"
-//   - "team-bigmac", "production" -> "group:production/team-bigmac"
-func formatTeamOwner(team, namespace string) string {
+//   - "honeybadger" -> "group:team-honeybadger"
+//   - "team-atlas" -> "group:team-atlas"
+//   - "team-bigmac" -> "group:team-bigmac"
+func formatTeamOwner(team string) string {
 	// Ensure the team name has the "team-" prefix
 	if !strings.HasPrefix(team, "team-") {
 		team = "team-" + team
 	}
 
-	// Return the properly formatted owner string with the given namespace
-	return fmt.Sprintf("group:%s/%s", namespace, team)
+	return fmt.Sprintf("group:%s", team)
 }
 
 // trackAnnotations counts each annotation key present in the entity.

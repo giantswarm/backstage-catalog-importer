@@ -56,7 +56,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			},
 			wantLinks:             nil,
 			wantVersion:           "v1.0.0",
-			wantOwner:             "group:default/unspecified",
+			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/my-chart-app",
 			wantCreatedTimeSet:    true,
 			wantErr:               false,
@@ -91,7 +91,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			},
 			wantLinks:             nil,
 			wantVersion:           "2.1.0",
-			wantOwner:             "group:giantswarm/unspecified",
+			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/advanced-chart-app",
 			wantCreatedTimeSet:    true,
 			wantErr:               false,
@@ -127,7 +127,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			},
 			wantLinks:             nil,
 			wantVersion:           "v1.0.0",
-			wantOwner:             "group:default/team-honeybadger",
+			wantOwner:             "group:team-honeybadger",
 			wantGithubProjectSlug: "giantswarm/chart-with-icon-app",
 			wantCreatedTimeSet:    true,
 			wantErr:               false,
@@ -161,7 +161,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			},
 			wantLinks:             nil,
 			wantVersion:           "v2.0.0",
-			wantOwner:             "group:default/team-atlas",
+			wantOwner:             "group:team-atlas",
 			wantGithubProjectSlug: "giantswarm/atlas-chart-app",
 			wantCreatedTimeSet:    true,
 			wantErr:               false,
@@ -196,7 +196,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			},
 			wantLinks:             nil,
 			wantVersion:           "v1.5.0",
-			wantOwner:             "group:custom/unspecified",
+			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/managed-chart-app",
 			wantCreatedTimeSet:    true,
 			wantErr:               false,
@@ -227,7 +227,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			},
 			wantLinks:             nil,
 			wantVersion:           "v1.0.0",
-			wantOwner:             "group:default/unspecified",
+			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/hello-world-app",
 			wantCreatedTimeSet:    true,
 			wantErr:               false,
@@ -258,7 +258,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 			},
 			wantLinks:             nil,
 			wantVersion:           "v2.3.100",
-			wantOwner:             "group:default/unspecified",
+			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/docs",
 			wantCreatedTimeSet:    true,
 			wantErr:               false,
@@ -490,48 +490,37 @@ func TestCreateComponentFromOCIChart_ErrorCases(t *testing.T) {
 // TestFormatTeamOwner tests the team owner formatting function
 func TestFormatTeamOwner(t *testing.T) {
 	tests := []struct {
-		name      string
-		team      string
-		namespace string
-		expected  string
+		name     string
+		team     string
+		expected string
 	}{
 		{
-			name:      "Team without prefix in giantswarm namespace",
-			team:      "honeybadger",
-			namespace: "giantswarm",
-			expected:  "group:giantswarm/team-honeybadger",
+			name:     "Team without prefix",
+			team:     "honeybadger",
+			expected: "group:team-honeybadger",
 		},
 		{
-			name:      "Team with prefix in default namespace",
-			team:      "team-atlas",
-			namespace: "default",
-			expected:  "group:default/team-atlas",
+			name:     "Team with prefix",
+			team:     "team-atlas",
+			expected: "group:team-atlas",
 		},
 		{
-			name:      "Team with prefix in production namespace",
-			team:      "team-bigmac",
-			namespace: "production",
-			expected:  "group:production/team-bigmac",
+			name:     "Single letter team",
+			team:     "a",
+			expected: "group:team-a",
 		},
 		{
-			name:      "Single letter team in custom namespace",
-			team:      "a",
-			namespace: "custom",
-			expected:  "group:custom/team-a",
-		},
-		{
-			name:      "Team with numbers in development namespace",
-			team:      "team-123",
-			namespace: "development",
-			expected:  "group:development/team-123",
+			name:     "Team with numbers",
+			team:     "team-123",
+			expected: "group:team-123",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := formatTeamOwner(tt.team, tt.namespace)
+			got := formatTeamOwner(tt.team)
 			if got != tt.expected {
-				t.Errorf("formatTeamOwner(%q, %q) = %q, want %q", tt.team, tt.namespace, got, tt.expected)
+				t.Errorf("formatTeamOwner(%q) = %q, want %q", tt.team, got, tt.expected)
 			}
 		})
 	}

@@ -32,11 +32,11 @@ backstage-catalog-importer charts gsoci.azurecr.io --prefix charts/giantswarm/ [
 
 cat <<EOF | backstage-catalog-importer crd -
 - url: https://github.com/giantswarm/apiextensions-application/blob/main/config/crd/application.giantswarm.io_apps.yaml
-  owner: group:giantswarm/team-honeybadger
+  owner: group:team-honeybadger
   lifecycle: production
   system: app-platform
 - url: https://github.com/giantswarm/apiextensions-application/blob/main/config/crd/application.giantswarm.io_catalogs.yaml
-  owner: group:giantswarm/team-honeybadger
+  owner: group:team-honeybadger
   lifecycle: deprecated
   system: app-platform
 EOF

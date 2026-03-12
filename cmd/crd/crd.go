@@ -28,7 +28,7 @@ The config file should be a YAML array with items containing:
 
 Example config:
   - url: https://github.com/giantswarm/apiextensions-application/blob/main/config/crd/application.giantswarm.io_apps.yaml
-    owner: group:default/team-honeybadger
+    owner: group:team-honeybadger
     lifecycle: production
     system: app-platform
 
