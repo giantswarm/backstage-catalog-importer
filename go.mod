@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa
-	helm.sh/helm/v3 v3.20.0
+	helm.sh/helm/v3 v3.20.1
 	oras.land/oras-go/v2 v2.6.0
 	sigs.k8s.io/yaml v1.6.0
 )
