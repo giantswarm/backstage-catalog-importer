@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Stop overriding namespace to `giantswarm` for Giant Swarm users in customer catalogs. The namespace should be determined by the default logic, not hardcoded.
+
 ## [0.26.2] - 2026-03-11
 
 ### Fixed
