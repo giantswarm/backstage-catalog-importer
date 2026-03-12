@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Stop overriding namespace to `giantswarm` for Giant Swarm users in customer catalogs. The namespace should be determined by the default logic, not hardcoded.
+- Remove namespace from owner format in charts command. Owner references now use `group:team-name` instead of `group:namespace/team-name`, aligning with how the components command formats owners.
 
 ## [0.26.2] - 2026-03-11
 
