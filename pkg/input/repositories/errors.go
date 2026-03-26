@@ -23,3 +23,8 @@ var dependenciesNotFoundError = &microerror.Error{
 	Kind: "dependenciesNotFoundError",
 	Desc: "Please enable the dependency graph feature for this repository",
 }
+
+// IsDependenciesNotFoundError returns true if error is dependenciesNotFoundError.
+func IsDependenciesNotFoundError(err error) bool {
+	return microerror.Cause(err) == dependenciesNotFoundError
+}
