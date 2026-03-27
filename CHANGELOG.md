@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.4] - 2026-03-27
+
 ### Fixed
 
 - Root command: don't swallow errors fetching dependencies. Retry in case of error.
@@ -438,7 +440,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.3...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.4...HEAD
+[0.26.4]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.3...v0.26.4
 [0.26.3]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.2...v0.26.3
 [0.26.2]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.1...v0.26.2
 [0.26.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.26.0...v0.26.1
