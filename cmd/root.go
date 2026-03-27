@@ -49,6 +49,7 @@ func init() {
 	rootCmd.Flags().StringP("chart-repo-prefix", "", "charts/giantswarm", "Prefix for chart repositories in the OCI registries")
 	rootCmd.Flags().StringP("public-oci-registry", "", "gsoci.azurecr.io", "Host name of the public OCI registry")
 	rootCmd.Flags().StringP("private-oci-registry", "", "gsociprivate.azurecr.io", "Host name of the private OCI registry")
+	rootCmd.Flags().StringSliceP("repo-filter", "", nil, "If set, only process repos with these names (for testing)")
 
 	rootCmd.AddCommand(charts.Command)
 	rootCmd.AddCommand(crd.Command)
@@ -85,6 +86,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 	privateOciRegistry, err := cmd.Flags().GetString("private-oci-registry")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	repoFilter, err := cmd.Flags().GetStringSlice("repo-filter")
+	if err != nil {
+		log.Fatal(err)
+	}
+	repoFilterSet := make(map[string]bool)
+	for _, name := range repoFilter {
+		repoFilterSet[name] = true
 	}
 
 	token := os.Getenv("GITHUB_TOKEN")
@@ -130,6 +140,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
 		for _, repo := range list.Repositories {
+			if len(repoFilterSet) > 0 && !repoFilterSet[repo.Name] {
+				continue
+			}
 
 			ociRegistry := publicOciRegistry
 			isPrivate, err := repoService.GetIsPrivate(repo.Name)
@@ -190,7 +203,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 
-			if lang == "go" {
+			if lang == "go" || repo.Gen.Language == repositories.RepoLanguageGo {
 				const maxRetries = 3
 				for attempt := range maxRetries {
 					deps, err = repoService.GetDependencies(repo.Name)

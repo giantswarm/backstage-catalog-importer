@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Root command: also fetch dependencies for repos where GitHub's auto-detected language is not Go but the repo config specifies `language: go`.
+
+### Added
+
+- Root command: add `--repo-filter` flag to limit processing to specific repos (for testing).
+
 ## [0.26.4] - 2026-03-27
 
 ### Fixed
