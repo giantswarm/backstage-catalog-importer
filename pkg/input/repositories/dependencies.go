@@ -27,7 +27,7 @@ type SbomPackage struct {
 func (s *Service) GetDependencies(name string) ([]string, error) {
 	sbom, resp, err := s.githubClient.DependencyGraph.GetSBOM(s.ctx, s.config.GithubOrganization, name)
 	if err != nil {
-		if resp.StatusCode == http.StatusNotFound {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
 			return nil, microerror.Mask(dependenciesNotFoundError)
 		}
 		return nil, err

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -190,9 +191,24 @@ func runRoot(cmd *cobra.Command, args []string) {
 			}
 
 			if lang == "go" {
-				deps, err = repoService.GetDependencies(repo.Name)
+				const maxRetries = 3
+				for attempt := range maxRetries {
+					deps, err = repoService.GetDependencies(repo.Name)
+					if err == nil || repositories.IsDependenciesNotFoundError(err) {
+						break
+					}
+					if attempt < maxRetries-1 {
+						delay := time.Duration(1<<attempt) * 5 * time.Second
+						log.Printf("WARN - %s: error fetching dependencies (attempt %d/%d): %v, retrying in %v", repo.Name, attempt+1, maxRetries, err, delay)
+						time.Sleep(delay)
+					}
+				}
 				if err != nil {
-					log.Printf("WARN - %s: error fetching dependencies: %v", repo.Name, err)
+					if repositories.IsDependenciesNotFoundError(err) {
+						log.Printf("WARN - %s: dependency graph not available, skipping dependencies", repo.Name)
+					} else {
+						log.Printf("ERROR - %s: failed to fetch dependencies after %d attempts: %v, continuing without dependencies", repo.Name, maxRetries, err)
+					}
 				}
 
 				for _, d := range deps {
