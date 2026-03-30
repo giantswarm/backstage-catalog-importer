@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -121,10 +120,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	numComponents := 0
 	numGroups := 0
 
-	// Collect Go dependencies for later analysis
-	dependencies := make(map[string][]string)
-	repositoriesImported := make(map[string]bool)
-
 	// Iterate repository lists (per team) and create component entities.
 	for _, list := range lists {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
@@ -177,9 +172,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				}
 			}
 
-			deps := []string{}
-			lang := repoService.MustGetLanguage(repo.Name)
-
 			latestReleaseTime, err := repoService.MustGetLatestReleaseTime(repo.Name)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
@@ -188,32 +180,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 			latestReleaseTag, err := repoService.MustGetLatestReleaseTag(repo.Name)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
-			}
-
-			if lang == "go" {
-				const maxRetries = 3
-				for attempt := range maxRetries {
-					deps, err = repoService.GetDependencies(repo.Name)
-					if err == nil || repositories.IsDependenciesNotFoundError(err) {
-						break
-					}
-					if attempt < maxRetries-1 {
-						delay := time.Duration(1<<attempt) * 5 * time.Second
-						log.Printf("WARN - %s: error fetching dependencies (attempt %d/%d): %v, retrying in %v", repo.Name, attempt+1, maxRetries, err, delay)
-						time.Sleep(delay)
-					}
-				}
-				if err != nil {
-					if repositories.IsDependenciesNotFoundError(err) {
-						log.Printf("WARN - %s: dependency graph not available, skipping dependencies", repo.Name)
-					} else {
-						log.Printf("ERROR - %s: failed to fetch dependencies after %d attempts: %v, continuing without dependencies", repo.Name, maxRetries, err)
-					}
-				}
-
-				for _, d := range deps {
-					dependencies[d] = append(dependencies[d], fmt.Sprintf("used in [%s](https://github.com/%s/%s) owned by @%s/%s", repo.Name, githubOrganization, repo.Name, githubOrganization, list.OwnerTeamName))
-				}
 			}
 
 			description := repoService.MustGetDescription(repo.Name)
@@ -233,7 +199,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				repo.Name,
 				component.WithCircleCiSlug(fmt.Sprintf("github/%s/%s", githubOrganization, repo.Name)),
 				component.WithDefaultBranch(defaultBranch),
-				component.WithDependsOn(deps...),
 				component.WithDescription(description),
 				component.WithFlavors(genFlavors...),
 				component.WithGithubProjectSlug(fmt.Sprintf("%s/%s", githubOrganization, repo.Name)),
@@ -302,7 +267,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 
-			repositoriesImported[repo.Name] = true
 		}
 	}
 
@@ -357,27 +321,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	err = groupExporter.WriteFile()
 	if err != nil {
 		log.Fatalf("Error writing groups: %v", err)
-	}
-
-	// Filter Go dependencies to those that are not in the catalog.
-	dependenciesNotCovered := make(map[string][]string)
-	for name, info := range dependencies {
-		ok := repositoriesImported[name]
-		if !ok {
-			dependenciesNotCovered[name] = info
-		}
-	}
-
-	if len(dependenciesNotCovered) > 0 {
-		fmt.Println("\nFound the following Go dependencies not covered in the catalog:")
-		for name, info := range dependenciesNotCovered {
-			fmt.Printf("\n- [ ] [%s](https://github.com/%s/%s)", name, githubOrganization, name)
-			for _, infoItem := range info {
-				fmt.Printf("\n   - %s", infoItem)
-			}
-		}
-
-		fmt.Println("")
 	}
 
 	fmt.Printf("\n%d components written to file %s with size %d bytes", numComponents, componentExporter.TargetPath, componentExporter.Len())
