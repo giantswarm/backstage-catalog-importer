@@ -18,4 +18,3 @@ func IsFileNotFoundError(err error) bool {
 var repositoryNotFoundError = &microerror.Error{
 	Kind: "repositoryNotFoundError",
 }
-
