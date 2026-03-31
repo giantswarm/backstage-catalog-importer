@@ -108,10 +108,6 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 	if c.CircleCiSlug != "" {
 		e.Metadata.Annotations["circleci.com/project-slug"] = c.CircleCiSlug
 	}
-	if c.DeploymentNames != nil {
-		sort.Strings(c.DeploymentNames)
-		e.Metadata.Annotations["giantswarm.io/deployment-names"] = strings.Join(c.DeploymentNames, ",")
-	}
 	if c.Type == "service" {
 		e.Metadata.Annotations["backstage.io/kubernetes-id"] = c.Name
 		if c.KubernetesID != "" {

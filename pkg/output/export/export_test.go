@@ -73,7 +73,6 @@ func TestServiceOutput(t *testing.T) {
 							"backstage.io/source-location":         "url:https://github.com/giantswarm/my-service",
 							"backstage.io/techdocs-ref":            "url:https://github.com/giantswarm/my-service/tree/main",
 							"circleci.com/project-slug":            "github/giantswarm/my-service",
-							"giantswarm.io/deployment-names":       "my-service,my-service-app",
 							"giantswarm.io/helmchart-app-versions": ",2.3.4",
 							"giantswarm.io/helmchart-versions":     "1.2.3,0.4.1",
 							"giantswarm.io/helmcharts":             "first-chart,second-chart",
@@ -106,7 +105,7 @@ func TestServiceOutput(t *testing.T) {
 			},
 		},
 		{
-			name:       "Component with individual deployment names",
+			name:       "Component without deployment names annotation",
 			goldenFile: "case02.golden",
 			entities: []bscatalog.Entity{
 				{
@@ -116,13 +115,12 @@ func TestServiceOutput(t *testing.T) {
 						Name:        "project-with-two-apps",
 						Description: "Project that includes two apps",
 						Annotations: map[string]string{
-							"backstage.io/kubernetes-id":     "project-with-two-apps",
-							"backstage.io/source-location":   "url:https://github.com/giantswarm/project-with-two-apps",
-							"backstage.io/techdocs-ref":      "url:https://github.com/giantswarm/project-with-two-apps/tree/master",
-							"circleci.com/project-slug":      "github/giantswarm/project-with-two-apps",
-							"giantswarm.io/deployment-names": "first-name,second-name-app",
-							"github.com/project-slug":        "giantswarm/project-with-two-apps",
-							"github.com/team-slug":           "myorg/team-slug",
+							"backstage.io/kubernetes-id":   "project-with-two-apps",
+							"backstage.io/source-location": "url:https://github.com/giantswarm/project-with-two-apps",
+							"backstage.io/techdocs-ref":    "url:https://github.com/giantswarm/project-with-two-apps/tree/master",
+							"circleci.com/project-slug":    "github/giantswarm/project-with-two-apps",
+							"github.com/project-slug":      "giantswarm/project-with-two-apps",
+							"github.com/team-slug":         "myorg/team-slug",
 						},
 					},
 					Spec: bscatalog.ComponentSpec{

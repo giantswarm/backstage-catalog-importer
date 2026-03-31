@@ -81,12 +81,6 @@ func WithGithubProjectSlug(slug string) Option {
 	}
 }
 
-func WithDeploymentNames(names ...string) Option {
-	return func(c *Component) {
-		c.DeploymentNames = names
-	}
-}
-
 func WithType(t string) Option {
 	return func(c *Component) {
 		c.Type = t

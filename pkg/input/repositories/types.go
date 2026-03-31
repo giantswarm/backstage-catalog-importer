@@ -4,14 +4,13 @@ import "time"
 
 // Repo represents an entry in the giantswarm/github repositories YAML data.
 type Repo struct {
-	Name            string           `yaml:"name"`
-	ComponentType   string           `yaml:"componentType"`
-	DeploymentNames []string         `yaml:"deploymentNames"`
-	System          string           `yaml:"system"`
-	Gen             RepoGen          `yaml:"gen"`
-	Lifecycle       RepoLifecycle    `yaml:"lifecycle"`
-	Replacements    RepoReplacements `yaml:"replace"`
-	AppTestSuite    interface{}      `yaml:"app_test_suite"`
+	Name          string           `yaml:"name"`
+	ComponentType string           `yaml:"componentType"`
+	System        string           `yaml:"system"`
+	Gen           RepoGen          `yaml:"gen"`
+	Lifecycle     RepoLifecycle    `yaml:"lifecycle"`
+	Replacements  RepoReplacements `yaml:"replace"`
+	AppTestSuite  interface{}      `yaml:"app_test_suite"`
 }
 
 type RepoFlavor string
