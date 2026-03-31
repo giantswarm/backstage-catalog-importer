@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.28.1] - 2026-03-31
 
+### Fixed
+
+- Detect based on CircleCI configuration if a private repo pushes OCI artifacts to a public registry
+
 ## [0.28.0] - 2026-03-31
 
 ### Removed
