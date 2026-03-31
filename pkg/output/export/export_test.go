@@ -115,12 +115,12 @@ func TestServiceOutput(t *testing.T) {
 						Name:        "project-with-two-apps",
 						Description: "Project that includes two apps",
 						Annotations: map[string]string{
-							"backstage.io/kubernetes-id":     "project-with-two-apps",
-							"backstage.io/source-location":   "url:https://github.com/giantswarm/project-with-two-apps",
-							"backstage.io/techdocs-ref":      "url:https://github.com/giantswarm/project-with-two-apps/tree/master",
-							"circleci.com/project-slug":      "github/giantswarm/project-with-two-apps",
-							"github.com/project-slug":        "giantswarm/project-with-two-apps",
-							"github.com/team-slug":           "myorg/team-slug",
+							"backstage.io/kubernetes-id":   "project-with-two-apps",
+							"backstage.io/source-location": "url:https://github.com/giantswarm/project-with-two-apps",
+							"backstage.io/techdocs-ref":    "url:https://github.com/giantswarm/project-with-two-apps/tree/master",
+							"circleci.com/project-slug":    "github/giantswarm/project-with-two-apps",
+							"github.com/project-slug":      "giantswarm/project-with-two-apps",
+							"github.com/team-slug":         "myorg/team-slug",
 						},
 					},
 					Spec: bscatalog.ComponentSpec{
