@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Remove `giantswarm.io/deployment-names` annotation from catalog entities. This annotation is no longer used as of Backstage v0.117.1, replaced by `giantswarm.io/helmcharts`.
+- The component export in the root command no longer exports dependencies between components.
 
 ## [0.26.4] - 2026-03-27
 
