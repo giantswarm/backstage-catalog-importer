@@ -63,7 +63,7 @@ workflows:
 			want: false,
 		},
 		{
-			name: "empty config",
+			name:   "empty config",
 			config: ``,
 			want:   false,
 		},
