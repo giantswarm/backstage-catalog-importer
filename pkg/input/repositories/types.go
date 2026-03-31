@@ -6,7 +6,6 @@ import "time"
 type Repo struct {
 	Name            string           `yaml:"name"`
 	ComponentType   string           `yaml:"componentType"`
-	DeploymentNames []string         `yaml:"deploymentNames"`
 	System          string           `yaml:"system"`
 	Gen             RepoGen          `yaml:"gen"`
 	Lifecycle       RepoLifecycle    `yaml:"lifecycle"`

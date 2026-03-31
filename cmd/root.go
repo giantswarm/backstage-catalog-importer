@@ -216,12 +216,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				}
 			}
 
-			// Prepare deployment names (default to <name> and <name>-app if not set).
-			deploymentNames := repo.DeploymentNames
-			if len(deploymentNames) == 0 {
-				deploymentNames = componentutil.GenerateDeploymentNames(repo.Name)
-			}
-
 			description := repoService.MustGetDescription(repo.Name)
 			defaultBranch := repoService.MustGetDefaultBranch(repo.Name)
 
@@ -240,7 +234,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				component.WithCircleCiSlug(fmt.Sprintf("github/%s/%s", githubOrganization, repo.Name)),
 				component.WithDefaultBranch(defaultBranch),
 				component.WithDependsOn(deps...),
-				component.WithDeploymentNames(deploymentNames...),
 				component.WithDescription(description),
 				component.WithFlavors(genFlavors...),
 				component.WithGithubProjectSlug(fmt.Sprintf("%s/%s", githubOrganization, repo.Name)),
@@ -291,12 +284,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 			// Grafana dashboard link for services.
 			if repo.ComponentType == "service" {
-				urlParts := []string{}
-				for _, d := range deploymentNames {
-					urlParts = append(urlParts, fmt.Sprintf("var-app=%s", d))
-				}
+				baseName := strings.TrimSuffix(repo.Name, "-app")
+				nameWithApp := baseName + "-app"
 				c.AddLink(bscatalog.EntityLink{
-					URL:   fmt.Sprintf("https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&%s&from=now-24h&to=now", strings.Join(urlParts, "&")),
+					URL:   fmt.Sprintf("https://giantswarm.grafana.net/d/eb617ba1-209a-4d57-9963-1af9a8ddc8d4/general-service-metrics?orgId=1&var-app=%s&var-app=%s&from=now-24h&to=now", baseName, nameWithApp),
 					Title: "General service metrics dashboard",
 					Icon:  "dashboard",
 					Type:  "grafana-dashboard",

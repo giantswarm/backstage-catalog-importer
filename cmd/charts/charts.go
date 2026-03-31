@@ -318,9 +318,6 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		}
 	}
 
-	// Prepare deployment names using shared utility function
-	deploymentNames := componentutil.GenerateDeploymentNames(name)
-
 	// Build component options
 	componentOpts := []component.Option{
 		component.WithNamespace(namespace),
@@ -330,7 +327,6 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		component.WithType(componentType),
 		component.WithLatestReleaseTag(chartVersion),
 		component.WithLatestReleaseTime(createdTime),
-		component.WithDeploymentNames(deploymentNames...),
 		component.WithTags("helmchart"),
 	}
 

@@ -64,9 +64,6 @@ type Component struct {
 	// Whether the component has at least one release (used for tags).
 	HasReleases bool
 
-	// Names to use for Kubernetes resource lookup.
-	DeploymentNames []string
-
 	// Component type. Defaults to "unspecified".
 	Type string
 

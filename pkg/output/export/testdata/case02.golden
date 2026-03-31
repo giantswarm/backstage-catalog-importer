@@ -13,7 +13,6 @@ metadata:
         backstage.io/source-location: url:https://github.com/giantswarm/project-with-two-apps
         backstage.io/techdocs-ref: url:https://github.com/giantswarm/project-with-two-apps/tree/master
         circleci.com/project-slug: github/giantswarm/project-with-two-apps
-        giantswarm.io/deployment-names: first-name,second-name-app
         github.com/project-slug: giantswarm/project-with-two-apps
         github.com/team-slug: myorg/team-slug
 spec:
