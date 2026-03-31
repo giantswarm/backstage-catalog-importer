@@ -132,7 +132,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 				log.Fatalf("Error: %v", err)
 			}
 			if isPrivate {
-				ociRegistry = privateOciRegistry
+				forcePublic, err := repoService.GetForcePublicRegistry(repo.Name)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				if !forcePublic {
+					ociRegistry = privateOciRegistry
+				}
 			}
 
 			hasReadme, err := repoService.GetHasReadme(repo.Name)
