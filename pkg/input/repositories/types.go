@@ -65,6 +65,11 @@ type GithubRepoContentDetails struct {
 	// Whether the repository has a CircleCI configuration file.
 	HasCircleCI bool
 
+	// Whether the CircleCI config uses force-public in push-to-registries,
+	// meaning charts/images are published to the public registry even though
+	// the repository is private.
+	ForcePublicRegistry bool
+
 	// Whether the repository has a README.md in the root directory.
 	HasReadme bool
 

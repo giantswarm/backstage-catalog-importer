@@ -10,6 +10,90 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestCircleciConfigHasForcePublic(t *testing.T) {
+	tests := []struct {
+		name   string
+		config string
+		want   bool
+	}{
+		{
+			name: "force-public true on push-to-registries",
+			config: `version: 2.1
+workflows:
+  build:
+    jobs:
+      - architect/push-to-registries:
+          context: architect
+          force-public: true
+`,
+			want: true,
+		},
+		{
+			name: "force-public false on push-to-registries",
+			config: `version: 2.1
+workflows:
+  build:
+    jobs:
+      - architect/push-to-registries:
+          context: architect
+          force-public: false
+`,
+			want: false,
+		},
+		{
+			name: "no force-public on push-to-registries",
+			config: `version: 2.1
+workflows:
+  build:
+    jobs:
+      - architect/push-to-registries:
+          context: architect
+`,
+			want: false,
+		},
+		{
+			name: "no push-to-registries job",
+			config: `version: 2.1
+workflows:
+  build:
+    jobs:
+      - architect/go-build:
+          context: architect
+`,
+			want: false,
+		},
+		{
+			name:   "empty config",
+			config: ``,
+			want:   false,
+		},
+		{
+			name:   "invalid YAML",
+			config: `{{{invalid`,
+			want:   false,
+		},
+		{
+			name: "push-to-registries as simple string entry",
+			config: `version: 2.1
+workflows:
+  build:
+    jobs:
+      - architect/push-to-registries
+`,
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := circleciConfigHasForcePublic(tt.config)
+			if got != tt.want {
+				t.Errorf("circleciConfigHasForcePublic() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestLoadListShallow(t *testing.T) {
 	tests := []struct {
 		name    string

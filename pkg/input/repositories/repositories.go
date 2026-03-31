@@ -145,9 +145,20 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	details := GithubRepoContentDetails{}
 
 	// Detect CircleCI
-	_, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
+	circleciFileContent, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
 	if err == nil {
 		details.HasCircleCI = true
+
+		// Check if push-to-registries uses force-public: true
+		if circleciFileContent != nil {
+			content, contentErr := circleciFileContent.GetContent()
+			if contentErr == nil {
+				details.ForcePublicRegistry = circleciConfigHasForcePublic(content)
+				if details.ForcePublicRegistry {
+					log.Printf("DEBUG - %s - CircleCI config has force-public: true in push-to-registries\n", name)
+				}
+			}
+		}
 	} else if resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
@@ -355,6 +366,19 @@ func (s *Service) GetHasCircleCI(name string) (bool, error) {
 	return s.githubRepoContentDetails[name].HasCircleCI, nil
 }
 
+// Returns whether the repo's CircleCI config uses force-public in push-to-registries,
+// meaning charts/images go to the public registry despite the repo being private.
+func (s *Service) GetForcePublicRegistry(name string) (bool, error) {
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
+		if err != nil {
+			return false, microerror.Mask(err)
+		}
+	}
+
+	return s.githubRepoContentDetails[name].ForcePublicRegistry, nil
+}
+
 // Returns whether the repo has a main README file.
 func (s *Service) GetHasReadme(name string) (bool, error) {
 	if _, ok := s.githubRepoContentDetails[name]; !ok {
@@ -389,4 +413,40 @@ func (s *Service) GetHelmChartNames(name string) ([]string, error) {
 	}
 
 	return s.githubRepoContentDetails[name].HelmChartNames, nil
+}
+
+// circleciConfigHasForcePublic parses a CircleCI config YAML and checks whether
+// any push-to-registries job in the workflows section has force-public: true.
+func circleciConfigHasForcePublic(configYAML string) bool {
+	var config struct {
+		Workflows map[string]struct {
+			Jobs []map[string]any `yaml:"jobs"`
+		} `yaml:"workflows"`
+	}
+
+	if err := yaml.Unmarshal([]byte(configYAML), &config); err != nil {
+		return false
+	}
+
+	for _, workflow := range config.Workflows {
+		for _, job := range workflow.Jobs {
+			for jobName, jobConfig := range job {
+				// Match job names like "architect/push-to-registries" or "push-to-registries"
+				if !strings.HasSuffix(jobName, "push-to-registries") {
+					continue
+				}
+				params, ok := jobConfig.(map[string]any)
+				if !ok {
+					continue
+				}
+				if forcePublic, exists := params["force-public"]; exists {
+					if val, ok := forcePublic.(bool); ok && val {
+						return true
+					}
+				}
+			}
+		}
+	}
+
+	return false
 }
