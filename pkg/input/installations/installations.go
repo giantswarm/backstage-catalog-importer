@@ -10,7 +10,7 @@ import (
 	"slices"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v84/github"
+	"github.com/google/go-github/v85/github"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
