@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove `giantswarm.io/latest-release-tag` and `giantswarm.io/latest-release-date` annotations from exported components (root and charts commands). The `no-releases` tag is no longer emitted either.
+
 ## [0.28.1] - 2026-03-31
 
 ### Fixed

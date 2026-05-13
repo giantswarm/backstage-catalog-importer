@@ -1,7 +1,5 @@
 package repositories
 
-import "time"
-
 // Repo represents an entry in the giantswarm/github repositories YAML data.
 type Repo struct {
 	Name          string           `yaml:"name"`
@@ -79,13 +77,4 @@ type GithubRepoContentDetails struct {
 	NumHelmCharts int
 
 	HelmChartNames []string
-}
-
-// Cache for info on releases of a repo.
-type GithubReleaseDetails struct {
-	// Creation date/time of the latest release.
-	LatestReleaseTime time.Time
-
-	// Tag name of the latest release.
-	LatestReleaseTag string
 }

@@ -1,8 +1,6 @@
 package component
 
 import (
-	"time"
-
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 )
 
@@ -54,24 +52,6 @@ func WithHasReadme(hasReadme bool) Option {
 func WithDefaultBranch(defaultBranch string) Option {
 	return func(c *Component) {
 		c.DefaultBranch = defaultBranch
-	}
-}
-
-func WithLatestReleaseTime(latestReleaseTime time.Time) Option {
-	return func(c *Component) {
-		c.LatestReleaseTime = latestReleaseTime
-	}
-}
-
-func WithLatestReleaseTag(latestReleaseTag string) Option {
-	return func(c *Component) {
-		c.LatestReleaseTag = latestReleaseTag
-	}
-}
-
-func WithHasReleases(hasReleases bool) Option {
-	return func(c *Component) {
-		c.HasReleases = hasReleases
 	}
 }
 
