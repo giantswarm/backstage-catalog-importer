@@ -2,7 +2,6 @@ package component
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -77,8 +76,6 @@ func TestComponent_ToEntity(t *testing.T) {
 				WithHasReadme(true),
 				WithKubernetesID("my-k8s-id"),
 				WithLabels(map[string]string{"key": "value"}),
-				WithLatestReleaseTag("v5.0.1"),
-				WithLatestReleaseTime(time.Date(2018, time.January, 3, 1, 2, 3, 0, time.UTC)),
 				WithLifecycle("deprecated"),
 				WithNamespace("my-namespace"),
 				WithOwner("my-owner"),
@@ -106,8 +103,6 @@ func TestComponent_ToEntity(t *testing.T) {
 						"backstage.io/source-location":         "url:https://github.com/foo-org/my-project",
 						"backstage.io/techdocs-ref":            "url:https://github.com/foo-org/my-project/tree/master",
 						"circleci.com/project-slug":            "my-circleci-slug",
-						"giantswarm.io/latest-release-date":    "2018-01-03T01:02:03Z",
-						"giantswarm.io/latest-release-tag":     "v5.0.1",
 						"github.com/project-slug":              "foo-org/my-project",
 						"github.com/team-slug":                 "my-team",
 						"giantswarm.io/helmcharts":             "gsoci.azurecr.io/charts/giantswarm/first-chart,gsoci.azurecr.io/charts/giantswarm/second-chart",
@@ -124,35 +119,6 @@ func TestComponent_ToEntity(t *testing.T) {
 					Owner:     "my-owner",
 					System:    "my-system",
 					DependsOn: []string{"component:first-dependency", "component:second-dependency"},
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name:          "NoReleases",
-			componentName: "no-releases-component",
-			options: []Option{
-				WithHasReleases(false),
-				WithLanguage("python"),
-				WithFlavors("cli"),
-			},
-			want: &bscatalog.Entity{
-				APIVersion: bscatalog.APIVersion,
-				Kind:       bscatalog.EntityKindComponent,
-				Metadata: bscatalog.EntityMetadata{
-					Name: "no-releases-component",
-					Labels: map[string]string{
-						"giantswarm.io/language":   "python",
-						"giantswarm.io/flavor-cli": "true",
-					},
-					Annotations: map[string]string{},
-					Links:       []bscatalog.EntityLink{},
-					Tags:        []string{"flavor:cli", "language:python", "no-releases"},
-				},
-				Spec: bscatalog.ComponentSpec{
-					Type:      "unspecified",
-					Lifecycle: "production",
-					Owner:     "unspecified",
 				},
 			},
 			wantErr: false,
@@ -300,12 +266,11 @@ func TestNew(t *testing.T) {
 			name: "Success",
 			args: args{name: "minimal"},
 			want: &Component{
-				Name:        "minimal",
-				Namespace:   "default",
-				Owner:       "unspecified",
-				Type:        "unspecified",
-				Lifecycle:   "production",
-				HasReleases: true,
+				Name:      "minimal",
+				Namespace: "default",
+				Owner:     "unspecified",
+				Type:      "unspecified",
+				Lifecycle: "production",
 			},
 		},
 		{
@@ -343,12 +308,11 @@ func TestGeneric(t *testing.T) {
 				return New("minimal")
 			},
 			want: &Component{
-				Name:        "minimal",
-				Namespace:   "default",
-				Owner:       "unspecified",
-				Type:        "unspecified",
-				Lifecycle:   "production",
-				HasReleases: true,
+				Name:      "minimal",
+				Namespace: "default",
+				Owner:     "unspecified",
+				Type:      "unspecified",
+				Lifecycle: "production",
 			},
 		},
 		{
@@ -373,12 +337,11 @@ func TestGeneric(t *testing.T) {
 				Links: []bscatalog.EntityLink{
 					{URL: "https://example.com", Title: "link1", Icon: "dashboard", Type: "dashboard"},
 				},
-				Name:        "minimal",
-				Namespace:   "default",
-				Owner:       "unspecified",
-				Tags:        []string{"tag1"},
-				Type:        "unspecified",
-				HasReleases: true,
+				Name:      "minimal",
+				Namespace: "default",
+				Owner:     "unspecified",
+				Tags:      []string{"tag1"},
+				Type:      "unspecified",
 			},
 		},
 	}

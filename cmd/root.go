@@ -178,16 +178,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 				}
 			}
 
-			latestReleaseTime, err := repoService.MustGetLatestReleaseTime(repo.Name)
-			if err != nil {
-				log.Fatalf("Error: %v", err)
-			}
-
-			latestReleaseTag, err := repoService.MustGetLatestReleaseTag(repo.Name)
-			if err != nil {
-				log.Fatalf("Error: %v", err)
-			}
-
 			description := repoService.MustGetDescription(repo.Name)
 			defaultBranch := repoService.MustGetDefaultBranch(repo.Name)
 
@@ -210,11 +200,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 				component.WithGithubProjectSlug(fmt.Sprintf("%s/%s", githubOrganization, repo.Name)),
 				component.WithGithubTeamSlug(list.OwnerTeamName),
 				component.WithHasReadme(hasReadme),
-				component.WithHasReleases(latestReleaseTag != ""),
 				component.WithHelmCharts(charts...),
 				component.WithLanguage(genLanguage),
-				component.WithLatestReleaseTag(latestReleaseTag),
-				component.WithLatestReleaseTime(latestReleaseTime),
 				component.WithLifecycle(string(repo.Lifecycle)),
 				component.WithOwner(list.OwnerTeamName),
 				component.WithPrivate(isPrivate),

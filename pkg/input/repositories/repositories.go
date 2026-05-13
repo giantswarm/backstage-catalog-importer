@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v86/github"
@@ -52,8 +51,6 @@ type Service struct {
 	githubRepoDetails map[string]GithubRepoDetails
 	// Cached information on repo content
 	githubRepoContentDetails map[string]GithubRepoContentDetails
-	// Cached information on repo releases
-	githubReleaseDetails map[string]GithubReleaseDetails
 }
 
 // New instantiates a new repositories service.
@@ -80,7 +77,6 @@ func New(c Config) (*Service, error) {
 		githubClient:             client,
 		githubRepoDetails:        make(map[string]GithubRepoDetails),
 		githubRepoContentDetails: make(map[string]GithubRepoContentDetails),
-		githubReleaseDetails:     make(map[string]GithubReleaseDetails),
 	}
 
 	if c.GithubAuthToken != "" {
@@ -208,29 +204,6 @@ func (s *Service) LoadGitHubFile(name string, path string) (string, error) {
 	return fileContent.GetContent()
 }
 
-// Load tag and date of the projectz's latest release.
-func (s *Service) loadGithubReleaseDetails(name string) error {
-	latestRelease, response, err := s.githubClient.Repositories.GetLatestRelease(s.ctx, s.config.GithubOrganization, name)
-	if err != nil && response.StatusCode != http.StatusNotFound {
-		return err
-	}
-
-	created := time.Time{}
-	tag := latestRelease.GetTagName()
-	if tag != "" {
-		created = latestRelease.CreatedAt.Time
-	}
-
-	details := GithubReleaseDetails{
-		LatestReleaseTime: created,
-		LatestReleaseTag:  tag,
-	}
-
-	s.githubReleaseDetails[name] = details
-
-	return nil
-}
-
 // Loads a list of repository configurations from a local path.
 // The file name is asserted in the format `<team_name>.yaml`, with all
 // repositories mentioned in it belonging to the team of that name.
@@ -326,32 +299,6 @@ func (s *Service) MustGetDefaultBranch(name string) string {
 	}
 
 	return s.githubRepoDetails[name].DefaultBranch
-}
-
-// Returns the creation time of the repository's most recent release.
-// If no release was found, returns zero-value time.
-func (s *Service) MustGetLatestReleaseTime(name string) (time.Time, error) {
-	if _, ok := s.githubReleaseDetails[name]; !ok {
-		err := s.loadGithubReleaseDetails(name)
-		if err != nil {
-			return time.Time{}, microerror.Mask(err)
-		}
-	}
-
-	return s.githubReleaseDetails[name].LatestReleaseTime, nil
-}
-
-// Returns the tag of the repository's most recent release.
-// If no release was found, returns empty string.
-func (s *Service) MustGetLatestReleaseTag(name string) (string, error) {
-	if _, ok := s.githubReleaseDetails[name]; !ok {
-		err := s.loadGithubReleaseDetails(name)
-		if err != nil {
-			return "string", microerror.Mask(err)
-		}
-	}
-
-	return s.githubReleaseDetails[name].LatestReleaseTag, nil
 }
 
 // Returns whether the repo has a CircleCI configuration.

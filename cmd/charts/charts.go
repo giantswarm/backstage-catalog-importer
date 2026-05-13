@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -231,28 +230,16 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		}
 	}
 
-	// Extract version, appVersion, creation time, icon, team owner, and chart type
+	// Extract version, appVersion, icon, team owner, and chart type
 	chartVersion := tag
 	var appVersion string
 	var chartType string
-	createdTime := time.Time{} // Zero value, will be set from manifest annotations
 	var iconURL string
 	componentOwner := "group:unspecified" // Default owner
 
 	// See https://github.com/giantswarm/roadmap/issues/4156#issuecomment-3589340419
 	managed := false
 	audience := audienceAll
-
-	// Extract creation time from OCI manifest annotations
-	if manifestInfo.Annotations != nil {
-		if created, ok := manifestInfo.Annotations["org.opencontainers.image.created"]; ok && created != "" {
-			if t, err := time.Parse(time.RFC3339, created); err == nil {
-				createdTime = t
-			} else {
-				log.Printf("WARN: Failed to parse org.opencontainers.image.created annotation '%s' for %s:%s: %v", created, repo, tag, err)
-			}
-		}
-	}
 
 	if configMap != nil {
 		// Extract version from top-level (Helm chart config structure)
@@ -325,8 +312,6 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		component.WithDescription(description),
 		component.WithOwner(componentOwner),
 		component.WithType(componentType),
-		component.WithLatestReleaseTag(chartVersion),
-		component.WithLatestReleaseTime(createdTime),
 		component.WithTags("helmchart"),
 	}
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
@@ -15,9 +14,6 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 	copy(tags, c.Tags)
 	if c.IsPrivate {
 		tags = append(tags, "private")
-	}
-	if !c.HasReleases {
-		tags = append(tags, "no-releases")
 	}
 	if c.DefaultBranch == "master" {
 		tags = append(tags, "defaultbranch:master")
@@ -98,12 +94,6 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 	}
 	if c.GithubTeamSlug != "" {
 		e.Metadata.Annotations["github.com/team-slug"] = c.GithubTeamSlug
-	}
-	if c.LatestReleaseTag != "" {
-		e.Metadata.Annotations["giantswarm.io/latest-release-tag"] = c.LatestReleaseTag
-	}
-	if c.LatestReleaseTime.Format(time.RFC3339) != "0001-01-01T00:00:00Z" {
-		e.Metadata.Annotations["giantswarm.io/latest-release-date"] = c.LatestReleaseTime.Format(time.RFC3339)
 	}
 	if c.CircleCiSlug != "" {
 		e.Metadata.Annotations["circleci.com/project-slug"] = c.CircleCiSlug

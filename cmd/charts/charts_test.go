@@ -2,7 +2,6 @@ package charts
 
 import (
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -25,10 +24,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 		wantTags              []string
 		wantAnnotations       map[string]string
 		wantLinks             []bscatalog.EntityLink
-		wantVersion           string
 		wantOwner             string
 		wantGithubProjectSlug string
-		wantCreatedTimeSet    bool
 		wantErr               bool
 	}{
 		{
@@ -55,10 +52,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/helmchart-versions":   "v1.0.0",
 			},
 			wantLinks:             nil,
-			wantVersion:           "v1.0.0",
 			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/my-chart-app",
-			wantCreatedTimeSet:    true,
 			wantErr:               false,
 		},
 		{
@@ -90,10 +85,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/helmchart-app-versions": "1.5.3",
 			},
 			wantLinks:             nil,
-			wantVersion:           "2.1.0",
 			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/advanced-chart-app",
-			wantCreatedTimeSet:    true,
 			wantErr:               false,
 		},
 		{
@@ -126,10 +119,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/icon-url":             "https://example.com/icon.png",
 			},
 			wantLinks:             nil,
-			wantVersion:           "v1.0.0",
 			wantOwner:             "group:team-honeybadger",
 			wantGithubProjectSlug: "giantswarm/chart-with-icon-app",
-			wantCreatedTimeSet:    true,
 			wantErr:               false,
 		},
 		{
@@ -160,10 +151,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/helmchart-versions":   "v2.0.0",
 			},
 			wantLinks:             nil,
-			wantVersion:           "v2.0.0",
 			wantOwner:             "group:team-atlas",
 			wantGithubProjectSlug: "giantswarm/atlas-chart-app",
-			wantCreatedTimeSet:    true,
 			wantErr:               false,
 		},
 		{
@@ -195,10 +184,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/helmchart-versions":   "v1.5.0",
 			},
 			wantLinks:             nil,
-			wantVersion:           "v1.5.0",
 			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/managed-chart-app",
-			wantCreatedTimeSet:    true,
 			wantErr:               false,
 		},
 		{
@@ -226,10 +213,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/helmchart-versions":   "v1.0.0",
 			},
 			wantLinks:             nil,
-			wantVersion:           "v1.0.0",
 			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/hello-world-app",
-			wantCreatedTimeSet:    true,
 			wantErr:               false,
 		},
 		{
@@ -257,10 +242,8 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				"giantswarm.io/helmchart-versions":   "v2.3.100",
 			},
 			wantLinks:             nil,
-			wantVersion:           "v2.3.100",
 			wantOwner:             "group:unspecified",
 			wantGithubProjectSlug: "giantswarm/docs",
-			wantCreatedTimeSet:    true,
 			wantErr:               false,
 		},
 		{
@@ -363,31 +346,9 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				t.Errorf("createComponentFromOCIChart() Links mismatch (-want +got):\n%s", diff)
 			}
 
-			// Check version
-			if got.LatestReleaseTag != tt.wantVersion {
-				t.Errorf("createComponentFromOCIChart() LatestReleaseTag = %v, want %v", got.LatestReleaseTag, tt.wantVersion)
-			}
-
 			// Check GitHub project slug
 			if got.GithubProjectSlug != tt.wantGithubProjectSlug {
 				t.Errorf("createComponentFromOCIChart() GithubProjectSlug = %v, want %v", got.GithubProjectSlug, tt.wantGithubProjectSlug)
-			}
-
-			// Check that creation time is set when expected
-			if tt.wantCreatedTimeSet {
-				if got.LatestReleaseTime.IsZero() {
-					t.Errorf("createComponentFromOCIChart() LatestReleaseTime should not be zero")
-				}
-			}
-
-			// For test cases with specific created time from manifest annotations, verify it's parsed correctly
-			if tt.manifestAnnotations != nil {
-				if created, ok := tt.manifestAnnotations["org.opencontainers.image.created"]; ok {
-					expectedTime, _ := time.Parse(time.RFC3339, created)
-					if !got.LatestReleaseTime.Equal(expectedTime) {
-						t.Errorf("createComponentFromOCIChart() LatestReleaseTime = %v, want %v", got.LatestReleaseTime, expectedTime)
-					}
-				}
 			}
 		})
 	}

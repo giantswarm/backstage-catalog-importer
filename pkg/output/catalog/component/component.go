@@ -4,7 +4,6 @@ package component
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
@@ -55,15 +54,6 @@ type Component struct {
 	// Default branch of the component repository
 	DefaultBranch string
 
-	// Time of the latest release of the component
-	LatestReleaseTime time.Time
-
-	// Tag of the latest release of the component
-	LatestReleaseTag string
-
-	// Whether the component has at least one release (used for tags).
-	HasReleases bool
-
 	// Component type. Defaults to "unspecified".
 	Type string
 
@@ -106,12 +96,11 @@ func New(name string, options ...Option) (*Component, error) {
 	}
 
 	c := &Component{
-		Name:        name,
-		Namespace:   "default",
-		Type:        "unspecified",
-		Owner:       "unspecified",
-		Lifecycle:   "production",
-		HasReleases: true,
+		Name:      name,
+		Namespace: "default",
+		Type:      "unspecified",
+		Owner:     "unspecified",
+		Lifecycle: "production",
 	}
 
 	for _, option := range options {
