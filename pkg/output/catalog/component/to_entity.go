@@ -39,7 +39,7 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 		},
 	}
 
-	if c.Namespace != "default" {
+	if c.Namespace != defaultNamespace {
 		e.Metadata.Namespace = c.Namespace
 	}
 
@@ -98,7 +98,7 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 	if c.CircleCiSlug != "" {
 		e.Metadata.Annotations["circleci.com/project-slug"] = c.CircleCiSlug
 	}
-	if c.Type == "service" {
+	if c.Type == typeService {
 		e.Metadata.Annotations["backstage.io/kubernetes-id"] = c.Name
 		if c.KubernetesID != "" {
 			e.Metadata.Annotations["backstage.io/kubernetes-id"] = c.KubernetesID

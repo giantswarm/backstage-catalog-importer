@@ -1,0 +1,10 @@
+version: "2"
+
+linters:
+  exclusions:
+    rules:
+      # Test files often contain repeated literal strings (table-driven test
+      # cases, fixture values). Reporting these as goconst violations is noise.
+      - path: _test\.go
+        linters:
+          - goconst

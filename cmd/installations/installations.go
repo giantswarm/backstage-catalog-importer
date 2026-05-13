@@ -27,6 +27,11 @@ const (
 	outputFlag = "output"
 
 	awsCloudProviderURLMask = "https://signin.aws.amazon.com/switchrole?account=%s&roleName=%s&displayName=%s"
+
+	providerAWS = "aws"
+
+	iconAWS     = "aws"
+	iconGrafana = "grafana"
 )
 
 func init() {
@@ -149,7 +154,7 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 	}
 
 	// Happa and Grafana link
-	if ins.Provider == "aws" || ins.Provider == "azure" || ins.Provider == "kvm" {
+	if ins.Provider == providerAWS || ins.Provider == "azure" || ins.Provider == "kvm" {
 		// Vintage
 		r.Links = append(r.Links, []bscatalog.EntityLink{
 			{
@@ -159,7 +164,7 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 			}, {
 				URL:   fmt.Sprintf("https://grafana.g8s.%s/", ins.Base),
 				Title: "Grafana",
-				Icon:  "grafana",
+				Icon:  iconGrafana,
 			},
 		}...)
 	} else {
@@ -167,11 +172,11 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 			{
 				URL:   fmt.Sprintf("https://grafana-%s.teleport.giantswarm.io", ins.Codename),
 				Title: "Grafana (via Teleport)",
-				Icon:  "grafana",
+				Icon:  iconGrafana,
 			}, {
 				URL:   fmt.Sprintf("https://grafana.%s.%s/", ins.Codename, ins.Base),
 				Title: "Grafana (customer URL)",
-				Icon:  "grafana",
+				Icon:  iconGrafana,
 			}, {
 				URL:   fmt.Sprintf("https://happa.%s.%s/admin-login", ins.Codename, ins.Base),
 				Title: "Happa",
@@ -190,14 +195,14 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 			r.Links = append(r.Links, bscatalog.EntityLink{
 				URL:   fmt.Sprintf(awsCloudProviderURLMask, ins.Aws.HostCluster.Account, ins.Aws.HostCluster.AdminRoleARN, fmt.Sprintf("%s+management+cluster", ins.Codename)),
 				Title: "AWS Console (management cluster)",
-				Icon:  "aws",
+				Icon:  iconAWS,
 			})
 		}
 		if ins.Aws.GuestCluster.Account != "" && ins.Aws.GuestCluster.AdminRoleARN != "" {
 			r.Links = append(r.Links, bscatalog.EntityLink{
 				URL:   fmt.Sprintf(awsCloudProviderURLMask, ins.Aws.GuestCluster.Account, ins.Aws.GuestCluster.AdminRoleARN, fmt.Sprintf("%s+workload+clusters", ins.Codename)),
 				Title: "AWS Console (workload clusters)",
-				Icon:  "aws",
+				Icon:  iconAWS,
 			})
 		}
 	}

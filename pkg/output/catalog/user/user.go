@@ -73,7 +73,7 @@ func (c *User) ToEntity() *bscatalog.Entity {
 	}
 
 	e := &bscatalog.Entity{
-		APIVersion: "backstage.io/v1alpha1",
+		APIVersion: bscatalog.APIVersion,
 		Kind:       bscatalog.EntityKindUser,
 		Metadata: bscatalog.EntityMetadata{
 			Name:        c.Name,

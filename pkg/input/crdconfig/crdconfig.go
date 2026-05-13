@@ -10,6 +10,8 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
+const defaultLifecycle = "production"
+
 // Item represents a single CRD configuration entry.
 type Item struct {
 	// URL is the GitHub URL to the CRD YAML file (required).
@@ -102,6 +104,6 @@ func validateItem(item *Item) error {
 // applyDefaults sets default values for optional fields.
 func applyDefaults(item *Item) {
 	if item.Lifecycle == "" {
-		item.Lifecycle = "production"
+		item.Lifecycle = defaultLifecycle
 	}
 }

@@ -8,6 +8,13 @@ import (
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
+const (
+	defaultNamespace = "default"
+	defaultType      = "crd"
+	defaultLifecycle = "production"
+	defaultOwner     = "unspecified"
+)
+
 // API holds our internal representation of something that we want
 // to export as a Backstage entity of kind "API".
 type API struct {
@@ -61,10 +68,10 @@ func New(name string, options ...Option) (*API, error) {
 
 	a := &API{
 		Name:      name,
-		Namespace: "default",
-		Type:      "crd",
-		Lifecycle: "production",
-		Owner:     "unspecified",
+		Namespace: defaultNamespace,
+		Type:      defaultType,
+		Lifecycle: defaultLifecycle,
+		Owner:     defaultOwner,
 	}
 
 	for _, option := range options {
