@@ -21,7 +21,7 @@ func (a *API) ToEntity() *bscatalog.Entity {
 	}
 
 	// Only set namespace if not "default"
-	if a.Namespace != "default" {
+	if a.Namespace != defaultNamespace {
 		e.Metadata.Namespace = a.Namespace
 	}
 

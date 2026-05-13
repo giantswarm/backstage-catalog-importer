@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Add `.golangci.yml` configuration that excludes test files from the `goconst` linter, and replace repeated literal strings in non-test code with named constants.
+
 ### Removed
 
 - Remove `giantswarm.io/latest-release-tag` and `giantswarm.io/latest-release-date` annotations from exported components (root and charts commands). The `no-releases` tag is no longer emitted either.

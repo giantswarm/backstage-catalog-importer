@@ -9,6 +9,15 @@ import (
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
+const (
+	defaultNamespace = "default"
+	defaultType      = "unspecified"
+	defaultOwner     = "unspecified"
+	defaultLifecycle = "production"
+
+	typeService = "service"
+)
+
 // Component holds our internal representation of something that we want
 // to export as a Backstage entity of type "component".
 type Component struct {
@@ -97,10 +106,10 @@ func New(name string, options ...Option) (*Component, error) {
 
 	c := &Component{
 		Name:      name,
-		Namespace: "default",
-		Type:      "unspecified",
-		Owner:     "unspecified",
-		Lifecycle: "production",
+		Namespace: defaultNamespace,
+		Type:      defaultType,
+		Owner:     defaultOwner,
+		Lifecycle: defaultLifecycle,
 	}
 
 	for _, option := range options {

@@ -54,6 +54,8 @@ const (
 
 	audienceAll        = "all"
 	audienceGiantSwarm = "giantswarm"
+
+	defaultComponentOwner = "group:unspecified"
 )
 
 func init() {
@@ -235,7 +237,7 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 	var appVersion string
 	var chartType string
 	var iconURL string
-	componentOwner := "group:unspecified" // Default owner
+	componentOwner := defaultComponentOwner
 
 	// See https://github.com/giantswarm/roadmap/issues/4156#issuecomment-3589340419
 	managed := false

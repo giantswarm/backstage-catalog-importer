@@ -7,6 +7,8 @@ import (
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 )
 
+const defaultGroupType = "team"
+
 // Option is an option to configure a Group.
 type Option func(*Group)
 
@@ -39,7 +41,7 @@ func New(name string, options ...Option) (*Group, error) {
 	c := &Group{
 		Name:      name,
 		Namespace: "default",
-		Type:      "team",
+		Type:      defaultGroupType,
 	}
 
 	for _, option := range options {
@@ -66,7 +68,7 @@ func (c *Group) ToEntity() *bscatalog.Entity {
 	}
 
 	e := &bscatalog.Entity{
-		APIVersion: "backstage.io/v1alpha1",
+		APIVersion: bscatalog.APIVersion,
 		Kind:       bscatalog.EntityKindGroup,
 		Metadata: bscatalog.EntityMetadata{
 			Name:        c.Name,
