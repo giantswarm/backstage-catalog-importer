@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
 )
