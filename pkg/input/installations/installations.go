@@ -10,7 +10,7 @@ import (
 	"slices"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
@@ -64,10 +64,15 @@ func New(c Config) (*Service, error) {
 
 	ctx := context.Background()
 
+	githubClient, err := httpclient.NewGitHubClient(c.GithubAuthToken)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
 	s := &Service{
 		ctx:          ctx,
 		config:       c,
-		githubClient: httpclient.NewGitHubClient(c.GithubAuthToken),
+		githubClient: githubClient,
 	}
 
 	return s, nil

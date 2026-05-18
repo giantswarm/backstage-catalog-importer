@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
@@ -69,7 +69,10 @@ func New(c Config) (*Service, error) {
 	}
 
 	ctx := context.Background()
-	client := httpclient.NewGitHubClient(c.GithubAuthToken)
+	client, err := httpclient.NewGitHubClient(c.GithubAuthToken)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
 
 	s := &Service{
 		config:                   c,

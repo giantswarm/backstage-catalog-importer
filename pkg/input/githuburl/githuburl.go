@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/giantswarm/microerror"
-	"github.com/google/go-github/v86/github"
+	"github.com/google/go-github/v87/github"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
@@ -28,7 +28,10 @@ type Service struct {
 // New creates a new GitHub URL fetching service.
 func New(c Config) (*Service, error) {
 	ctx := context.Background()
-	client := httpclient.NewGitHubClient(c.AuthToken)
+	client, err := httpclient.NewGitHubClient(c.AuthToken)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Service{
 		client: client,
