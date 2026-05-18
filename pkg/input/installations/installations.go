@@ -64,10 +64,15 @@ func New(c Config) (*Service, error) {
 
 	ctx := context.Background()
 
+	githubClient, err := httpclient.NewGitHubClient(c.GithubAuthToken)
+	if err != nil {
+		return nil, microerror.Mask(err)
+	}
+
 	s := &Service{
 		ctx:          ctx,
 		config:       c,
-		githubClient: httpclient.NewGitHubClient(c.GithubAuthToken),
+		githubClient: githubClient,
 	}
 
 	return s, nil

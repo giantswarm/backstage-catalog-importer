@@ -28,7 +28,10 @@ type Service struct {
 // New creates a new GitHub URL fetching service.
 func New(c Config) (*Service, error) {
 	ctx := context.Background()
-	client := httpclient.NewGitHubClient(c.AuthToken)
+	client, err := httpclient.NewGitHubClient(c.AuthToken)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Service{
 		client: client,

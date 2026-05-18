@@ -136,7 +136,7 @@ func sleep(ctx context.Context, d time.Duration) {
 }
 
 // NewGitHubClient creates a new GitHub API client with retry logic.
-func NewGitHubClient(token string) *github.Client {
+func NewGitHubClient(token string) (*github.Client, error) {
 	transport := &retryTransport{
 		base:       http.DefaultTransport,
 		maxRetries: DefaultMaxRetries,
@@ -148,10 +148,10 @@ func NewGitHubClient(token string) *github.Client {
 		Transport: transport,
 	}
 
-	client := github.NewClient(httpClient)
+	opts := []github.ClientOptionsFunc{github.WithHTTPClient(httpClient)}
 	if token != "" {
-		client = client.WithAuthToken(token)
+		opts = append(opts, github.WithAuthToken(token))
 	}
 
-	return client
+	return github.NewClient(opts...)
 }

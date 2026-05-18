@@ -279,14 +279,20 @@ func TestBackoff_CapsRetryAfterAtMaxDelay(t *testing.T) {
 }
 
 func TestNewGitHubClient(t *testing.T) {
-	client := NewGitHubClient("test-token")
+	client, err := NewGitHubClient("test-token")
+	if err != nil {
+		t.Fatalf("NewGitHubClient returned error: %v", err)
+	}
 	if client == nil {
 		t.Fatal("NewGitHubClient returned nil")
 	}
 }
 
 func TestNewGitHubClient_NoToken(t *testing.T) {
-	client := NewGitHubClient("")
+	client, err := NewGitHubClient("")
+	if err != nil {
+		t.Fatalf("NewGitHubClient with empty token returned error: %v", err)
+	}
 	if client == nil {
 		t.Fatal("NewGitHubClient with empty token returned nil")
 	}

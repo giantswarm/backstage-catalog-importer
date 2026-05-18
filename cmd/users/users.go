@@ -60,7 +60,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
 
-	githubClient := httpclient.NewGitHubClient(token)
+	githubClient, err := httpclient.NewGitHubClient(token)
+	if err != nil {
+		log.Fatalf("Error: could not create GitHub client -- %v", err)
+	}
 
 	userExporter := export.New(export.Config{TargetPath: path + "/users.yaml"})
 
