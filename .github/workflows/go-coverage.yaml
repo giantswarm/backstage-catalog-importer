@@ -8,6 +8,6 @@ on:
 
 jobs:
   coverage:
-    uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@main
+    uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@8618a2e9ad62ae431581df07bb86e8b081f7133d # main
     secrets:
       token: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
