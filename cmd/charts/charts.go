@@ -141,8 +141,11 @@ func runCharts(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		// Select the latest pure semver release tag. Dev builds (semver
-		// pre-releases like 1.1.22-dev....) and non-semver tags are ignored.
+		// Prefer the latest pure semver release tag for metadata extraction,
+		// so the component reflects the latest release rather than a dev build.
+		// Dev builds (semver pre-releases like 1.1.22-dev....) and non-semver
+		// tags fall back to the highest tag; the version annotations are gated
+		// separately in createComponentFromOCIChart.
 		tag, hasRelease := ociregistry.LatestReleaseTag(tags)
 		if hasRelease {
 			log.Printf("Using release tag: %s", tag)
@@ -165,7 +168,7 @@ func runCharts(cmd *cobra.Command, args []string) {
 		}
 
 		// Create component from repository and manifest data
-		comp, err := createComponentFromOCIChart(repo, tag, manifestInfo, namespace, componentType, registryHostname, hasRelease)
+		comp, err := createComponentFromOCIChart(repo, tag, manifestInfo, namespace, componentType, registryHostname)
 		if err != nil {
 			log.Printf("WARN: Failed to create component for %s:%s: %v", repo, tag, err)
 			continue
@@ -198,7 +201,7 @@ func runCharts(cmd *cobra.Command, args []string) {
 }
 
 // createComponentFromOCIChart creates a Backstage component from OCI chart metadata
-func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregistry.ManifestInfo, namespace, componentType, registryHostname string, setVersions bool) (*component.Component, error) {
+func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregistry.ManifestInfo, namespace, componentType, registryHostname string) (*component.Component, error) {
 	configMap := manifestInfo.Config
 
 	// Extract GitHub project slug and repository name from home field (Helm chart config structure)
@@ -343,10 +346,11 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 	helmchartPath := fmt.Sprintf("%s/%s", registryHostname, repo)
 	comp.SetAnnotation("giantswarm.io/helmcharts", helmchartPath)
 
-	// Only set version annotations when the selected tag is a pure semver
-	// release. For charts that only have dev/pre-release tags, we still export
-	// the component but omit the version annotations.
-	if setVersions {
+	// Only publish version annotations for pure semver releases. chartVersion
+	// comes from the chart's config (Chart.yaml version), falling back to the
+	// tag; we validate the value actually written rather than just the selected
+	// tag, so dev/pre-release builds never end up in the annotations.
+	if ociregistry.IsReleaseVersion(chartVersion) {
 		comp.SetAnnotation("giantswarm.io/helmchart-versions", chartVersion)
 
 		// Add app version if available

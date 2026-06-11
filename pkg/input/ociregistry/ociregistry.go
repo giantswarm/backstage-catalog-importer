@@ -129,17 +129,25 @@ func sortTagsBySemver(tags []string) {
 	})
 }
 
-// LatestReleaseTag returns the first tag that parses as a valid semver release
-// without a pre-release component. Tags are expected to be sorted descending
-// (as returned by ListRepositoryTags), so the first qualifying tag is the
-// highest release. Returns "" and false if no tag qualifies.
+// IsReleaseVersion reports whether version is a valid semver release without a
+// pre-release component. Dev builds like
+// "1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f" and
+// non-semver values return false.
+func IsReleaseVersion(version string) bool {
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return false
+	}
+	return v.Prerelease() == ""
+}
+
+// LatestReleaseTag returns the first tag that is a pure semver release (see
+// IsReleaseVersion). Tags are expected to be sorted descending (as returned by
+// ListRepositoryTags), so the first qualifying tag is the highest release.
+// Returns "" and false if no tag qualifies.
 func LatestReleaseTag(tags []string) (string, bool) {
 	for _, tag := range tags {
-		v, err := semver.NewVersion(tag)
-		if err != nil {
-			continue
-		}
-		if v.Prerelease() == "" {
+		if IsReleaseVersion(tag) {
 			return tag, true
 		}
 	}

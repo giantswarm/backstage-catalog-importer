@@ -199,6 +199,28 @@ func TestSortTagsBySemver(t *testing.T) {
 	}
 }
 
+func TestIsReleaseVersion(t *testing.T) {
+	tests := []struct {
+		version string
+		want    bool
+	}{
+		{"1.1.21", true},
+		{"v2.0.0", true},
+		{"1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f", false},
+		{"1.0.0-alpha", false},
+		{"latest", false},
+		{"", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.version, func(t *testing.T) {
+			if got := IsReleaseVersion(tt.version); got != tt.want {
+				t.Errorf("IsReleaseVersion(%q) = %v, want %v", tt.version, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestLatestReleaseTag(t *testing.T) {
 	tests := []struct {
 		name    string
