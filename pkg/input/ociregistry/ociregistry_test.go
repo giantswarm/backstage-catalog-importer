@@ -198,3 +198,64 @@ func TestSortTagsBySemver(t *testing.T) {
 		})
 	}
 }
+
+func TestLatestReleaseTag(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   []string
+		wantTag string
+		wantOK  bool
+	}{
+		{
+			name:    "Dev build sorts above release but is skipped",
+			input:   []string{"1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f", "1.1.21", "1.1.20"},
+			wantTag: "1.1.21",
+			wantOK:  true,
+		},
+		{
+			name:    "Plain releases return the highest",
+			input:   []string{"2.0.0", "1.5.0", "1.0.0"},
+			wantTag: "2.0.0",
+			wantOK:  true,
+		},
+		{
+			name:    "v-prefixed releases",
+			input:   []string{"v2.0.0", "v1.0.0"},
+			wantTag: "v2.0.0",
+			wantOK:  true,
+		},
+		{
+			name:    "Only pre-releases yields no release",
+			input:   []string{"1.0.0-rc1", "1.0.0-beta", "1.0.0-alpha"},
+			wantTag: "",
+			wantOK:  false,
+		},
+		{
+			name:    "Non-semver tags are skipped",
+			input:   []string{"latest", "main", "1.2.3"},
+			wantTag: "1.2.3",
+			wantOK:  true,
+		},
+		{
+			name:    "All non-semver tags yields no release",
+			input:   []string{"latest", "main", "dev"},
+			wantTag: "",
+			wantOK:  false,
+		},
+		{
+			name:    "Empty slice yields no release",
+			input:   []string{},
+			wantTag: "",
+			wantOK:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTag, gotOK := LatestReleaseTag(tt.input)
+			if gotTag != tt.wantTag || gotOK != tt.wantOK {
+				t.Errorf("LatestReleaseTag() = (%q, %v), want (%q, %v)", gotTag, gotOK, tt.wantTag, tt.wantOK)
+			}
+		})
+	}
+}

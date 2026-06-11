@@ -299,6 +299,7 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				tt.namespace,
 				tt.componentType,
 				tt.registryHostname,
+				true,
 			)
 
 			if (err != nil) != tt.wantErr {
@@ -351,6 +352,44 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 				t.Errorf("createComponentFromOCIChart() GithubProjectSlug = %v, want %v", got.GithubProjectSlug, tt.wantGithubProjectSlug)
 			}
 		})
+	}
+}
+
+// TestCreateComponentFromOCIChart_OmitVersions verifies that when setVersions is
+// false (no pure semver release tag available), the component is still created but
+// the version annotations are omitted while the helmcharts path annotation remains.
+func TestCreateComponentFromOCIChart_OmitVersions(t *testing.T) {
+	manifestInfo := &ociregistry.ManifestInfo{
+		Config: map[string]interface{}{
+			"description": "Dev-only chart",
+			"version":     "1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f",
+			"appVersion":  "1.1.22-dev",
+			"home":        "https://github.com/giantswarm/dev-chart-app",
+		},
+	}
+
+	got, err := createComponentFromOCIChart(
+		"giantswarm/dev-chart",
+		"1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f",
+		manifestInfo,
+		"default",
+		"service",
+		"registry.example.com",
+		false,
+	)
+	if err != nil {
+		t.Fatalf("createComponentFromOCIChart() unexpected error: %v", err)
+	}
+
+	wantAnnotations := map[string]string{
+		"application.giantswarm.io/audience": "all",
+		"application.giantswarm.io/managed":  "false",
+		"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/dev-chart-app/tree/main",
+		"giantswarm.io/helmcharts":           "registry.example.com/giantswarm/dev-chart",
+	}
+
+	if diff := cmp.Diff(wantAnnotations, got.Annotations); diff != "" {
+		t.Errorf("createComponentFromOCIChart() Annotations mismatch (-want +got):\n%s", diff)
 	}
 }
 
@@ -432,6 +471,7 @@ func TestCreateComponentFromOCIChart_ErrorCases(t *testing.T) {
 				tt.namespace,
 				tt.componentType,
 				tt.registryHostname,
+				true,
 			)
 
 			if (err != nil) != tt.wantErr {

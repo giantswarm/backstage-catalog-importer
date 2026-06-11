@@ -129,6 +129,23 @@ func sortTagsBySemver(tags []string) {
 	})
 }
 
+// LatestReleaseTag returns the first tag that parses as a valid semver release
+// without a pre-release component. Tags are expected to be sorted descending
+// (as returned by ListRepositoryTags), so the first qualifying tag is the
+// highest release. Returns "" and false if no tag qualifies.
+func LatestReleaseTag(tags []string) (string, bool) {
+	for _, tag := range tags {
+		v, err := semver.NewVersion(tag)
+		if err != nil {
+			continue
+		}
+		if v.Prerelease() == "" {
+			return tag, true
+		}
+	}
+	return "", false
+}
+
 // ManifestInfo contains both the config and manifest annotations
 type ManifestInfo struct {
 	Config      map[string]interface{}

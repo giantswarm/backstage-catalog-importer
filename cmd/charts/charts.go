@@ -141,9 +141,15 @@ func runCharts(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		// Use the first tag (typically latest or most recent)
-		tag := tags[0]
-		log.Printf("Using tag: %s", tag)
+		// Select the latest pure semver release tag. Dev builds (semver
+		// pre-releases like 1.1.22-dev....) and non-semver tags are ignored.
+		tag, hasRelease := ociregistry.LatestReleaseTag(tags)
+		if hasRelease {
+			log.Printf("Using release tag: %s", tag)
+		} else {
+			tag = tags[0]
+			log.Printf("No pure semver release tag found for %s; using %s for metadata, omitting version annotations", repo, tag)
+		}
 
 		// Get manifest for metadata extraction
 		manifestInfo, err := registry.GetRepositoryManifest(ctx, repo, tag)
@@ -159,7 +165,7 @@ func runCharts(cmd *cobra.Command, args []string) {
 		}
 
 		// Create component from repository and manifest data
-		comp, err := createComponentFromOCIChart(repo, tag, manifestInfo, namespace, componentType, registryHostname)
+		comp, err := createComponentFromOCIChart(repo, tag, manifestInfo, namespace, componentType, registryHostname, hasRelease)
 		if err != nil {
 			log.Printf("WARN: Failed to create component for %s:%s: %v", repo, tag, err)
 			continue
@@ -192,7 +198,7 @@ func runCharts(cmd *cobra.Command, args []string) {
 }
 
 // createComponentFromOCIChart creates a Backstage component from OCI chart metadata
-func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregistry.ManifestInfo, namespace, componentType, registryHostname string) (*component.Component, error) {
+func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregistry.ManifestInfo, namespace, componentType, registryHostname string, setVersions bool) (*component.Component, error) {
 	configMap := manifestInfo.Config
 
 	// Extract GitHub project slug and repository name from home field (Helm chart config structure)
@@ -336,11 +342,17 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 	// Format: registry/repository (combining what was oci-registry and oci-repository)
 	helmchartPath := fmt.Sprintf("%s/%s", registryHostname, repo)
 	comp.SetAnnotation("giantswarm.io/helmcharts", helmchartPath)
-	comp.SetAnnotation("giantswarm.io/helmchart-versions", chartVersion)
 
-	// Add app version if available
-	if appVersion != "" {
-		comp.SetAnnotation("giantswarm.io/helmchart-app-versions", appVersion)
+	// Only set version annotations when the selected tag is a pure semver
+	// release. For charts that only have dev/pre-release tags, we still export
+	// the component but omit the version annotations.
+	if setVersions {
+		comp.SetAnnotation("giantswarm.io/helmchart-versions", chartVersion)
+
+		// Add app version if available
+		if appVersion != "" {
+			comp.SetAnnotation("giantswarm.io/helmchart-app-versions", appVersion)
+		}
 	}
 
 	// Add audience and managed annotations
