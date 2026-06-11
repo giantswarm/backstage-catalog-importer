@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-06-11
+
 ### Changed
 
 - Release binaries now include darwin/amd64, darwin/arm64, windows/amd64, and windows/arm64 alongside the existing linux targets. Windows binaries are named `backstage-catalog-importer-windows-<arch>.exe`.
@@ -476,7 +478,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.29.1...HEAD
+[0.29.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.28.1...v0.29.0
 [0.28.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.28.0...v0.28.1
 [0.28.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.27.0...v0.28.0
