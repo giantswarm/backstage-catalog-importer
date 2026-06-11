@@ -354,6 +354,69 @@ func TestCreateComponentFromOCIChart(t *testing.T) {
 	}
 }
 
+// TestCreateComponentFromOCIChart_OmitVersions verifies that when the resolved
+// chart version is not a pure semver release, the component is still created but
+// the version annotations are omitted while the helmcharts path annotation
+// remains. Both the dev-tag case and the case where the tag is a clean release
+// but the config version carries a pre-release suffix are covered.
+func TestCreateComponentFromOCIChart_OmitVersions(t *testing.T) {
+	tests := []struct {
+		name      string
+		tag       string
+		configMap map[string]interface{}
+	}{
+		{
+			name: "Dev tag and dev config version",
+			tag:  "1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f",
+			configMap: map[string]interface{}{
+				"description": "Dev-only chart",
+				"version":     "1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f",
+				"appVersion":  "1.1.22-dev",
+				"home":        "https://github.com/giantswarm/dev-chart-app",
+			},
+		},
+		{
+			name: "Clean tag but pre-release config version",
+			tag:  "1.1.22",
+			configMap: map[string]interface{}{
+				"description": "Chart with dirty config version",
+				"version":     "1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f",
+				"appVersion":  "1.1.22-dev",
+				"home":        "https://github.com/giantswarm/dev-chart-app",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			manifestInfo := &ociregistry.ManifestInfo{Config: tt.configMap}
+
+			got, err := createComponentFromOCIChart(
+				"giantswarm/dev-chart",
+				tt.tag,
+				manifestInfo,
+				"default",
+				"service",
+				"registry.example.com",
+			)
+			if err != nil {
+				t.Fatalf("createComponentFromOCIChart() unexpected error: %v", err)
+			}
+
+			wantAnnotations := map[string]string{
+				"application.giantswarm.io/audience": "all",
+				"application.giantswarm.io/managed":  "false",
+				"backstage.io/techdocs-ref":          "url:https://github.com/giantswarm/dev-chart-app/tree/main",
+				"giantswarm.io/helmcharts":           "registry.example.com/giantswarm/dev-chart",
+			}
+
+			if diff := cmp.Diff(wantAnnotations, got.Annotations); diff != "" {
+				t.Errorf("createComponentFromOCIChart() Annotations mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 // TestCreateComponentFromOCIChart_ErrorCases tests error scenarios
 func TestCreateComponentFromOCIChart_ErrorCases(t *testing.T) {
 	tests := []struct {

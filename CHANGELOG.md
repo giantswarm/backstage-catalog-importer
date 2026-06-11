@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Release binaries now include darwin/amd64, darwin/arm64, windows/amd64, and windows/arm64 alongside the existing linux targets. Windows binaries are named `backstage-catalog-importer-windows-<arch>.exe`.
 
+### Fixed
+
+- The `charts` command now selects the latest pure semver release when generating the `giantswarm.io/helmchart-versions` and `giantswarm.io/helmchart-app-versions` annotations, ignoring dev/pre-release builds (e.g. `1.1.22-dev....`). Charts that only have dev builds are still exported but without these version annotations.
+
 ## [0.29.0] - 2026-05-13
 
 ### Changed

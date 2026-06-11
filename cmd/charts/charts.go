@@ -141,9 +141,18 @@ func runCharts(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		// Use the first tag (typically latest or most recent)
-		tag := tags[0]
-		log.Printf("Using tag: %s", tag)
+		// Prefer the latest pure semver release tag for metadata extraction,
+		// so the component reflects the latest release rather than a dev build.
+		// Dev builds (semver pre-releases like 1.1.22-dev....) and non-semver
+		// tags fall back to the highest tag; the version annotations are gated
+		// separately in createComponentFromOCIChart.
+		tag, hasRelease := ociregistry.LatestReleaseTag(tags)
+		if hasRelease {
+			log.Printf("Using release tag: %s", tag)
+		} else {
+			tag = tags[0]
+			log.Printf("No pure semver release tag found for %s; using %s for metadata, omitting version annotations", repo, tag)
+		}
 
 		// Get manifest for metadata extraction
 		manifestInfo, err := registry.GetRepositoryManifest(ctx, repo, tag)
@@ -336,11 +345,18 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 	// Format: registry/repository (combining what was oci-registry and oci-repository)
 	helmchartPath := fmt.Sprintf("%s/%s", registryHostname, repo)
 	comp.SetAnnotation("giantswarm.io/helmcharts", helmchartPath)
-	comp.SetAnnotation("giantswarm.io/helmchart-versions", chartVersion)
 
-	// Add app version if available
-	if appVersion != "" {
-		comp.SetAnnotation("giantswarm.io/helmchart-app-versions", appVersion)
+	// Only publish version annotations for pure semver releases. chartVersion
+	// comes from the chart's config (Chart.yaml version), falling back to the
+	// tag; we validate the value actually written rather than just the selected
+	// tag, so dev/pre-release builds never end up in the annotations.
+	if ociregistry.IsReleaseVersion(chartVersion) {
+		comp.SetAnnotation("giantswarm.io/helmchart-versions", chartVersion)
+
+		// Add app version if available
+		if appVersion != "" {
+			comp.SetAnnotation("giantswarm.io/helmchart-app-versions", appVersion)
+		}
 	}
 
 	// Add audience and managed annotations

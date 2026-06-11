@@ -129,6 +129,31 @@ func sortTagsBySemver(tags []string) {
 	})
 }
 
+// IsReleaseVersion reports whether version is a valid semver release without a
+// pre-release component. Dev builds like
+// "1.1.22-dev.teams-alignment-branch.2026-06-10.19-12-31.h10c664f" and
+// non-semver values return false.
+func IsReleaseVersion(version string) bool {
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return false
+	}
+	return v.Prerelease() == ""
+}
+
+// LatestReleaseTag returns the first tag that is a pure semver release (see
+// IsReleaseVersion). Tags are expected to be sorted descending (as returned by
+// ListRepositoryTags), so the first qualifying tag is the highest release.
+// Returns "" and false if no tag qualifies.
+func LatestReleaseTag(tags []string) (string, bool) {
+	for _, tag := range tags {
+		if IsReleaseVersion(tag) {
+			return tag, true
+		}
+	}
+	return "", false
+}
+
 // ManifestInfo contains both the config and manifest annotations
 type ManifestInfo struct {
 	Config      map[string]interface{}
