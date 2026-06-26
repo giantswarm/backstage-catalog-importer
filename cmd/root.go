@@ -211,8 +211,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 			// Surface github repo-config settings as filterable catalog tags so
 			// the devportal catalog can be sliced company-wide by CI/release
 			// shape, not just team/type/flavour/language.
+			// Value tag (always exactly one) so the catalog tag picker, which
+			// only ANDs positive tags, can select both "generated" and the
+			// complement "manual" -- e.g. release:auto-release + ci:manual.
 			if repo.Gen.CI.Generate {
-				c.AddTag("ci-generated")
+				c.AddTag("ci:generated")
+			} else {
+				c.AddTag("ci:manual")
 			}
 			c.AddTag("release:" + repo.EffectiveReleaseWorkflow())
 			if repo.HasUpstreamCheck() {

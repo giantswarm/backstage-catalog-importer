@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Emit the CI-generation state as a value tag (`ci:generated` / `ci:manual`, always exactly one) instead of the presence-only `ci-generated`. The catalog tag picker only ANDs positive tags, so a complement tag is needed to express queries like "auto-release but not devctl-generated CI" (`release:auto-release` + `ci:manual`).
+
 ### Added
 
 - Add a `groups` subcommand that exports Giant Swarm GitHub teams as Backstage group entities to `groups.yaml`.
