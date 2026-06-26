@@ -51,14 +51,16 @@ func TestGroupFromTeam(t *testing.T) {
 		name        string
 		team        *github.Team
 		memberNames []string
+		namespace   string
 
-		expectedName     string
-		expectedTitle    string
-		expectedDesc     string
-		expectedPicture  string
-		expectedParent   string
-		expectedSelector string
-		expectedMembers  []string
+		expectedName      string
+		expectedNamespace string
+		expectedTitle     string
+		expectedDesc      string
+		expectedPicture   string
+		expectedParent    string
+		expectedSelector  string
+		expectedMembers   []string
 	}{
 		{
 			name: "team without parent and with members",
@@ -68,14 +70,16 @@ func TestGroupFromTeam(t *testing.T) {
 				Name:        github.Ptr("Honey Badger"),
 				Description: github.Ptr("The honey badger team"),
 			},
-			memberNames:      []string{"bob", "alice"},
-			expectedName:     "team-honeybadger",
-			expectedTitle:    "Honey Badger",
-			expectedDesc:     "The honey badger team",
-			expectedPicture:  "https://avatars.githubusercontent.com/t/123?s=116&v=4",
-			expectedParent:   "",
-			expectedSelector: "tags @> 'owner:team-honeybadger'",
-			expectedMembers:  []string{"bob", "alice"},
+			memberNames:       []string{"bob", "alice"},
+			namespace:         "default",
+			expectedName:      "team-honeybadger",
+			expectedNamespace: "default",
+			expectedTitle:     "Honey Badger",
+			expectedDesc:      "The honey badger team",
+			expectedPicture:   "https://avatars.githubusercontent.com/t/123?s=116&v=4",
+			expectedParent:    "",
+			expectedSelector:  "tags @> 'owner:team-honeybadger'",
+			expectedMembers:   []string{"bob", "alice"},
 		},
 		{
 			name: "team with parent and no members",
@@ -88,26 +92,49 @@ func TestGroupFromTeam(t *testing.T) {
 					Slug: github.Ptr("team-parent"),
 				},
 			},
-			memberNames:      nil,
-			expectedName:     "team-bumblebee",
-			expectedTitle:    "Bumblebee",
-			expectedDesc:     "",
-			expectedPicture:  "https://avatars.githubusercontent.com/t/456?s=116&v=4",
-			expectedParent:   "team-parent",
-			expectedSelector: "tags @> 'owner:team-bumblebee'",
-			expectedMembers:  nil,
+			memberNames:       nil,
+			namespace:         "default",
+			expectedName:      "team-bumblebee",
+			expectedNamespace: "default",
+			expectedTitle:     "Bumblebee",
+			expectedDesc:      "",
+			expectedPicture:   "https://avatars.githubusercontent.com/t/456?s=116&v=4",
+			expectedParent:    "team-parent",
+			expectedSelector:  "tags @> 'owner:team-bumblebee'",
+			expectedMembers:   nil,
+		},
+		{
+			name: "empty namespace is omitted",
+			team: &github.Team{
+				ID:   github.Ptr(int64(789)),
+				Slug: github.Ptr("team-shield"),
+				Name: github.Ptr("Shield"),
+			},
+			memberNames:       []string{"carol"},
+			namespace:         "",
+			expectedName:      "team-shield",
+			expectedNamespace: "",
+			expectedTitle:     "Shield",
+			expectedDesc:      "",
+			expectedPicture:   "https://avatars.githubusercontent.com/t/789?s=116&v=4",
+			expectedParent:    "",
+			expectedSelector:  "tags @> 'owner:team-shield'",
+			expectedMembers:   []string{"carol"},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			g, err := groupFromTeam(tc.team, tc.memberNames)
+			g, err := groupFromTeam(tc.team, tc.memberNames, tc.namespace)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
 			if g.Name != tc.expectedName {
 				t.Errorf("Name: got %q, want %q", g.Name, tc.expectedName)
+			}
+			if g.Namespace != tc.expectedNamespace {
+				t.Errorf("Namespace: got %q, want %q", g.Namespace, tc.expectedNamespace)
 			}
 			if g.Title != tc.expectedTitle {
 				t.Errorf("Title: got %q, want %q", g.Title, tc.expectedTitle)
@@ -126,6 +153,11 @@ func TestGroupFromTeam(t *testing.T) {
 			}
 			if !reflect.DeepEqual(g.MemberNames, tc.expectedMembers) {
 				t.Errorf("MemberNames: got %v, want %v", g.MemberNames, tc.expectedMembers)
+			}
+
+			// ToEntity mutates the group (it sorts members), so assert on it last.
+			if ns := g.ToEntity().Metadata.Namespace; ns != tc.expectedNamespace {
+				t.Errorf("Entity namespace: got %q, want %q", ns, tc.expectedNamespace)
 			}
 		})
 	}
