@@ -11,14 +11,13 @@ import (
 
 	"github.com/giantswarm/backstage-catalog-importer/cmd/charts"
 	"github.com/giantswarm/backstage-catalog-importer/cmd/crd"
+	groups "github.com/giantswarm/backstage-catalog-importer/cmd/groups"
 	installations "github.com/giantswarm/backstage-catalog-importer/cmd/installations"
 	users "github.com/giantswarm/backstage-catalog-importer/cmd/users"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/group"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 	componentutil "github.com/giantswarm/backstage-catalog-importer/pkg/util/component"
 )
@@ -51,6 +50,7 @@ func init() {
 
 	rootCmd.AddCommand(charts.Command)
 	rootCmd.AddCommand(crd.Command)
+	rootCmd.AddCommand(groups.Command)
 	rootCmd.AddCommand(installations.Command)
 	rootCmd.AddCommand(users.Command)
 }
@@ -101,24 +101,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	teamsService, err := teams.New(teams.Config{
-		GithubOrganization: githubOrganization,
-		GithubAuthToken:    token,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	lists, err := repoService.GetLists()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	groupExporter := export.New(export.Config{TargetPath: path + "/groups.yaml"})
 	componentExporter := export.New(export.Config{TargetPath: path + "/components.yaml"})
 
 	numComponents := 0
-	numGroups := 0
 
 	// Iterate repository lists (per team) and create component entities.
 	for _, list := range lists {
@@ -263,61 +253,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// Export teams
-	teams, err := teamsService.GetAll()
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-	log.Printf("Processing %d teams", len(teams))
-
-	for _, team := range teams {
-		members, err := teamsService.GetMembers(team.GetSlug())
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-
-		var memberNames []string
-		for _, u := range members {
-			n := u.GetLogin()
-			memberNames = append(memberNames, n)
-		}
-
-		parentTeamName := ""
-		if team.GetParent() != nil {
-			parentTeamName = team.GetParent().GetSlug()
-		}
-
-		group, err := group.New(team.GetSlug(),
-			group.WithTitle(team.GetName()),
-			group.WithDescription(team.GetDescription()),
-			group.WithPictureURL(fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", team.GetID())),
-			group.WithMemberNames(memberNames...),
-			group.WithParentName(parentTeamName),
-			group.WithGrafanaDashboardSelector(fmt.Sprintf("tags @> 'owner:%s'", team.GetSlug())),
-		)
-		if err != nil {
-			log.Fatalf("Error: could not create group -- %v", err)
-		}
-
-		numGroups++
-		entity := group.ToEntity()
-		err = groupExporter.AddEntity(entity)
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-	}
-
 	err = componentExporter.WriteFile()
 	if err != nil {
 		log.Fatalf("Error writing components: %v", err)
 	}
-	err = groupExporter.WriteFile()
-	if err != nil {
-		log.Fatalf("Error writing groups: %v", err)
-	}
 
 	fmt.Printf("\n%d components written to file %s with size %d bytes", numComponents, componentExporter.TargetPath, componentExporter.Len())
-	fmt.Printf("\n%d groups written to file %s with size %d bytes", numGroups, groupExporter.TargetPath, groupExporter.Len())
 	fmt.Println("")
 }
 
