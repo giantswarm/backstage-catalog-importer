@@ -94,6 +94,38 @@ workflows:
 	}
 }
 
+func TestEffectiveReleaseWorkflow(t *testing.T) {
+	tests := []struct {
+		name string
+		repo Repo
+		want string
+	}{
+		{
+			name: "explicit value wins over CI default",
+			repo: Repo{Gen: RepoGen{CI: RepoCI{Generate: true, ReleaseWorkflow: "legacy"}}},
+			want: "legacy",
+		},
+		{
+			name: "generated CI implies auto-release",
+			repo: Repo{Gen: RepoGen{CI: RepoCI{Generate: true}}},
+			want: "auto-release",
+		},
+		{
+			name: "no CI defaults to legacy",
+			repo: Repo{Name: "name-only"},
+			want: "legacy",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.repo.EffectiveReleaseWorkflow(); got != tt.want {
+				t.Errorf("EffectiveReleaseWorkflow() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestLoadListShallow(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -190,6 +222,23 @@ func TestLoadList(t *testing.T) {
 						ArchitectOrb: false,
 						PreCommit:    true,
 						Renovate:     true,
+					},
+				},
+				{
+					Name:          "repo-with-ci-and-upstream",
+					ComponentType: "service",
+					Gen: RepoGen{
+						Flavors:   []RepoFlavor{RepoFlavorApp},
+						Language:  RepoLanguageGo,
+						PreCommit: []string{"helmchart"},
+						CI: RepoCI{
+							Generate:        true,
+							ReleaseWorkflow: "legacy",
+						},
+					},
+					UpstreamCheck: &RepoUpstreamCheck{
+						ChartPath:    "helm/foo",
+						UpstreamRepo: "org/foo",
 					},
 				},
 			},
