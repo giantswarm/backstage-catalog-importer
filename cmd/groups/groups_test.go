@@ -7,6 +7,45 @@ import (
 	"github.com/google/go-github/v88/github"
 )
 
+func TestIsDescendant(t *testing.T) {
+	// Hierarchy:
+	//   employees
+	//     ├── team-atlas
+	//     │     └── team-atlas-sub
+	//     └── ae-adidas
+	//   bots            (no parent)
+	parentBySlug := map[string]string{
+		"employees":      "",
+		"team-atlas":     "employees",
+		"team-atlas-sub": "team-atlas",
+		"ae-adidas":      "employees",
+		"bots":           "",
+	}
+
+	testCases := []struct {
+		slug     string
+		ancestor string
+		expected bool
+	}{
+		{slug: "team-atlas", ancestor: "employees", expected: true},       // direct child
+		{slug: "team-atlas-sub", ancestor: "employees", expected: true},   // transitive descendant
+		{slug: "ae-adidas", ancestor: "employees", expected: true},        // customer team is also under employees
+		{slug: "employees", ancestor: "employees", expected: false},       // a team is not its own descendant
+		{slug: "bots", ancestor: "employees", expected: false},            // unrelated top-level team
+		{slug: "team-atlas", ancestor: "team-atlas-sub", expected: false}, // ancestor/descendant reversed
+		{slug: "unknown", ancestor: "employees", expected: false},         // unknown slug
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.slug+"_in_"+tc.ancestor, func(t *testing.T) {
+			got := isDescendant(tc.slug, tc.ancestor, parentBySlug)
+			if got != tc.expected {
+				t.Errorf("isDescendant(%q, %q): got %v, want %v", tc.slug, tc.ancestor, got, tc.expected)
+			}
+		})
+	}
+}
+
 func TestGroupFromTeam(t *testing.T) {
 	testCases := []struct {
 		name        string

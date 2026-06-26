@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add a `groups` subcommand that exports Giant Swarm GitHub teams as Backstage group entities to `groups.yaml`.
+- The `groups` subcommand supports a `--teams` flag (comma-separated allowlist of team slugs) and a `--parent` flag (only export teams that are descendants of the given parent team, e.g. `employees`) to control which teams are exported.
+
+### Changed
+
+- The `groups` subcommand now requires at least one of `--teams` or `--parent` to be set. This prevents accidentally exporting all teams, which can expose sensitive (e.g. customer-specific) team names.
 
 ### Removed
 
