@@ -64,7 +64,7 @@ func (s *Service) updateBuffer() error {
 func (s *Service) AddEntity(entity *bscatalog.Entity) error {
 	s.collection = append(s.collection, entity)
 
-	slices.SortFunc(s.collection, func(a, b *bscatalog.Entity) int {
+	slices.SortStableFunc(s.collection, func(a, b *bscatalog.Entity) int {
 		return cmp.Or(
 			cmp.Compare(a.APIVersion, b.APIVersion),
 			cmp.Compare(a.Kind, b.Kind),

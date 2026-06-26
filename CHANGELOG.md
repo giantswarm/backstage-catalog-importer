@@ -11,11 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a `groups` subcommand that exports Giant Swarm GitHub teams as Backstage group entities to `groups.yaml`.
 - The `groups` subcommand supports a `--teams` flag (comma-separated allowlist of team slugs) and a `--parent` flag (only export teams that are descendants of the given parent team, e.g. `employees`) to control which teams are exported.
+- The `groups` subcommand supports a `--namespace` flag (default `default`). Set it to an empty string to omit the `namespace` field from exported group entities (e.g. for customer-facing catalogs).
 - Emit additional component tags from the github repo configuration so the devportal catalog can be filtered company-wide by CI/release shape: `ci-generated` (when `gen.ci.generate` is set), `release:auto-release` / `release:legacy` (the effective release workflow), `upstream-check` (when `upstreamCheck` is configured), and `precommit` (when `gen.preCommit` is set).
 
 ### Changed
 
 - The `groups` subcommand now requires at least one of `--teams` or `--parent` to be set. This prevents accidentally exporting all teams, which can expose sensitive (e.g. customer-specific) team names.
+- Exported catalog entities are now sorted with a stable sort, so the output ordering is fully deterministic across runs and diffs stay minimal.
 
 ### Removed
 

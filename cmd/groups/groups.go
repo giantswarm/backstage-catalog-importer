@@ -18,8 +18,11 @@ import (
 const githubOrganization = "giantswarm"
 
 const (
-	teamsFlag  = "teams"
-	parentFlag = "parent"
+	teamsFlag     = "teams"
+	parentFlag    = "parent"
+	namespaceFlag = "namespace"
+
+	defaultNamespace = "default"
 )
 
 var Command = &cobra.Command{
@@ -43,6 +46,7 @@ descendant of the parent team.`,
 func init() {
 	Command.Flags().StringSlice(teamsFlag, nil, "Allowlist of team slugs to export (comma-separated). Only these teams are exported.")
 	Command.Flags().String(parentFlag, "", `Only export teams that are descendants of this parent team slug (e.g. "employees").`)
+	Command.Flags().StringP(namespaceFlag, "n", defaultNamespace, "Backstage namespace for the exported groups. Set to an empty string to omit the namespace field.")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -51,6 +55,10 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	parent, err := cmd.Flags().GetString(parentFlag)
+	if err != nil {
+		return err
+	}
+	namespace, err := cmd.Flags().GetString(namespaceFlag)
 	if err != nil {
 		return err
 	}
@@ -120,7 +128,7 @@ func run(cmd *cobra.Command, args []string) error {
 			memberNames = append(memberNames, u.GetLogin())
 		}
 
-		g, err := groupFromTeam(team, memberNames)
+		g, err := groupFromTeam(team, memberNames, namespace)
 		if err != nil {
 			log.Fatalf("Error: could not create group -- %v", err)
 		}
@@ -169,14 +177,16 @@ func isDescendant(slug, ancestor string, parentBySlug map[string]string) bool {
 	return false
 }
 
-// groupFromTeam builds a Backstage group from a GitHub team and its member logins.
-func groupFromTeam(team *github.Team, memberNames []string) (*group.Group, error) {
+// groupFromTeam builds a Backstage group from a GitHub team and its member
+// logins. An empty namespace omits the namespace field from the entity.
+func groupFromTeam(team *github.Team, memberNames []string, namespace string) (*group.Group, error) {
 	parentTeamName := ""
 	if team.GetParent() != nil {
 		parentTeamName = team.GetParent().GetSlug()
 	}
 
 	return group.New(team.GetSlug(),
+		group.WithNamespace(namespace),
 		group.WithTitle(team.GetName()),
 		group.WithDescription(team.GetDescription()),
 		group.WithPictureURL(fmt.Sprintf("https://avatars.githubusercontent.com/t/%d?s=116&v=4", team.GetID())),

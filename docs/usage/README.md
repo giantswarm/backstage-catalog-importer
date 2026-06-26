@@ -14,6 +14,8 @@ backstage-catalog-importer users --internal [--output path-to-output-dir]
 
 The `groups` command requires at least one of `--teams` (a comma-separated allowlist of team slugs) or `--parent` (only export teams that are descendants of the given parent team) to be set. This is a safeguard against accidentally exporting all teams, which can expose sensitive (e.g. customer-specific) team names. For customer-facing catalogs, prefer an explicit `--teams` allowlist.
 
+By default the exported groups use the `default` namespace. Pass `--namespace ""` to omit the `namespace` field entirely, which is recommended for customer-facing catalogs.
+
 As a result, several YAML files will be written to the output directory. Progress and warnings will be logged to the console.
 
 ### What's covered
