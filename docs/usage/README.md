@@ -8,9 +8,11 @@ To run the export, execute
 
 ```nohighlight
 backstage-catalog-importer [--output path-to-output-dir]
-backstage-catalog-importer groups [--output path-to-output-dir]
+backstage-catalog-importer groups --parent employees [--output path-to-output-dir]
 backstage-catalog-importer users --internal [--output path-to-output-dir]
 ```
+
+The `groups` command requires at least one of `--teams` (a comma-separated allowlist of team slugs) or `--parent` (only export teams that are descendants of the given parent team) to be set. This is a safeguard against accidentally exporting all teams, which can expose sensitive (e.g. customer-specific) team names. For customer-facing catalogs, prefer an explicit `--teams` allowlist.
 
 As a result, several YAML files will be written to the output directory. Progress and warnings will be logged to the console.
 
