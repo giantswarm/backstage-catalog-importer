@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add a `groups` subcommand that exports Giant Swarm GitHub teams as Backstage group entities to `groups.yaml`.
+
+### Removed
+
+- Remove group (`groups.yaml`) generation from the root command. Use the new `groups` subcommand instead.
+
 ## [0.29.1] - 2026-06-11
 
 ### Changed
