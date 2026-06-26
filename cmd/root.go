@@ -208,6 +208,20 @@ func runRoot(cmd *cobra.Command, args []string) {
 				c.AddTag("helmchart-deployable")
 			}
 
+			// Surface github repo-config settings as filterable catalog tags so
+			// the devportal catalog can be sliced company-wide by CI/release
+			// shape, not just team/type/flavour/language.
+			if repo.Gen.CI.Generate {
+				c.AddTag("ci-generated")
+			}
+			c.AddTag("release:" + repo.EffectiveReleaseWorkflow())
+			if repo.HasUpstreamCheck() {
+				c.AddTag("upstream-check")
+			}
+			if len(repo.Gen.PreCommit) > 0 {
+				c.AddTag("precommit")
+			}
+
 			if len(charts) > 0 {
 				// Determine the chart's audience annotation, and if 'all', add tag.
 				// (This ignores the rare case where a repo may have more than one chart with different audience annotations.)

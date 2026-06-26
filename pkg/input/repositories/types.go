@@ -2,13 +2,34 @@ package repositories
 
 // Repo represents an entry in the giantswarm/github repositories YAML data.
 type Repo struct {
-	Name          string           `yaml:"name"`
-	ComponentType string           `yaml:"componentType"`
-	System        string           `yaml:"system"`
-	Gen           RepoGen          `yaml:"gen"`
-	Lifecycle     RepoLifecycle    `yaml:"lifecycle"`
-	Replacements  RepoReplacements `yaml:"replace"`
-	AppTestSuite  interface{}      `yaml:"app_test_suite"`
+	Name          string             `yaml:"name"`
+	ComponentType string             `yaml:"componentType"`
+	System        string             `yaml:"system"`
+	Gen           RepoGen            `yaml:"gen"`
+	Lifecycle     RepoLifecycle      `yaml:"lifecycle"`
+	Replacements  RepoReplacements   `yaml:"replace"`
+	AppTestSuite  interface{}        `yaml:"app_test_suite"`
+	UpstreamCheck *RepoUpstreamCheck `yaml:"upstreamCheck"`
+}
+
+// HasUpstreamCheck reports whether the repo opted into the monthly upstream
+// update check.
+func (r Repo) HasUpstreamCheck() bool {
+	return r.UpstreamCheck != nil
+}
+
+// EffectiveReleaseWorkflow returns the release workflow that applies to the
+// repo, mirroring the default logic in github's repositories.schema.json: an
+// explicit gen.ci.releaseWorkflow wins; otherwise a devctl-generated CI surface
+// (gen.ci.generate) implies "auto-release", and everything else is "legacy".
+func (r Repo) EffectiveReleaseWorkflow() string {
+	if r.Gen.CI.ReleaseWorkflow != "" {
+		return string(r.Gen.CI.ReleaseWorkflow)
+	}
+	if r.Gen.CI.Generate {
+		return "auto-release"
+	}
+	return "legacy"
 }
 
 type RepoFlavor string
@@ -31,6 +52,23 @@ type RepoGen struct {
 	Flavors            []RepoFlavor `yaml:"flavours"`
 	Language           RepoLanguage `yaml:"language"`
 	InstallUpdateChart bool         `yaml:"installUpdateChart"`
+	PreCommit          []string     `yaml:"preCommit"`
+	CI                 RepoCI       `yaml:"ci"`
+}
+
+// RepoCI holds the gen.ci block: whether devctl generates the CI surface and
+// which release workflow it produces.
+type RepoCI struct {
+	Generate        bool   `yaml:"generate"`
+	ReleaseWorkflow string `yaml:"releaseWorkflow"`
+}
+
+// RepoUpstreamCheck holds the upstreamCheck block that opts a repo into the
+// monthly upstream update check.
+type RepoUpstreamCheck struct {
+	ChartPath     string `yaml:"chartPath"`
+	UpstreamRepo  string `yaml:"upstreamRepo"`
+	ReleasePrefix string `yaml:"releasePrefix"`
 }
 
 type RepoReplacements struct {

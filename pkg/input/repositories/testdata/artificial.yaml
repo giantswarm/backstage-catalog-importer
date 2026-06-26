@@ -19,3 +19,17 @@
     architect-orb: false
     renovate: true
     precommit: true
+- name: repo-with-ci-and-upstream
+  componentType: service
+  gen:
+    flavours:
+    - app
+    language: go
+    preCommit:
+    - helmchart
+    ci:
+      generate: true
+      releaseWorkflow: legacy
+  upstreamCheck:
+    chartPath: helm/foo
+    upstreamRepo: org/foo
