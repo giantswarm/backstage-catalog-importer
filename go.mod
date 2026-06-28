@@ -39,3 +39,5 @@ replace golang.org/x/crypto v0.49.0 => golang.org/x/crypto v0.53.0
 replace golang.org/x/net v0.52.0 => golang.org/x/net v0.56.0
 
 replace golang.org/x/sys v0.42.0 => golang.org/x/sys v0.46.0
+
+replace github.com/containerd/containerd => github.com/containerd/containerd v1.7.33
