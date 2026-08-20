@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Stop publishing unsubstituted chart and app versions to the component catalog. Component entities read `helm/<chart>/Chart.yaml` from each repo's default branch, where architect has not replaced the version placeholders yet, so 22 chart versions (`0.0.0-dev`, `1.6.0-dev`, `mcp-template`'s `0.0.0`) and 8 app versions (`chart-operator` `3.3.1-dev`, `appcatalog` `1.0.1-dev`, …) were reaching the devportal. `cmd/charts` already guards the same annotations with `ociregistry.IsReleaseVersion`; the component path never got it. Withheld values keep their slot so the comma-separated lists stay aligned with `giantswarm.io/helmcharts` by index, and an annotation whose every slot is empty is now omitted rather than emitted as `,,`. The app-version guard is deliberately narrower than the chart-version one: app versions name the upstream release and follow no convention (`main`, `edge-25.12.3`, `4.9`, `1.12.8-gs-6158079b4` are all real), so only the `0.0.0` placeholder and architect's own `-dev` prerelease are dropped.
+
 ### Changed
 
 - Emit the CI-generation state as a value tag (`ci:generated` / `ci:manual`, always exactly one) instead of the presence-only `ci-generated`. The catalog tag picker only ANDs positive tags, so a complement tag is needed to express queries like "auto-release but not devctl-generated CI" (`release:auto-release` + `ci:manual`).
