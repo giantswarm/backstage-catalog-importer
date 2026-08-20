@@ -115,4 +115,9 @@ type GithubRepoContentDetails struct {
 	NumHelmCharts int
 
 	HelmChartNames []string
+
+	// Whether helm/<chart>/values.schema.json exists, keyed by chart name.
+	// A chart absent from the map was never looked at; callers must treat that
+	// as unknown rather than as absent.
+	HasValuesSchema map[string]bool
 }
