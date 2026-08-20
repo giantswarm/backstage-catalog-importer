@@ -40,6 +40,17 @@ const (
 
 	// Backstage annotation key for component icon URL.
 	iconBackstageAnnotation = "giantswarm.io/icon-url"
+
+	// Chart metadata standard compliance, for the devportal readiness view.
+	// The verdict is a label because Backstage only filters server-side on
+	// labels; the detail is annotations because a flag list does not fit the
+	// constraints on a label value.
+	readinessStandardsLabel      = "giantswarm.io/readiness-standards"
+	readinessStandardsOK         = "ok"
+	readinessStandardsIncomplete = "incomplete"
+	readinessFlagsAnnotation     = "giantswarm.io/readiness-flags"
+	readinessAdvisoryAnnotation  = "giantswarm.io/readiness-advisory"
+	chartMetadataStyleAnnotation = "giantswarm.io/chart-metadata-style"
 )
 
 func init() {
@@ -246,6 +257,30 @@ func runRoot(cmd *cobra.Command, args []string) {
 				iconURL := selectIconURL(repo.Name, charts)
 				if iconURL != "" {
 					c.SetAnnotation(iconBackstageAnnotation, iconURL)
+				}
+
+				// Check the charts against the chart metadata standard, so the
+				// devportal can show and filter on it. These are gaps against
+				// the documented standard, not violations of anything enforced
+				// — see pkg/output/catalog/component/readiness.go.
+				hasValuesSchema, err := repoService.GetHasValuesSchema(repo.Name)
+				if err != nil {
+					log.Printf("WARN - %s - error determining values schema presence: %v", repo.Name, err)
+				}
+				standards := component.CheckStandards(charts, hasValuesSchema)
+				c.SetAnnotation(chartMetadataStyleAnnotation, standards.Style)
+				// The label reflects only what is actually enforced, so it stays
+				// a signal: four charts in the whole fleet fail those checks,
+				// while 80% are missing keywords. Advisory gaps ride along in
+				// their own annotation and must not be rendered as failures.
+				if standards.Complete() {
+					c.SetLabel(readinessStandardsLabel, readinessStandardsOK)
+				} else {
+					c.SetLabel(readinessStandardsLabel, readinessStandardsIncomplete)
+					c.SetAnnotation(readinessFlagsAnnotation, standards.EnforcedString())
+				}
+				if advisory := standards.AdvisoryString(); advisory != "" {
+					c.SetAnnotation(readinessAdvisoryAnnotation, advisory)
 				}
 			}
 
