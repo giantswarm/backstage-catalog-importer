@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/installations"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/group"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/resource"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
 )
@@ -76,6 +78,16 @@ func run(cmd *cobra.Command, args []string) error {
 		log.Fatalf("Error: could not write installations -- %v", err)
 	}
 
+	// Installations are owned by customer groups which exist nowhere else in
+	// the catalog, so export one Group entity per distinct customer to avoid
+	// dangling owner relations.
+	for _, e := range toCustomerGroupEntities(ins) {
+		err = installationsExporter.AddEntity(e)
+		if err != nil {
+			log.Fatalf("Error: could not add customer group -- %v", err)
+		}
+	}
+
 	for _, installation := range ins {
 		e := toResourceEntity(installation)
 		err = installationsExporter.AddEntity(e)
@@ -90,6 +102,37 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// toCustomerGroupEntities returns one Group entity of type "customer" per
+// distinct customer owning at least one installation, sorted by name.
+func toCustomerGroupEntities(ins []*installations.Installation) []*bscatalog.Entity {
+	customers := make(map[string]bool)
+	for _, i := range ins {
+		if i.Customer != "" {
+			customers[i.Customer] = true
+		}
+	}
+
+	names := make([]string, 0, len(customers))
+	for name := range customers {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	entities := make([]*bscatalog.Entity, 0, len(names))
+	for _, name := range names {
+		g, err := group.New(name,
+			group.WithType("customer"),
+			group.WithDescription(fmt.Sprintf("Customer %s", name)),
+		)
+		if err != nil {
+			log.Fatalf("Error: could not create customer group %q -- %v", name, err)
+		}
+		entities = append(entities, g.ToEntity())
+	}
+
+	return entities
 }
 
 func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
