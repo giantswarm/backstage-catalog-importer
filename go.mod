@@ -31,7 +31,10 @@ replace github.com/distribution/distribution/v3 v3.0.0 => github.com/distributio
 
 replace go.opentelemetry.io/otel v1.43.0 => go.opentelemetry.io/otel v1.44.0
 
-replace golang.org/x/crypto v0.49.0 => golang.org/x/crypto v0.53.0
+replace (
+	golang.org/x/crypto v0.49.0 => golang.org/x/crypto v0.53.0
+	golang.org/x/crypto v0.54.0 => golang.org/x/crypto v0.55.0
+)
 
 replace golang.org/x/net v0.52.0 => golang.org/x/net v0.56.0
 
@@ -40,3 +43,5 @@ replace golang.org/x/sys v0.42.0 => golang.org/x/sys v0.46.0
 replace github.com/containerd/containerd => github.com/containerd/containerd v1.7.34
 
 replace golang.org/x/text v0.38.0 => golang.org/x/text v0.40.0
+
+replace golang.org/x/mod v0.37.0 => golang.org/x/mod v0.40.0
