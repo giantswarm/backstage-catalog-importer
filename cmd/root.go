@@ -149,6 +149,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 			// Fetch Helm chart info if available.
 			var charts []*helmchart.Chart
+			// The helm/ sub-directory each chart came from, aligned with
+			// charts by index. A chart's declared name is free to differ from
+			// its directory, and values.schema.json presence is known per
+			// directory, so the directory has to be carried along.
+			var chartDirs []string
 			var hasDeployableChart bool
 			{
 				numCharts, err := repoService.GetNumHelmCharts(repo.Name)
@@ -170,6 +175,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 								log.Printf("WARN - %s - error parsing helm chart %s: %v", repo.Name, chartName, err)
 							} else {
 								charts = append(charts, chart)
+								chartDirs = append(chartDirs, chartName)
 								if componentutil.IsChartDeployable(chart.Type) {
 									hasDeployableChart = true
 								}
@@ -263,19 +269,27 @@ func runRoot(cmd *cobra.Command, args []string) {
 				// devportal can show and filter on it. These are gaps against
 				// the documented standard, not violations of anything enforced
 				// — see pkg/output/catalog/component/readiness.go.
-				hasValuesSchema, err := repoService.GetHasValuesSchema(repo.Name)
-				if err != nil {
-					log.Printf("WARN - %s - error determining values schema presence: %v", repo.Name, err)
+				hasValuesSchema, schemaErr := repoService.GetHasValuesSchema(repo.Name)
+				if schemaErr != nil {
+					log.Printf("WARN - %s - error determining values schema presence: %v", repo.Name, schemaErr)
 				}
-				standards := component.CheckStandards(charts, hasValuesSchema)
+				standards := component.CheckStandards(charts, chartDirs, hasValuesSchema)
 				c.SetAnnotation(chartMetadataStyleAnnotation, standards.Style)
 				// The label reflects only what is actually enforced, so it stays
 				// a signal: four charts in the whole fleet fail those checks,
 				// while 80% are missing keywords. Advisory gaps ride along in
 				// their own annotation and must not be rendered as failures.
-				if standards.Complete() {
+				//
+				// If schema presence could not be determined at all, the label
+				// is left off rather than set to ok: "we did not look" is not
+				// the same claim as "we looked and it passed", and the whole
+				// point of the label is that it can be trusted.
+				switch {
+				case schemaErr != nil:
+					// No verdict.
+				case standards.Complete():
 					c.SetLabel(readinessStandardsLabel, readinessStandardsOK)
-				} else {
+				default:
 					c.SetLabel(readinessStandardsLabel, readinessStandardsIncomplete)
 					c.SetAnnotation(readinessFlagsAnnotation, standards.EnforcedString())
 				}

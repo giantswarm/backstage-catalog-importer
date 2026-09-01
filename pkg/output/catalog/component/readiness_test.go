@@ -69,9 +69,17 @@ func TestCheckStandards(t *testing.T) {
 	library := compliantChart("library-chart")
 	library.Type = "library"
 
+	// A chart whose declared name has nothing to do with the directory it
+	// lives in. Real repos do this; schema presence is known per directory.
+	renamed := compliantChart("declared-name")
+
 	tests := []struct {
-		name            string
-		charts          []*helmchart.Chart
+		name   string
+		charts []*helmchart.Chart
+		// chartDirs is the helm/ directory per chart. Left nil, the runner
+		// fills it with each chart's own name, which is the usual case; the
+		// cases that exercise a divergence set it explicitly.
+		chartDirs       []string
 		hasValuesSchema map[string]bool
 		want            Standards
 	}{
@@ -166,6 +174,29 @@ func TestCheckStandards(t *testing.T) {
 			want:            Standards{Style: MetadataStyleCurrent},
 		},
 		{
+			name:            "schema is looked up by directory, not declared name",
+			charts:          []*helmchart.Chart{renamed},
+			chartDirs:       []string{"chart-dir"},
+			hasValuesSchema: map[string]bool{"chart-dir": false},
+			want:            Standards{Style: MetadataStyleCurrent, Enforced: []string{FlagNoValuesSchema}},
+		},
+		{
+			// The declared name must not reach into a sibling directory's
+			// entry, which is what keying by chart.Name did.
+			name:            "declared name never picks up another directory's schema",
+			charts:          []*helmchart.Chart{renamed},
+			chartDirs:       []string{"chart-dir"},
+			hasValuesSchema: map[string]bool{"chart-dir": true, "declared-name": false},
+			want:            Standards{Style: MetadataStyleCurrent},
+		},
+		{
+			name:            "a chart with no known directory has an unknown schema",
+			charts:          []*helmchart.Chart{compliantChart("good-chart")},
+			chartDirs:       []string{},
+			hasValuesSchema: map[string]bool{"good-chart": false},
+			want:            Standards{Style: MetadataStyleCurrent},
+		},
+		{
 			name:            "gaps are unioned across charts and sorted",
 			charts:          []*helmchart.Chart{legacy, v1},
 			hasValuesSchema: map[string]bool{"legacy-chart": true, "v1-chart": false},
@@ -179,7 +210,14 @@ func TestCheckStandards(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := CheckStandards(tt.charts, tt.hasValuesSchema)
+			chartDirs := tt.chartDirs
+			if chartDirs == nil {
+				for _, chart := range tt.charts {
+					chartDirs = append(chartDirs, chart.Name)
+				}
+			}
+
+			got := CheckStandards(tt.charts, chartDirs, tt.hasValuesSchema)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("CheckStandards() mismatch (-want +got):\n%s", diff)
 			}

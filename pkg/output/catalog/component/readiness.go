@@ -100,9 +100,18 @@ func (s Standards) AdvisoryString() string {
 }
 
 // CheckStandards checks a component's charts against the chart metadata
-// standard. hasValuesSchema says, per chart name, whether the repo carries
-// helm/<chart>/values.schema.json; a chart absent from the map is treated as
-// unknown and never flagged, so an unreadable repo cannot invent a gap.
+// standard.
+//
+// chartDirs names the helm/ sub-directory each chart was loaded from, aligned
+// with charts by index. It is not the same thing as the chart's own name: a
+// chart in helm/foo is free to declare name: bar, and hasValuesSchema is keyed
+// by directory, so the two must not be conflated. A chart with no directory
+// name has its schema treated as unknown rather than looked up under a key
+// that may belong to a different chart.
+//
+// hasValuesSchema says, per helm/ directory, whether the repo carries
+// values.schema.json; a directory absent from the map is treated as unknown
+// and never flagged, so an unreadable repo cannot invent a gap.
 //
 // A gap found in any chart of a multi-chart component is reported for the
 // component.
@@ -111,7 +120,7 @@ func (s Standards) AdvisoryString() string {
 // branch they are unsubstituted placeholders (see versions.go), and whether a
 // release reached the registry is a question about the registry, not about
 // Chart.yaml.
-func CheckStandards(charts []*helmchart.Chart, hasValuesSchema map[string]bool) Standards {
+func CheckStandards(charts []*helmchart.Chart, chartDirs []string, hasValuesSchema map[string]bool) Standards {
 	if len(charts) == 0 {
 		return Standards{Style: MetadataStyleNone}
 	}
@@ -121,7 +130,7 @@ func CheckStandards(charts []*helmchart.Chart, hasValuesSchema map[string]bool) 
 	sawCurrent := false
 	sawLegacy := false
 
-	for _, chart := range charts {
+	for i, chart := range charts {
 		if chart == nil {
 			continue
 		}
@@ -165,8 +174,8 @@ func CheckStandards(charts []*helmchart.Chart, hasValuesSchema map[string]bool) 
 
 		// Library charts have no values to validate, so a missing schema is
 		// not a gap for them.
-		if componentutil.IsChartDeployable(chart.Type) {
-			if present, known := hasValuesSchema[chart.Name]; known && !present {
+		if componentutil.IsChartDeployable(chart.Type) && i < len(chartDirs) {
+			if present, known := hasValuesSchema[chartDirs[i]]; known && !present {
 				enforced[FlagNoValuesSchema] = true
 			}
 		}

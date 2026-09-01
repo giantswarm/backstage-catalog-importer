@@ -182,12 +182,19 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	if err == nil {
 		if directoryContent != nil {
 			details.HasHelmFolder = true
-			details.NumHelmCharts = len(directoryContent)
-			details.HelmChartNames = make([]string, len(directoryContent))
+			details.HelmChartNames = make([]string, 0, len(directoryContent))
 			details.HasValuesSchema = make(map[string]bool, len(directoryContent))
-			for i, item := range directoryContent {
+			for _, item := range directoryContent {
+				// Only sub-directories are charts. A stray helm/README.md is
+				// not one, and listing it would spend a request that returns
+				// file content instead of a listing - and answers 403 rather
+				// than 404 once the file passes 1 MB.
+				if item.GetType() != "dir" {
+					continue
+				}
+
 				chartName := item.GetName()
-				details.HelmChartNames[i] = chartName
+				details.HelmChartNames = append(details.HelmChartNames, chartName)
 
 				// Detect values.schema.json per chart. One listing per chart
 				// rather than one lookup per file, so Chart.yaml and anything
@@ -205,12 +212,17 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 						details.HasValuesSchema[chartName] = false
 					}
 				} else if chartResp != nil && chartResp.StatusCode != http.StatusNotFound {
-					// Anything but "not found" means we do not know, and the
+					// Anything but "not found" means we do not know, so the
 					// chart stays absent from the map rather than being
-					// recorded as having no schema.
-					return chartErr
+					// recorded as having no schema. It must not abort the
+					// load: everything else about the repo is still valid, and
+					// a single transient 403 or 502 among the per-chart
+					// listings would otherwise kill the whole import, since
+					// GetNumHelmCharts is fatal on error.
+					log.Printf("WARN - %s - could not list helm/%s, schema presence unknown: %v\n", name, chartName, chartErr)
 				}
 			}
+			details.NumHelmCharts = len(details.HelmChartNames)
 		}
 	} else if resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
