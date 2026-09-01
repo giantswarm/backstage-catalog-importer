@@ -8,9 +8,14 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/ociregistry"
 )
 
-// placeholderVersion is what architect leaves in Chart.yaml until it substitutes
-// the real version at release time.
-const placeholderVersion = "0.0.0"
+// isPlaceholderVersion reports whether a parsed version is architect's 0.0.0
+// placeholder, left in Chart.yaml until the real version is substituted at
+// release time. The comparison is on the parsed value rather than the literal
+// string so that every spelling is caught: 0.0.0, v0.0.0 and 0.0.0+<sha> all
+// parse to the same version, and all are equally unsubstituted.
+func isPlaceholderVersion(v *semver.Version) bool {
+	return v.Major() == 0 && v.Minor() == 0 && v.Patch() == 0
+}
 
 // isPublishableChartVersion reports whether a chart version is a real release,
 // and so worth publishing to the catalog.
@@ -22,14 +27,19 @@ const placeholderVersion = "0.0.0"
 // versions such as 0.0.0-dev or 1.6.0-dev. Those are not versions anybody can
 // deploy and must not reach the catalog.
 //
-// placeholderVersion needs its own check: 0.0.0 is valid semver with no
+// The placeholder needs its own check on top: 0.0.0 is valid semver with no
 // prerelease, so IsReleaseVersion accepts it.
 func isPublishableChartVersion(version string) bool {
-	if version == "" || version == placeholderVersion {
+	if !ociregistry.IsReleaseVersion(version) {
 		return false
 	}
 
-	return ociregistry.IsReleaseVersion(version)
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return false
+	}
+
+	return !isPlaceholderVersion(v)
 }
 
 // isPublishableAppVersion reports whether an app version is worth publishing.
@@ -41,8 +51,12 @@ func isPublishableChartVersion(version string) bool {
 // app versions to suppress a handful of placeholders, so only values that are
 // provably unsubstituted are dropped: the 0.0.0 placeholder, and a semver whose
 // prerelease is architect's own dev marker.
+//
+// Note this guard alone does not decide whether an app version is published:
+// ToEntity applies it only to charts that already passed
+// isPublishableChartVersion, because both values come from the same Chart.yaml.
 func isPublishableAppVersion(version string) bool {
-	if version == "" || version == placeholderVersion {
+	if version == "" {
 		return false
 	}
 
@@ -50,6 +64,10 @@ func isPublishableAppVersion(version string) bool {
 	if err != nil {
 		// Not semver at all, so not a placeholder either. Take it at face value.
 		return true
+	}
+
+	if isPlaceholderVersion(v) {
+		return false
 	}
 
 	prerelease := v.Prerelease()

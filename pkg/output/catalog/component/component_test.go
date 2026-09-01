@@ -25,10 +25,15 @@ func TestComponent_ToEntity(t *testing.T) {
 
 	// A repo whose default branch still carries architect's placeholders. Only
 	// the second of these three charts has been released.
+	//
+	// The unreleased chart pins a real upstream app version, as agent and
+	// aws-cost-exporter do today. It is still withheld: it was read from the
+	// same unsubstituted Chart.yaml, so it describes the default-branch tip
+	// rather than anything published.
 	mockDevChart := &helmchart.Chart{}
 	mockDevChart.Name = "dev-chart"
 	mockDevChart.Version = "0.0.0-dev"
-	mockDevChart.AppVersion = "0.0.0-dev"
+	mockDevChart.AppVersion = "v1.13.2"
 
 	mockReleasedChart := &helmchart.Chart{}
 	mockReleasedChart.Name = "released-chart"
@@ -198,8 +203,10 @@ func TestComponent_ToEntity(t *testing.T) {
 		{
 			// Placeholder versions are withheld, but their slots are kept so the
 			// comma-separated lists stay aligned with helmcharts by index. The
-			// released chart keeps its version while its app version, which is
-			// still a dev marker, is dropped independently.
+			// unreleased chart withholds its app version along with its chart
+			// version, even though that app version is a real upstream release.
+			// The released chart keeps its chart version while its app version,
+			// still a dev marker, is dropped on its own.
 			name:          "WithUnsubstitutedChartVersions",
 			componentName: "mixed-charts",
 			options: []Option{
@@ -230,8 +237,9 @@ func TestComponent_ToEntity(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			// Every chart is a placeholder, so neither version annotation is
-			// worth emitting: joining empty slots would say nothing.
+			// The only chart is unreleased, so neither version annotation is
+			// worth emitting: joining empty slots would say nothing. Its real
+			// upstream app version goes with it.
 			name:          "WithOnlyUnsubstitutedChartVersions",
 			componentName: "all-dev-charts",
 			options: []Option{

@@ -20,6 +20,13 @@ func TestIsPublishableChartVersion(t *testing.T) {
 		{"0.0.0", false},
 		{"", false},
 
+		// Every spelling of the placeholder, all equally unsubstituted. These
+		// carry no prerelease, so the shared IsReleaseVersion rule accepts them
+		// and only the placeholder check rejects them.
+		{"v0.0.0", false},
+		{"0.0.0+abc1234", false},
+		{"v0.0.0+abc1234", false},
+
 		// Not a version at all.
 		{"main", false},
 	}
@@ -41,6 +48,8 @@ func TestIsPublishableAppVersion(t *testing.T) {
 		{"0.0.0-dev", false},
 		{"1.0.1-dev", false},
 		{"0.0.0", false},
+		{"v0.0.0", false},
+		{"0.0.0+abc1234", false},
 		{"", false},
 
 		// Real upstream versions that a pure-semver rule would wrongly discard.
