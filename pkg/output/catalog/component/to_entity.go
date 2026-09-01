@@ -105,20 +105,37 @@ func (c *Component) ToEntity() *bscatalog.Entity {
 		}
 	}
 	if len(c.HelmCharts) > 0 {
-		names := make([]string, len(c.HelmCharts))
 		versions := make([]string, len(c.HelmCharts))
 		appVersions := make([]string, len(c.HelmCharts))
 		fullChartNames := make([]string, len(c.HelmCharts))
 		for i, chart := range c.HelmCharts {
-			names[i] = chart.Name
-			versions[i] = chart.Version
-			appVersions[i] = chart.AppVersion
 			fullChartNames[i] = fmt.Sprintf("%s/%s/%s", c.OciRegistry, c.OciRepositoryPrefix, chart.Name)
+
+			// A version is withheld rather than removed: the frontend pairs
+			// these comma-separated lists with helmcharts by index, so the
+			// slots have to stay aligned.
+			//
+			// The app version is nested inside the chart-version check, as in
+			// cmd/charts: both values are read from the same Chart.yaml, so an
+			// unsubstituted chart version means the app version beside it
+			// describes an unreleased state too and must not be published on
+			// its own.
+			if isPublishableChartVersion(chart.Version) {
+				versions[i] = chart.Version
+
+				if isPublishableAppVersion(chart.AppVersion) {
+					appVersions[i] = chart.AppVersion
+				}
+			}
 		}
 
 		e.Metadata.Annotations["giantswarm.io/helmcharts"] = strings.Join(fullChartNames, ",")
-		e.Metadata.Annotations["giantswarm.io/helmchart-versions"] = strings.Join(versions, ",")
-		e.Metadata.Annotations["giantswarm.io/helmchart-app-versions"] = strings.Join(appVersions, ",")
+		if hasAny(versions) {
+			e.Metadata.Annotations["giantswarm.io/helmchart-versions"] = strings.Join(versions, ",")
+		}
+		if hasAny(appVersions) {
+			e.Metadata.Annotations["giantswarm.io/helmchart-app-versions"] = strings.Join(appVersions, ",")
+		}
 	}
 
 	spec := bscatalog.ComponentSpec{

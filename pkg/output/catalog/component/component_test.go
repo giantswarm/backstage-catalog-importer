@@ -23,6 +23,28 @@ func TestComponent_ToEntity(t *testing.T) {
 	mockChart2.Version = "0.4.1"
 	mockChart2.AppVersion = "2.3.4"
 
+	// A repo whose default branch still carries architect's placeholders. Only
+	// the second of these three charts has been released.
+	//
+	// The unreleased chart pins a real upstream app version, as agent and
+	// aws-cost-exporter do today. It is still withheld: it was read from the
+	// same unsubstituted Chart.yaml, so it describes the default-branch tip
+	// rather than anything published.
+	mockDevChart := &helmchart.Chart{}
+	mockDevChart.Name = "dev-chart"
+	mockDevChart.Version = "0.0.0-dev"
+	mockDevChart.AppVersion = "v1.13.2"
+
+	mockReleasedChart := &helmchart.Chart{}
+	mockReleasedChart.Name = "released-chart"
+	mockReleasedChart.Version = "4.2.0"
+	mockReleasedChart.AppVersion = "3.3.1-dev"
+
+	mockUpstreamChart := &helmchart.Chart{}
+	mockUpstreamChart.Name = "upstream-chart"
+	mockUpstreamChart.Version = "1.5.0"
+	mockUpstreamChart.AppVersion = "edge-25.12.3"
+
 	mockChartWithAudience := &helmchart.Chart{}
 	mockChartWithAudience.Name = "first-chart"
 	mockChartWithAudience.Version = "1.2.3"
@@ -179,6 +201,73 @@ func TestComponent_ToEntity(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			// Placeholder versions are withheld, but their slots are kept so the
+			// comma-separated lists stay aligned with helmcharts by index. The
+			// unreleased chart withholds its app version along with its chart
+			// version, even though that app version is a real upstream release.
+			// The released chart keeps its chart version while its app version,
+			// still a dev marker, is dropped on its own.
+			name:          "WithUnsubstitutedChartVersions",
+			componentName: "mixed-charts",
+			options: []Option{
+				WithHelmCharts(mockDevChart, mockReleasedChart, mockUpstreamChart),
+				WithOciRegistry("gsoci.azurecr.io"),
+				WithOciRepositoryPrefix("charts/giantswarm"),
+			},
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.APIVersion,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
+					Name:   "mixed-charts",
+					Labels: map[string]string{},
+					Annotations: map[string]string{
+						"giantswarm.io/helmcharts":             "gsoci.azurecr.io/charts/giantswarm/dev-chart,gsoci.azurecr.io/charts/giantswarm/released-chart,gsoci.azurecr.io/charts/giantswarm/upstream-chart",
+						"giantswarm.io/helmchart-versions":     ",4.2.0,1.5.0",
+						"giantswarm.io/helmchart-app-versions": ",,edge-25.12.3",
+					},
+					Links: []bscatalog.EntityLink{},
+					Tags:  []string{"helmchart"},
+				},
+				Spec: bscatalog.ComponentSpec{
+					Type:      "unspecified",
+					Lifecycle: "production",
+					Owner:     "unspecified",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			// The only chart is unreleased, so neither version annotation is
+			// worth emitting: joining empty slots would say nothing. Its real
+			// upstream app version goes with it.
+			name:          "WithOnlyUnsubstitutedChartVersions",
+			componentName: "all-dev-charts",
+			options: []Option{
+				WithHelmCharts(mockDevChart),
+				WithOciRegistry("gsoci.azurecr.io"),
+				WithOciRepositoryPrefix("charts/giantswarm"),
+			},
+			want: &bscatalog.Entity{
+				APIVersion: bscatalog.APIVersion,
+				Kind:       bscatalog.EntityKindComponent,
+				Metadata: bscatalog.EntityMetadata{
+					Name:   "all-dev-charts",
+					Labels: map[string]string{},
+					Annotations: map[string]string{
+						"giantswarm.io/helmcharts": "gsoci.azurecr.io/charts/giantswarm/dev-chart",
+					},
+					Links: []bscatalog.EntityLink{},
+					Tags:  []string{"helmchart"},
+				},
+				Spec: bscatalog.ComponentSpec{
+					Type:      "unspecified",
+					Lifecycle: "production",
+					Owner:     "unspecified",
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name:          "WithHelmChartAudienceAll",
 			componentName: "chart-audience-component",
 			options: []Option{
@@ -193,9 +282,8 @@ func TestComponent_ToEntity(t *testing.T) {
 					Name:   "chart-audience-component",
 					Labels: map[string]string{},
 					Annotations: map[string]string{
-						"giantswarm.io/helmcharts":             "gsoci.azurecr.io/charts/giantswarm/first-chart",
-						"giantswarm.io/helmchart-versions":     "1.2.3",
-						"giantswarm.io/helmchart-app-versions": "",
+						"giantswarm.io/helmcharts":         "gsoci.azurecr.io/charts/giantswarm/first-chart",
+						"giantswarm.io/helmchart-versions": "1.2.3",
 					},
 					Links: []bscatalog.EntityLink{},
 					Tags:  []string{"helmchart", "helmchart-audience-all"},
