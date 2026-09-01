@@ -6,6 +6,7 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,6 +19,10 @@ import (
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
 )
+
+// valuesSchemaFileName is the values schema a deployable chart is expected to
+// ship. app-build-suite's HasValuesSchema check looks for exactly this name.
+const valuesSchemaFileName = "values.schema.json"
 
 type Config struct {
 	// Name of the GitHub organization owning our repository.
@@ -177,11 +182,47 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	if err == nil {
 		if directoryContent != nil {
 			details.HasHelmFolder = true
-			details.NumHelmCharts = len(directoryContent)
-			details.HelmChartNames = make([]string, len(directoryContent))
-			for i, item := range directoryContent {
-				details.HelmChartNames[i] = item.GetName()
+			details.HelmChartNames = make([]string, 0, len(directoryContent))
+			details.HasValuesSchema = make(map[string]bool, len(directoryContent))
+			for _, item := range directoryContent {
+				// Only sub-directories are charts. A stray helm/README.md is
+				// not one, and listing it would spend a request that returns
+				// file content instead of a listing - and answers 403 rather
+				// than 404 once the file passes 1 MB.
+				if item.GetType() != "dir" {
+					continue
+				}
+
+				chartName := item.GetName()
+				details.HelmChartNames = append(details.HelmChartNames, chartName)
+
+				// Detect values.schema.json per chart. One listing per chart
+				// rather than one lookup per file, so Chart.yaml and anything
+				// else we come to need is already in hand.
+				_, chartContent, chartResp, chartErr := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, fmt.Sprintf("helm/%s", chartName), nil)
+				if chartErr == nil {
+					for _, chartItem := range chartContent {
+						if chartItem.GetName() == valuesSchemaFileName {
+							details.HasValuesSchema[chartName] = true
+
+							break
+						}
+					}
+					if _, seen := details.HasValuesSchema[chartName]; !seen {
+						details.HasValuesSchema[chartName] = false
+					}
+				} else if chartResp != nil && chartResp.StatusCode != http.StatusNotFound {
+					// Anything but "not found" means we do not know, so the
+					// chart stays absent from the map rather than being
+					// recorded as having no schema. It must not abort the
+					// load: everything else about the repo is still valid, and
+					// a single transient 403 or 502 among the per-chart
+					// listings would otherwise kill the whole import, since
+					// GetNumHelmCharts is fatal on error.
+					log.Printf("WARN - %s - could not list helm/%s, schema presence unknown: %v\n", name, chartName, chartErr)
+				}
 			}
+			details.NumHelmCharts = len(details.HelmChartNames)
 		}
 	} else if resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
@@ -363,6 +404,20 @@ func (s *Service) GetHelmChartNames(name string) ([]string, error) {
 	}
 
 	return s.githubRepoContentDetails[name].HelmChartNames, nil
+}
+
+// Returns, per chart name, whether the repo carries
+// helm/<chart>/values.schema.json. A chart absent from the returned map was not
+// determined and must be treated as unknown, not as missing.
+func (s *Service) GetHasValuesSchema(name string) (map[string]bool, error) {
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
+		if err != nil {
+			return nil, microerror.Mask(err)
+		}
+	}
+
+	return s.githubRepoContentDetails[name].HasValuesSchema, nil
 }
 
 // circleciConfigHasForcePublic parses a CircleCI config YAML and checks whether
