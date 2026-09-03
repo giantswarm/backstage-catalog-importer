@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/google/go-github/v90/github"
+	"github.com/google/go-github/v91/github"
 	"github.com/spf13/cobra"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/teams"
