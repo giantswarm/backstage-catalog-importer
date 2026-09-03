@@ -49,3 +49,7 @@ replace golang.org/x/text v0.38.0 => golang.org/x/text v0.40.0
 replace golang.org/x/mod v0.37.0 => golang.org/x/mod v0.40.0
 
 replace google.golang.org/grpc v1.82.1 => google.golang.org/grpc v1.83.1
+
+replace go.opentelemetry.io/otel/sdk v1.43.0 => go.opentelemetry.io/otel/sdk v1.46.0
+
+replace go.opentelemetry.io/otel/sdk/log v0.19.0 => go.opentelemetry.io/otel/sdk/log v0.22.0
