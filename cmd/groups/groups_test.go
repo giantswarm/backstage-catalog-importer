@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/google/go-github/v90/github"
+	"github.com/google/go-github/v91/github"
 )
 
 func TestIsDescendant(t *testing.T) {
@@ -65,10 +65,10 @@ func TestGroupFromTeam(t *testing.T) {
 		{
 			name: "team without parent and with members",
 			team: &github.Team{
-				ID:          github.Ptr(int64(123)),
-				Slug:        github.Ptr("team-honeybadger"),
-				Name:        github.Ptr("Honey Badger"),
-				Description: github.Ptr("The honey badger team"),
+				ID:          new(int64(123)),
+				Slug:        new("team-honeybadger"),
+				Name:        new("Honey Badger"),
+				Description: new("The honey badger team"),
 			},
 			memberNames:       []string{"bob", "alice"},
 			namespace:         "default",
@@ -84,12 +84,12 @@ func TestGroupFromTeam(t *testing.T) {
 		{
 			name: "team with parent and no members",
 			team: &github.Team{
-				ID:          github.Ptr(int64(456)),
-				Slug:        github.Ptr("team-bumblebee"),
-				Name:        github.Ptr("Bumblebee"),
-				Description: github.Ptr(""),
+				ID:          new(int64(456)),
+				Slug:        new("team-bumblebee"),
+				Name:        new("Bumblebee"),
+				Description: new(""),
 				Parent: &github.Team{
-					Slug: github.Ptr("team-parent"),
+					Slug: new("team-parent"),
 				},
 			},
 			memberNames:       nil,
@@ -106,9 +106,9 @@ func TestGroupFromTeam(t *testing.T) {
 		{
 			name: "empty namespace is omitted",
 			team: &github.Team{
-				ID:   github.Ptr(int64(789)),
-				Slug: github.Ptr("team-shield"),
-				Name: github.Ptr("Shield"),
+				ID:   new(int64(789)),
+				Slug: new("team-shield"),
+				Name: new("Shield"),
 			},
 			memberNames:       []string{"carol"},
 			namespace:         "",
