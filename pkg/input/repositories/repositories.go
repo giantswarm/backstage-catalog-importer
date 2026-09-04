@@ -149,7 +149,7 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	details := GithubRepoContentDetails{}
 
 	// Detect CircleCI
-	circleciFileContent, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
+	circleciFileContent, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, circleCIConfigPath, nil)
 	if err == nil {
 		details.HasCircleCI = true
 
@@ -161,6 +161,7 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 				if details.ForcePublicRegistry {
 					log.Printf("DEBUG - %s - CircleCI config has force-public: true in push-to-registries\n", name)
 				}
+				details.CircleCI = s.loadCircleCIDetails(name, content)
 			}
 		}
 	} else if resp.StatusCode != http.StatusNotFound {
@@ -232,6 +233,58 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	s.githubRepoContentDetails[name] = details
 
 	return nil
+}
+
+// loadCircleCIDetails reads the build toolchain facts from a repo's CircleCI
+// configuration. A plain config.yml is self-contained. A devctl-generated one
+// is a dynamic-config setup workflow whose real orb reference and jobs sit in
+// workflows.yml, merged at pipeline time with the optional custom.yml, so both
+// are fetched and merged here too. A continued file that cannot be read is
+// skipped with a warning: the toolchain then comes out unknown for that repo,
+// which is honest, whereas failing the whole import over it is not useful.
+func (s *Service) loadCircleCIDetails(name string, configYAML string) CircleCIConfigDetails {
+	config := parseCircleCIFile(configYAML)
+	if !config.setup {
+		return mergeCircleCIFiles(config)
+	}
+
+	files := []circleCIFile{config}
+	for _, path := range []string{circleCIWorkflowsPath, circleCICustomPath} {
+		content, found, err := s.loadOptionalGitHubFile(name, path)
+		if err != nil {
+			log.Printf("WARN - %s - could not read %s, build toolchain may be incomplete: %v\n", name, path, err)
+
+			continue
+		}
+		if found {
+			files = append(files, parseCircleCIFile(content))
+		}
+	}
+
+	return mergeCircleCIFiles(files...)
+}
+
+// loadOptionalGitHubFile returns a file's content and whether it exists. A
+// missing file is not an error; anything else is.
+func (s *Service) loadOptionalGitHubFile(name string, path string) (string, bool, error) {
+	fileContent, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, path, nil)
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return "", false, nil
+		}
+
+		return "", false, err
+	}
+	if fileContent == nil {
+		return "", false, nil
+	}
+
+	content, err := fileContent.GetContent()
+	if err != nil {
+		return "", false, err
+	}
+
+	return content, true, nil
 }
 
 // Return the content of a source file in a repository as string.
@@ -418,6 +471,26 @@ func (s *Service) GetHasValuesSchema(name string) (map[string]bool, error) {
 	}
 
 	return s.githubRepoContentDetails[name].HasValuesSchema, nil
+}
+
+// Returns what the repo's CircleCI config declares about the build toolchain.
+// The zero value for a repo without a CircleCI config.
+func (s *Service) GetCircleCIConfig(name string) (CircleCIConfigDetails, error) {
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
+		if err != nil {
+			return CircleCIConfigDetails{}, microerror.Mask(err)
+		}
+	}
+
+	return s.githubRepoContentDetails[name].CircleCI, nil
+}
+
+// GithubClient exposes the authenticated GitHub client, for lookups outside
+// the organization's own repositories that should share its rate limit budget
+// and retry behaviour.
+func (s *Service) GithubClient() *github.Client {
+	return s.githubClient
 }
 
 // circleciConfigHasForcePublic parses a CircleCI config YAML and checks whether
