@@ -137,4 +137,9 @@ type GithubRepoContentDetails struct {
 	// be treated as unknown; GetChartYAML then reads it from GitHub.
 	ChartYAML        map[string]string
 	ChartYAMLMissing map[string]bool
+
+	// What the CircleCI config declares about the build toolchain: the
+	// architect orb ref and which orb jobs are used. Zero value when the repo
+	// has no CircleCI config.
+	CircleCI CircleCIConfigDetails
 }

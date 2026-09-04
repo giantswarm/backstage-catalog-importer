@@ -2,6 +2,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -15,6 +16,7 @@ import (
 	groups "github.com/giantswarm/backstage-catalog-importer/cmd/groups"
 	installations "github.com/giantswarm/backstage-catalog-importer/cmd/installations"
 	users "github.com/giantswarm/backstage-catalog-importer/cmd/users"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/architectorb"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
@@ -140,6 +142,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	start := time.Now()
 	repoService.PrefetchContentDetails(activeRepoNames, githubConcurrency)
 	log.Printf("Prefetched content details of %d repos in %s\n", len(activeRepoNames), time.Since(start).Round(time.Second))
+
+	// Resolves what each architect orb release pins (app-build-suite,
+	// app-test-suite), once per orb version for the whole run.
+	orbResolver := architectorb.NewResolver(context.Background(), repoService.GithubClient().Repositories)
 
 	numComponents := 0
 
@@ -316,6 +322,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 				if advisory := standards.AdvisoryString(); advisory != "" {
 					c.SetAnnotation(readinessAdvisoryAnnotation, advisory)
 				}
+			}
+
+			// Build toolchain declared by the CircleCI config on the default
+			// branch — see cmd/toolchain.go.
+			ciConfig, ciErr := repoService.GetCircleCIConfig(repo.Name)
+			if ciErr != nil {
+				log.Printf("WARN - %s - error reading CircleCI config details: %v", repo.Name, ciErr)
+			} else {
+				applyBuildToolchain(c, ciConfig, orbResolver.Pins)
 			}
 
 			// Grafana dashboard link for services.
