@@ -34,8 +34,8 @@ replace go.opentelemetry.io/otel v1.43.0 => go.opentelemetry.io/otel v1.44.0
 replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.43.0 => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.44.0
 
 replace (
-	golang.org/x/crypto v0.49.0 => golang.org/x/crypto v0.53.0
-	golang.org/x/crypto v0.54.0 => golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.49.0 => golang.org/x/crypto v0.56.0
+	golang.org/x/crypto v0.54.0 => golang.org/x/crypto v0.56.0
 )
 
 replace golang.org/x/net v0.52.0 => golang.org/x/net v0.56.0
