@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `charts`: a chart whose `Chart.yaml` carries `deprecated: true` is exported with `spec.lifecycle: deprecated` instead of `production`. Helm's deprecation flag is how a chart's authors say it is retired; a catalog that kept calling such a chart production sent readers to something nobody should install any more. Every other chart stays `production`.
 - Emit the CI-generation state as a value tag (`ci:generated` / `ci:manual`, always exactly one) instead of the presence-only `ci-generated`. The catalog tag picker only ANDs positive tags, so a complement tag is needed to express queries like "auto-release but not devctl-generated CI" (`release:auto-release` + `ci:manual`).
 
 ### Added

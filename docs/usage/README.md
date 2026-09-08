@@ -55,3 +55,5 @@ The result will be a `components.yaml` and a `groups.yaml` file in the output di
 ### Charts filtering
 
 The `charts` command only includes charts that have the annotation `io.giantswarm.application.audience` set to `"all"` in the config blob. Charts without this annotation or with a different value (e.g., `"giantswarm"`) are excluded from the output.
+
+A chart whose `Chart.yaml` sets `deprecated: true` is exported with `spec.lifecycle: deprecated`; every other chart is `production`.

@@ -32,6 +32,9 @@ Charts are discovered by listing repositories with a specified prefix and extrac
 
 Only charts with the annotation io.giantswarm.application.audience set to "all" in the config blob are included in the output.
 
+A chart whose Chart.yaml sets deprecated: true is exported with lifecycle "deprecated" (the Helm signal that its
+authors retired it); every other chart is "production".
+
 Arguments:
   registry    OCI registry hostname (e.g., gsoci.azurecr.io)`,
 	Args: cobra.ExactArgs(1),
@@ -56,6 +59,9 @@ const (
 	audienceGiantSwarm = "giantswarm"
 
 	defaultComponentOwner = "group:unspecified"
+
+	// Lifecycle of a chart whose Chart.yaml carries `deprecated: true`.
+	lifecycleDeprecated = "deprecated"
 )
 
 func init() {
@@ -241,12 +247,13 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		}
 	}
 
-	// Extract version, appVersion, icon, team owner, and chart type
+	// Extract version, appVersion, icon, team owner, chart type, and the deprecation flag
 	chartVersion := tag
 	var appVersion string
 	var chartType string
 	var iconURL string
 	componentOwner := defaultComponentOwner
+	deprecated := false
 
 	// See https://github.com/giantswarm/roadmap/issues/4156#issuecomment-3589340419
 	managed := false
@@ -271,6 +278,19 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 		// Extract icon from top-level (Helm chart config structure)
 		if icon, ok := configMap["icon"].(string); ok && icon != "" {
 			iconURL = icon
+		}
+
+		// Extract the deprecation flag from top-level (Helm chart config structure).
+		// Helm writes it as a boolean; a string spelling is accepted too.
+		switch v := configMap["deprecated"].(type) {
+		case bool:
+			deprecated = v
+		case string:
+			if b, err := strconv.ParseBool(v); err == nil {
+				deprecated = b
+			} else {
+				log.Printf("WARN: 'deprecated' value '%s' is not a valid boolean for %s:%s", v, repo, tag)
+			}
 		}
 
 		// Extract team owner from annotations (Helm chart config structure)
@@ -329,6 +349,11 @@ func createComponentFromOCIChart(repo string, tag string, manifestInfo *ociregis
 	// Add GitHub project slug if available
 	if githubProjectSlug != "" {
 		componentOpts = append(componentOpts, component.WithGithubProjectSlug(githubProjectSlug))
+	}
+
+	// A retired chart is a deprecated component, not a production one
+	if deprecated {
+		componentOpts = append(componentOpts, component.WithLifecycle(lifecycleDeprecated))
 	}
 
 	// Create the component

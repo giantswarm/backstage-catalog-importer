@@ -657,3 +657,46 @@ func findSubstring(s, substr string) bool {
 	}
 	return false
 }
+
+// TestCreateComponentFromOCIChart_Deprecated verifies that the Helm deprecation
+// flag in the chart's config (Chart.yaml `deprecated: true`) turns the component's
+// lifecycle to "deprecated", and that every other spelling keeps the default.
+func TestCreateComponentFromOCIChart_Deprecated(t *testing.T) {
+	tests := []struct {
+		name          string
+		deprecated    interface{}
+		wantLifecycle string
+	}{
+		{name: "no flag", deprecated: nil, wantLifecycle: "production"},
+		{name: "false", deprecated: false, wantLifecycle: "production"},
+		{name: "true", deprecated: true, wantLifecycle: "deprecated"},
+		{name: "string true", deprecated: "true", wantLifecycle: "deprecated"},
+		{name: "string garbage", deprecated: "retired", wantLifecycle: "production"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			configMap := map[string]interface{}{
+				"home":    "https://github.com/giantswarm/retired-chart",
+				"version": "0.42.0",
+			}
+			if tt.deprecated != nil {
+				configMap["deprecated"] = tt.deprecated
+			}
+			manifestInfo := &ociregistry.ManifestInfo{Config: configMap}
+			got, err := createComponentFromOCIChart("giantswarm/retired-chart", "0.42.0", manifestInfo, "default", "service", "registry.example.com")
+			if err != nil {
+				t.Fatalf("createComponentFromOCIChart() unexpected error: %v", err)
+			}
+			if got.Lifecycle != tt.wantLifecycle {
+				t.Errorf("createComponentFromOCIChart() Lifecycle = %q, want %q", got.Lifecycle, tt.wantLifecycle)
+			}
+			spec, ok := got.ToEntity().Spec.(bscatalog.ComponentSpec)
+			if !ok {
+				t.Fatalf("ToEntity() Spec is %T, want bscatalog.ComponentSpec", got.ToEntity().Spec)
+			}
+			if spec.Lifecycle != tt.wantLifecycle {
+				t.Errorf("ToEntity() Spec.Lifecycle = %q, want %q", spec.Lifecycle, tt.wantLifecycle)
+			}
+		})
+	}
+}
