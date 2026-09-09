@@ -120,4 +120,9 @@ type GithubRepoContentDetails struct {
 	// A chart absent from the map was never looked at; callers must treat that
 	// as unknown rather than as absent.
 	HasValuesSchema map[string]bool
+
+	// What the CircleCI config declares about the build toolchain: the
+	// architect orb ref and which orb jobs are used. Zero value when the repo
+	// has no CircleCI config.
+	CircleCI CircleCIConfigDetails
 }
