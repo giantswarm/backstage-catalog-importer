@@ -125,8 +125,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	for _, list := range lists {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
-		for _, repo := range list.Repositories {
-
+		for _, repo := range repoService.ActiveRepositories(list) {
 			ociRegistry := publicOciRegistry
 			isPrivate, err := repoService.GetIsPrivate(repo.Name)
 			if err != nil {
