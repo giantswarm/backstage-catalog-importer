@@ -4,7 +4,10 @@
 package repositories
 
 import (
+	"bytes"
+	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -268,5 +271,49 @@ func TestLoadList(t *testing.T) {
 				t.Errorf("LoadList() mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestActiveRepositories(t *testing.T) {
+	var logs bytes.Buffer
+	log.SetOutput(&logs)
+	log.SetFlags(0)
+	t.Cleanup(func() {
+		log.SetOutput(os.Stderr)
+		log.SetFlags(log.LstdFlags)
+	})
+
+	// The organisation listing knows the active repository and, deliberately,
+	// also the one declared as archived: an archived declaration must be
+	// skipped on the declaration alone, before any GitHub lookup.
+	s := &Service{
+		githubRepoDetails: map[string]GithubRepoDetails{
+			"active-repo":   {Name: "active-repo"},
+			"archived-repo": {Name: "archived-repo"},
+		},
+	}
+
+	repos, err := s.loadList("testdata/team-lifecycle.yaml")
+	if err != nil {
+		t.Fatalf("loadList() error = %v", err)
+	}
+
+	got := s.ActiveRepositories(ListResult{OwnerTeamName: "team-lifecycle", Repositories: repos})
+
+	var gotNames []string
+	for _, r := range got {
+		gotNames = append(gotNames, r.Name)
+	}
+	if diff := cmp.Diff([]string{"active-repo"}, gotNames); diff != "" {
+		t.Errorf("ActiveRepositories() names mismatch (-want +got):\n%s", diff)
+	}
+
+	wantLogs := []string{
+		"INFO - archived-repo - declared as archived, skipping",
+		`WARN - missing-repo - declared by team "team-lifecycle" but not found among the organisation's repositories, skipping`,
+	}
+	gotLogs := strings.Split(strings.TrimSpace(logs.String()), "\n")
+	if diff := cmp.Diff(wantLogs, gotLogs); diff != "" {
+		t.Errorf("ActiveRepositories() log lines mismatch (-want +got):\n%s", diff)
 	}
 }

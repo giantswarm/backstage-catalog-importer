@@ -48,6 +48,16 @@ const (
 	RepoLanguageGeneric RepoLanguage = "generic"
 )
 
+// RepoLifecycleArchived marks a declaration whose repository has been archived
+// on GitHub. The entry stays in the team file as the record of the repository;
+// the catalog has no component for it.
+const RepoLifecycleArchived RepoLifecycle = "archived"
+
+// IsArchived reports whether the declaration carries lifecycle archived.
+func (r Repo) IsArchived() bool {
+	return r.Lifecycle == RepoLifecycleArchived
+}
+
 type RepoGen struct {
 	Flavors            []RepoFlavor `yaml:"flavours"`
 	Language           RepoLanguage `yaml:"language"`

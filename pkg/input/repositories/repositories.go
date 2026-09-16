@@ -307,6 +307,31 @@ func (s *Service) GetLists() ([]ListResult, error) {
 	return result, nil
 }
 
+// ActiveRepositories returns the declarations of a team list that the catalog
+// has a component for. A declaration with lifecycle archived is skipped before
+// any GitHub lookup: it stays in the team file as the record of the repository,
+// but archived repositories are not catalog components. A declared repository
+// missing from the organisation listing (archived on GitHub without the
+// declaration saying so, renamed, deleted) is skipped with a warning rather
+// than failing the run: one stale entry must not stop the catalog for the
+// whole organisation, and reporting such drift is the inventory's job.
+func (s *Service) ActiveRepositories(list ListResult) []Repo {
+	active := make([]Repo, 0, len(list.Repositories))
+	for _, repo := range list.Repositories {
+		if repo.IsArchived() {
+			log.Printf("INFO - %s - declared as archived, skipping\n", repo.Name)
+			continue
+		}
+		if _, ok := s.githubRepoDetails[repo.Name]; !ok {
+			log.Printf("WARN - %s - declared by team %q but not found among the organisation's repositories, skipping\n", repo.Name, list.OwnerTeamName)
+			continue
+		}
+		active = append(active, repo)
+	}
+
+	return active
+}
+
 // Returns the description for the given repo. If not available,
 // or an error occurs, returns an empty string.
 func (s *Service) MustGetDescription(name string) string {

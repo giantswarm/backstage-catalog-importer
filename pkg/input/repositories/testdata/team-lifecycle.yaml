@@ -1,0 +1,9 @@
+- name: active-repo
+  gen:
+    flavours:
+    - app
+    language: go
+- name: archived-repo
+  lifecycle: archived
+- name: missing-repo
+  componentType: service
