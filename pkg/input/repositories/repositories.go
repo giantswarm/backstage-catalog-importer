@@ -12,10 +12,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v92/github"
 	"go.yaml.in/yaml/v3"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
 )
@@ -54,8 +56,10 @@ type Service struct {
 
 	// Cached information on certain repos
 	githubRepoDetails map[string]GithubRepoDetails
-	// Cached information on repo content
+	// Cached information on repo content, filled concurrently by
+	// PrefetchContentDetails and guarded by contentDetailsMu.
 	githubRepoContentDetails map[string]GithubRepoContentDetails
+	contentDetailsMu         sync.RWMutex
 }
 
 // New instantiates a new repositories service.
@@ -229,9 +233,57 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 		return err
 	}
 
+	s.contentDetailsMu.Lock()
 	s.githubRepoContentDetails[name] = details
+	s.contentDetailsMu.Unlock()
 
 	return nil
+}
+
+// contentDetails returns the repo's content details, loading them on first
+// use. Safe for concurrent use: two callers racing on the same uncached repo
+// may both load it, and the second write wins with identical data.
+func (s *Service) contentDetails(name string) (GithubRepoContentDetails, error) {
+	s.contentDetailsMu.RLock()
+	details, ok := s.githubRepoContentDetails[name]
+	s.contentDetailsMu.RUnlock()
+	if ok {
+		return details, nil
+	}
+
+	if err := s.loadGithubRepoContentDetails(name); err != nil {
+		return GithubRepoContentDetails{}, err
+	}
+
+	s.contentDetailsMu.RLock()
+	defer s.contentDetailsMu.RUnlock()
+
+	return s.githubRepoContentDetails[name], nil
+}
+
+// PrefetchContentDetails loads the content details of the named repos with up
+// to workers concurrent loads, so the per-repo loop that follows is served
+// from cache instead of paying several sequential GitHub round trips per repo.
+//
+// A repo that fails to load is logged and left uncached: the getters then try
+// again on first use and report the error exactly as they would without the
+// prefetch, so prefetching can make a run faster but never changes its
+// outcome.
+func (s *Service) PrefetchContentDetails(names []string, workers int) {
+	var g errgroup.Group
+	g.SetLimit(max(workers, 1))
+
+	for _, name := range names {
+		g.Go(func() error {
+			if _, err := s.contentDetails(name); err != nil {
+				log.Printf("WARN - %s - prefetching content details failed, will retry: %v\n", name, err)
+			}
+
+			return nil
+		})
+	}
+
+	_ = g.Wait()
 }
 
 // Return the content of a source file in a repository as string.
@@ -372,77 +424,65 @@ func (s *Service) MustGetDefaultBranch(name string) string {
 
 // Returns whether the repo has a CircleCI configuration.
 func (s *Service) GetHasCircleCI(name string) (bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return false, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return false, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HasCircleCI, nil
+	return details.HasCircleCI, nil
 }
 
 // Returns whether the repo's CircleCI config uses force-public in push-to-registries,
 // meaning charts/images go to the public registry despite the repo being private.
 func (s *Service) GetForcePublicRegistry(name string) (bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return false, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return false, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].ForcePublicRegistry, nil
+	return details.ForcePublicRegistry, nil
 }
 
 // Returns whether the repo has a main README file.
 func (s *Service) GetHasReadme(name string) (bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return false, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return false, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HasReadme, nil
+	return details.HasReadme, nil
 }
 
 // Returns whether the repo has a Helm chart.
 func (s *Service) GetNumHelmCharts(name string) (int, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return 0, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return 0, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].NumHelmCharts, nil
+	return details.NumHelmCharts, nil
 }
 
 // Returns the name(s) of the repo's Helm chart(s).
 func (s *Service) GetHelmChartNames(name string) ([]string, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return nil, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HelmChartNames, nil
+	return details.HelmChartNames, nil
 }
 
 // Returns, per chart name, whether the repo carries
 // helm/<chart>/values.schema.json. A chart absent from the returned map was not
 // determined and must be treated as unknown, not as missing.
 func (s *Service) GetHasValuesSchema(name string) (map[string]bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return nil, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HasValuesSchema, nil
+	return details.HasValuesSchema, nil
 }
 
 // circleciConfigHasForcePublic parses a CircleCI config YAML and checks whether
