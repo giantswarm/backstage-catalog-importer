@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Fetch each repository's content details (CircleCI config, README, Helm charts, values schemas) with a bounded pool of concurrent requests before building components, instead of one repository after another inside the loop. Set the pool size with `--github-concurrency` (default 8). A repository whose prefetch fails is left uncached and loaded again in the loop, which reports the error exactly as before, so the prefetch changes the run time and nothing else.
 - `charts`: a chart whose `Chart.yaml` carries `deprecated: true` is exported with `spec.lifecycle: deprecated` instead of `production`. Helm's deprecation flag is how a chart's authors say it is retired; a catalog that kept calling such a chart production sent readers to something nobody should install any more. Every other chart stays `production`.
 - Emit the CI-generation state as a value tag (`ci:generated` / `ci:manual`, always exactly one) instead of the presence-only `ci-generated`. The catalog tag picker only ANDs positive tags, so a complement tag is needed to express queries like "auto-release but not devctl-generated CI" (`release:auto-release` + `ci:manual`).
 

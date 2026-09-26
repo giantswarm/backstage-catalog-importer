@@ -297,3 +297,62 @@ func TestNewGitHubClient_NoToken(t *testing.T) {
 		t.Fatal("NewGitHubClient with empty token returned nil")
 	}
 }
+
+func TestRetryTransport_403(t *testing.T) {
+	tests := []struct {
+		name         string
+		retryAfter   string
+		wantAttempts int32
+		wantStatus   int
+	}{
+		{
+			name:         "secondary rate limit with Retry-After is retried",
+			retryAfter:   "1",
+			wantAttempts: 2,
+			wantStatus:   http.StatusOK,
+		},
+		{
+			name:         "permission error without Retry-After is not retried",
+			wantAttempts: 1,
+			wantStatus:   http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var attempts atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if attempts.Add(1) == 1 {
+					if tt.retryAfter != "" {
+						w.Header().Set("Retry-After", tt.retryAfter)
+					}
+					w.WriteHeader(http.StatusForbidden)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+			defer server.Close()
+
+			transport := &retryTransport{
+				base:       http.DefaultTransport,
+				maxRetries: 3,
+				baseDelay:  10 * time.Millisecond,
+				maxDelay:   5 * time.Second,
+			}
+			client := &http.Client{Transport: transport}
+
+			resp, err := client.Get(server.URL)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			defer func() { _ = resp.Body.Close() }()
+
+			if resp.StatusCode != tt.wantStatus {
+				t.Errorf("status = %d, want %d", resp.StatusCode, tt.wantStatus)
+			}
+			if got := attempts.Load(); got != tt.wantAttempts {
+				t.Errorf("attempts = %d, want %d", got, tt.wantAttempts)
+			}
+		})
+	}
+}

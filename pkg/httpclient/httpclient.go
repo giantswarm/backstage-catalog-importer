@@ -62,7 +62,7 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 
 		// Check if the response status code is retryable.
-		if !isRetryableStatus(resp.StatusCode) {
+		if !isRetryable(resp) {
 			return resp, nil
 		}
 
@@ -82,6 +82,18 @@ func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	return resp, err
+}
+
+// isRetryable reports whether a response warrants a retry: a retryable status,
+// or a 403 that is GitHub's secondary rate limit rather than a permission
+// error. GitHub marks the rate limit with a Retry-After header, which backoff
+// then honours; a permission 403 carries none and is returned at once.
+func isRetryable(resp *http.Response) bool {
+	if isRetryableStatus(resp.StatusCode) {
+		return true
+	}
+
+	return resp.StatusCode == http.StatusForbidden && resp.Header.Get("Retry-After") != ""
 }
 
 // isRetryableStatus returns true for HTTP status codes that warrant a retry.

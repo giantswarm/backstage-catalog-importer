@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -58,6 +59,7 @@ func init() {
 	rootCmd.Flags().StringP("chart-repo-prefix", "", "charts/giantswarm", "Prefix for chart repositories in the OCI registries")
 	rootCmd.Flags().StringP("public-oci-registry", "", "gsoci.azurecr.io", "Host name of the public OCI registry")
 	rootCmd.Flags().StringP("private-oci-registry", "", "gsociprivate.azurecr.io", "Host name of the private OCI registry")
+	rootCmd.Flags().IntP("github-concurrency", "", 8, "Number of repositories whose content details are fetched from GitHub concurrently")
 
 	rootCmd.AddCommand(charts.Command)
 	rootCmd.AddCommand(crd.Command)
@@ -92,6 +94,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
+	githubConcurrency, err := cmd.Flags().GetInt("github-concurrency")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	privateOciRegistry, err := cmd.Flags().GetString("private-oci-registry")
 	if err != nil {
 		log.Fatal(err)
@@ -119,13 +126,28 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	componentExporter := export.New(export.Config{TargetPath: path + "/components.yaml"})
 
+	// Fetch what the loop below reads from each repo's files concurrently up
+	// front; one repo costs several sequential GitHub round trips, which is
+	// what dominates the run time.
+	activeRepos := make([][]repositories.Repo, len(lists))
+	var activeRepoNames []string
+	for i, list := range lists {
+		activeRepos[i] = repoService.ActiveRepositories(list)
+		for _, repo := range activeRepos[i] {
+			activeRepoNames = append(activeRepoNames, repo.Name)
+		}
+	}
+	start := time.Now()
+	repoService.PrefetchContentDetails(activeRepoNames, githubConcurrency)
+	log.Printf("Prefetched content details of %d repos in %s\n", len(activeRepoNames), time.Since(start).Round(time.Second))
+
 	numComponents := 0
 
 	// Iterate repository lists (per team) and create component entities.
-	for _, list := range lists {
+	for i, list := range lists {
 		log.Printf("Processing %d repos of team %q\n", len(list.Repositories), list.OwnerTeamName)
 
-		for _, repo := range repoService.ActiveRepositories(list) {
+		for _, repo := range activeRepos[i] {
 			ociRegistry := publicOciRegistry
 			isPrivate, err := repoService.GetIsPrivate(repo.Name)
 			if err != nil {

@@ -13,6 +13,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/spf13/cobra v1.10.2
 	go.yaml.in/yaml/v3 v3.0.5
+	golang.org/x/sync v0.22.0
 	helm.sh/helm/v3 v3.22.0
 	oras.land/oras-go/v2 v2.6.2
 	sigs.k8s.io/yaml v1.6.0
@@ -24,7 +25,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	golang.org/x/sync v0.22.0 // indirect
 )
 
 replace github.com/distribution/distribution/v3 v3.0.0 => github.com/distribution/distribution/v3 v3.1.1
