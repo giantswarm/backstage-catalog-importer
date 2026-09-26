@@ -167,7 +167,7 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 				}
 			}
 		}
-	} else if resp.StatusCode != http.StatusNotFound {
+	} else if resp == nil || resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
 	}
@@ -176,7 +176,7 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	_, _, resp, err = s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, "README.md", nil)
 	if err == nil {
 		details.HasReadme = true
-	} else if resp.StatusCode != http.StatusNotFound {
+	} else if resp == nil || resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
 	}
@@ -228,7 +228,7 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 			}
 			details.NumHelmCharts = len(details.HelmChartNames)
 		}
-	} else if resp.StatusCode != http.StatusNotFound {
+	} else if resp == nil || resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
 		return err
 	}

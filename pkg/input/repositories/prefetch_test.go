@@ -144,3 +144,25 @@ func TestPrefetchContentDetails(t *testing.T) {
 		t.Errorf("GetHasReadme() after recovery = %v, %v; want true, nil", hasReadme, err)
 	}
 }
+
+// A transport error reaches the loader with a nil response. It must come back
+// as an error, not a nil dereference: inside a prefetch worker a panic would
+// take the whole run down.
+func TestContentDetails_TransportErrorIsAnError(t *testing.T) {
+	fake := &fakeContentsServer{requests: make(map[string]int)}
+	s := newFakeService(t, fake)
+	srv := httptest.NewServer(fake)
+	srv.Close() // Nothing listens at this address any more.
+	closedURL := srv.URL + "/"
+	client, err := github.NewClient(github.WithURLs(&closedURL, &closedURL), github.WithDisableRateLimitCheck())
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.githubClient = client
+
+	s.PrefetchContentDetails([]string{"unreachable"}, 2)
+
+	if _, err := s.GetHasReadme("unreachable"); err == nil {
+		t.Error("GetHasReadme() against an unreachable API returned no error")
+	}
+}
