@@ -119,6 +119,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	componentExporter := export.New(export.Config{TargetPath: path + "/components.yaml"})
 
+	// Resolves what each architect orb release pins (app-build-suite,
+	// app-test-suite), once per orb version for the whole run.
+	orbResolver := repoService.NewOrbResolver()
+
 	numComponents := 0
 
 	// Iterate repository lists (per team) and create component entities.
@@ -295,6 +299,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 				if advisory := standards.AdvisoryString(); advisory != "" {
 					c.SetAnnotation(readinessAdvisoryAnnotation, advisory)
 				}
+			}
+
+			// Build toolchain declared by the CircleCI config on the default
+			// branch — see cmd/toolchain.go.
+			ciConfig, ciErr := repoService.GetCircleCIConfig(repo.Name)
+			if ciErr != nil {
+				log.Printf("WARN - %s - error reading CircleCI config details: %v", repo.Name, ciErr)
+			} else {
+				applyBuildToolchain(c, ciConfig, orbResolver.Pins)
 			}
 
 			// Grafana dashboard link for services.

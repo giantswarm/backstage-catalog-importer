@@ -18,6 +18,7 @@ import (
 	"go.yaml.in/yaml/v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/architectorb"
 )
 
 // valuesSchemaFileName is the values schema a deployable chart is expected to
@@ -149,15 +150,17 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	details := GithubRepoContentDetails{}
 
 	// Detect CircleCI
-	circleciFileContent, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, ".circleci/config.yml", nil)
+	circleciFileContent, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, circleCIConfigPath, nil)
 	if err == nil {
 		details.HasCircleCI = true
 
-		// Check if push-to-registries uses force-public: true
+		// Build toolchain facts, and whether push-to-registries uses
+		// force-public: true, from the merged view of all config files.
 		if circleciFileContent != nil {
 			content, contentErr := circleciFileContent.GetContent()
 			if contentErr == nil {
-				details.ForcePublicRegistry = circleciConfigHasForcePublic(content)
+				details.CircleCI = s.loadCircleCIDetails(name, content)
+				details.ForcePublicRegistry = details.CircleCI.ForcePublicRegistry
 				if details.ForcePublicRegistry {
 					log.Printf("DEBUG - %s - CircleCI config has force-public: true in push-to-registries\n", name)
 				}
@@ -232,6 +235,67 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	s.githubRepoContentDetails[name] = details
 
 	return nil
+}
+
+// loadCircleCIDetails reads the build toolchain facts from a repo's CircleCI
+// configuration. A plain config.yml is self-contained. A devctl-generated one
+// is a dynamic-config setup workflow whose real orb reference and jobs sit in
+// workflows.yml, merged at pipeline time with the optional custom.yml, so both
+// are fetched and merged here too. A continued file that cannot be read is
+// skipped with a warning and the result marked Incomplete: the toolchain then
+// comes out unknown for that repo, which is honest, whereas failing the whole
+// import over it is not useful. So is a setup workflow without workflows.yml,
+// which continues with something this does not know how to find.
+func (s *Service) loadCircleCIDetails(name string, configYAML string) CircleCIConfigDetails {
+	config := parseCircleCIFile(configYAML)
+	if !config.setup {
+		return mergeCircleCIFiles(config)
+	}
+
+	files := []circleCIFile{config}
+	incomplete := false
+	for _, path := range []string{circleCIWorkflowsPath, circleCICustomPath} {
+		content, found, err := s.loadOptionalGitHubFile(name, path)
+		if err != nil {
+			log.Printf("WARN - %s - could not read %s, build toolchain may be incomplete: %v\n", name, path, err)
+			incomplete = true
+
+			continue
+		}
+		if found {
+			files = append(files, parseCircleCIFile(content))
+		} else if path == circleCIWorkflowsPath {
+			incomplete = true
+		}
+	}
+
+	details := mergeCircleCIFiles(files...)
+	details.Incomplete = details.Incomplete || incomplete
+
+	return details
+}
+
+// loadOptionalGitHubFile returns a file's content and whether it exists. A
+// missing file is not an error; anything else is.
+func (s *Service) loadOptionalGitHubFile(name string, path string) (string, bool, error) {
+	fileContent, _, resp, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, path, nil)
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return "", false, nil
+		}
+
+		return "", false, err
+	}
+	if fileContent == nil {
+		return "", false, nil
+	}
+
+	content, err := fileContent.GetContent()
+	if err != nil {
+		return "", false, err
+	}
+
+	return content, true, nil
 }
 
 // Return the content of a source file in a repository as string.
@@ -445,38 +509,22 @@ func (s *Service) GetHasValuesSchema(name string) (map[string]bool, error) {
 	return s.githubRepoContentDetails[name].HasValuesSchema, nil
 }
 
-// circleciConfigHasForcePublic parses a CircleCI config YAML and checks whether
-// any push-to-registries job in the workflows section has force-public: true.
-func circleciConfigHasForcePublic(configYAML string) bool {
-	var config struct {
-		Workflows map[string]struct {
-			Jobs []map[string]any `yaml:"jobs"`
-		} `yaml:"workflows"`
-	}
-
-	if err := yaml.Unmarshal([]byte(configYAML), &config); err != nil {
-		return false
-	}
-
-	for _, workflow := range config.Workflows {
-		for _, job := range workflow.Jobs {
-			for jobName, jobConfig := range job {
-				// Match job names like "architect/push-to-registries" or "push-to-registries"
-				if !strings.HasSuffix(jobName, "push-to-registries") {
-					continue
-				}
-				params, ok := jobConfig.(map[string]any)
-				if !ok {
-					continue
-				}
-				if forcePublic, exists := params["force-public"]; exists {
-					if val, ok := forcePublic.(bool); ok && val {
-						return true
-					}
-				}
-			}
+// Returns what the repo's CircleCI config declares about the build toolchain.
+// The zero value for a repo without a CircleCI config.
+func (s *Service) GetCircleCIConfig(name string) (CircleCIConfigDetails, error) {
+	if _, ok := s.githubRepoContentDetails[name]; !ok {
+		err := s.loadGithubRepoContentDetails(name)
+		if err != nil {
+			return CircleCIConfigDetails{}, microerror.Mask(err)
 		}
 	}
 
-	return false
+	return s.githubRepoContentDetails[name].CircleCI, nil
+}
+
+// NewOrbResolver returns a resolver for architect orb pins that reads the orb
+// source through this service's GitHub client, sharing its rate limit budget
+// and retry behaviour.
+func (s *Service) NewOrbResolver() *architectorb.Resolver {
+	return architectorb.NewResolver(s.ctx, s.githubClient.Repositories)
 }
