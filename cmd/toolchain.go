@@ -6,68 +6,66 @@ import (
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 )
 
-// Build toolchain, for the devportal's build view. What a repo's default
-// branch declares it builds with: the architect orb version, and the
-// app-build-suite and app-test-suite versions that orb release pins (or, for
-// ATS, the repo's own override). Versions are labels so the catalog can filter
-// on them server-side; anything that is not a clean version goes into an
-// annotation instead, because Backstage rejects it as a label value.
-//
-// These say what a build on the default branch would use today. They are not
-// proof of what the last build ran: an orb bump that landed after the last
-// green build changes the label, not history.
-const (
-	architectOrbVersionLabel   = "giantswarm.io/architect-orb-version"
-	appBuildSuiteVersionLabel  = "giantswarm.io/app-build-suite-version"
-	appTestSuiteVersionLabel   = "giantswarm.io/app-test-suite-version"
-	architectOrbRefAnnotation  = "giantswarm.io/architect-orb-ref"
-	atsVersionSourceAnnotation = "giantswarm.io/app-test-suite-version-source"
-
-	atsVersionSourceRepo       = "repo"
-	atsVersionSourceOrbDefault = "orb-default"
-)
-
 // orbPins is the one thing applyBuildToolchain needs from the orb resolver,
 // kept as a function so the wiring can be tested without GitHub.
 type orbPins func(version string) architectorb.Pins
 
 // applyBuildToolchain sets the build toolchain labels and annotations on c
-// from what the repo's CircleCI config declares.
+// from what the repo's CircleCI config declares; the vocabulary is in
+// pkg/output/catalog/component/toolchain.go.
 //
-// Nothing is set for a repo that does not use the architect orb. A repo on a
-// non-release orb ref (dev:<sha>, volatile) gets only the raw ref as an
+// Nothing is set for a repo that does not use the architect orb. ABS is
+// reported only for repos that run push-to-app-catalog, ATS only for repos
+// that run run-tests-with-ats, because a version nobody runs is not a fact
+// about the repo. Wherever a used tool gets no version label, its status
+// label says why.
+//
+// A repo on a non-release orb ref (dev:<sha>, volatile) gets the raw ref as an
 // annotation: there is no orb tag to resolve pins from, and the ref itself is
-// not a valid label value. ABS is set only for repos that run
-// push-to-app-catalog, ATS only for repos that run run-tests-with-ats, because
-// a version nobody runs is not a fact about the repo.
+// not a valid label value. Its ABS is then unknown, and so is its ATS unless
+// the repo names the tag itself.
 func applyBuildToolchain(c *component.Component, ci repositories.CircleCIConfigDetails, pins orbPins) {
 	if ci.ArchitectOrbRef == "" {
-		return
-	}
-
-	version, isRelease := architectorb.ReleaseVersion(ci.ArchitectOrbRef)
-	if !isRelease {
-		c.SetAnnotation(architectOrbRefAnnotation, ci.ArchitectOrbRef)
+		if ci.Incomplete {
+			c.SetLabel(component.LabelArchitectOrbStatus, component.ToolchainStatusUnknown)
+		}
 
 		return
 	}
 
-	setLabelIfValid(c, architectOrbVersionLabel, version)
-
-	resolved := pins(version)
-
-	if ci.UsesPushToAppCatalog && resolved.AppBuildSuite != "" {
-		setLabelIfValid(c, appBuildSuiteVersionLabel, resolved.AppBuildSuite)
+	resolved := architectorb.Pins{}
+	if version, isRelease := architectorb.ReleaseVersion(ci.ArchitectOrbRef); isRelease {
+		c.SetLabel(component.LabelArchitectOrbVersion, version)
+		resolved = pins(version)
+	} else {
+		c.SetAnnotation(component.AnnotationArchitectOrbRef, ci.ArchitectOrbRef)
+		c.SetLabel(component.LabelArchitectOrbStatus, component.ToolchainStatusNonRelease)
 	}
 
-	if ci.UsesRunTestsWithATS && !ci.ATSContainerTagConflict {
-		tag, source := ci.ATSContainerTag, atsVersionSourceRepo
+	switch {
+	case ci.UsesPushToAppCatalog:
+		if !setLabelIfValid(c, component.LabelAppBuildSuiteVersion, resolved.AppBuildSuite) {
+			c.SetLabel(component.LabelAppBuildSuiteStatus, component.ToolchainStatusUnknown)
+		}
+	case ci.Incomplete:
+		c.SetLabel(component.LabelAppBuildSuiteStatus, component.ToolchainStatusUnknown)
+	}
+
+	switch {
+	case ci.UsesRunTestsWithATS && ci.ATSContainerTagConflict:
+		c.SetLabel(component.LabelAppTestSuiteStatus, component.ToolchainStatusConflict)
+	case ci.UsesRunTestsWithATS:
+		tag, source := ci.ATSContainerTag, component.ToolchainATSSourceRepo
 		if tag == "" {
-			tag, source = resolved.AppTestSuite, atsVersionSourceOrbDefault
+			tag, source = resolved.AppTestSuite, component.ToolchainATSSourceOrbDefault
 		}
-		if tag != "" && setLabelIfValid(c, appTestSuiteVersionLabel, tag) {
-			c.SetAnnotation(atsVersionSourceAnnotation, source)
+		if setLabelIfValid(c, component.LabelAppTestSuiteVersion, tag) {
+			c.SetAnnotation(component.AnnotationAppTestSuiteVersionSource, source)
+		} else {
+			c.SetLabel(component.LabelAppTestSuiteStatus, component.ToolchainStatusUnknown)
 		}
+	case ci.Incomplete:
+		c.SetLabel(component.LabelAppTestSuiteStatus, component.ToolchainStatusUnknown)
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestParseCircleCIConfig(t *testing.T) {
+func TestParseCircleCIFile(t *testing.T) {
 	tests := []struct {
 		name   string
 		config string
@@ -176,16 +176,145 @@ workflows:
 			},
 		},
 		{
-			name: "job with a suffix-alike name is not matched",
+			name: "only the exact orb job name matches, not look-alikes",
+			config: `orbs:
+  architect: giantswarm/architect@10.1.2
+  other: someone/other@1.0.0
+workflows:
+  build:
+    jobs:
+      - architect/push-to-app-catalog-dryrun
+      - other/push-to-app-catalog
+      - custom-push-to-app-catalog
+      - other/run-tests-with-ats:
+          app-test-suite_container_tag: "0.1.0"
+      - architect/go-build
+`,
+			want: CircleCIConfigDetails{ArchitectOrbRef: "10.1.2"},
+		},
+		{
+			name: "jobs under the default alias do not match when the orb is imported under another",
+			config: `orbs:
+  gs: giantswarm/architect@9.6.0
+workflows:
+  build:
+    jobs:
+      - architect/push-to-app-catalog
+`,
+			want: CircleCIConfigDetails{ArchitectOrbRef: "9.6.0"},
+		},
+		{
+			name: "legacy workflows version key does not discard the rest of the file",
+			config: `version: 2.1
+orbs:
+  architect: giantswarm/architect@10.1.2
+workflows:
+  version: 2
+  build:
+    jobs:
+      - architect/push-to-app-catalog:
+          name: push-to-default-app-catalog
+      - architect/run-tests-with-ats:
+          app-test-suite_container_tag: 0.10.6
+      - architect/push-to-registries:
+          force-public: true
+`,
+			want: CircleCIConfigDetails{
+				ArchitectOrbRef:      "10.1.2",
+				UsesPushToAppCatalog: true,
+				UsesRunTestsWithATS:  true,
+				ATSContainerTag:      "0.10.6",
+				ForcePublicRegistry:  true,
+			},
+		},
+		{
+			name: "an ATS override alongside a job on the orb default is a conflict",
 			config: `orbs:
   architect: giantswarm/architect@10.1.2
 workflows:
   build:
     jobs:
-      - architect/push-to-app-catalog-dryrun
-      - architect/go-build
+      - architect/run-tests-with-ats:
+          name: pinned
+          app-test-suite_container_tag: "0.10.6"
+      - architect/run-tests-with-ats:
+          name: default
 `,
-			want: CircleCIConfigDetails{ArchitectOrbRef: "10.1.2"},
+			want: CircleCIConfigDetails{
+				ArchitectOrbRef:         "10.1.2",
+				UsesRunTestsWithATS:     true,
+				ATSContainerTagConflict: true,
+			},
+		},
+		{
+			name: "unquoted float ATS tag keeps its trailing zero",
+			config: `orbs:
+  architect: giantswarm/architect@10.1.2
+workflows:
+  build:
+    jobs:
+      - architect/run-tests-with-ats:
+          app-test-suite_container_tag: 1.0
+`,
+			want: CircleCIConfigDetails{
+				ArchitectOrbRef:     "10.1.2",
+				UsesRunTestsWithATS: true,
+				ATSContainerTag:     "1.0",
+			},
+		},
+		{
+			name: "orb job invoked as a step of a repo-defined command",
+			config: `version: 2.1
+orbs:
+  architect: giantswarm/architect@10.6.2
+commands:
+  run-ats:
+    parameters:
+      ats_version:
+        type: string
+        default: 0.10.2
+    steps:
+    - architect/run-tests-with-ats:
+        app-test-suite_container_tag: << parameters.ats_version >>
+jobs:
+  run-tests:
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - checkout
+      - run-ats
+workflows:
+  build:
+    jobs:
+    - architect/push-to-app-catalog:
+        name: push-kyverno-chart-to-giantswarm-catalog
+    - run-tests
+`,
+			want: CircleCIConfigDetails{
+				ArchitectOrbRef:      "10.6.2",
+				UsesPushToAppCatalog: true,
+				UsesRunTestsWithATS:  true,
+				ATSContainerTag:      "<< parameters.ats_version >>",
+			},
+		},
+		{
+			name: "parameters brought in through a YAML anchor and merge key",
+			config: `orbs:
+  architect: giantswarm/architect@10.1.2
+ats_defaults: &ats_defaults
+  app-test-suite_container_tag: "0.10.6"
+workflows:
+  build:
+    jobs:
+      - architect/run-tests-with-ats:
+          <<: *ats_defaults
+          name: e2e
+`,
+			want: CircleCIConfigDetails{
+				ArchitectOrbRef:     "10.1.2",
+				UsesRunTestsWithATS: true,
+				ATSContainerTag:     "0.10.6",
+			},
 		},
 		{
 			name: "dynamic-config setup workflow declares nothing itself",
@@ -213,17 +342,17 @@ workflows:
 			want:   CircleCIConfigDetails{},
 		},
 		{
-			name:   "invalid YAML",
+			name:   "invalid YAML is incomplete, not empty",
 			config: "orbs: [unclosed",
-			want:   CircleCIConfigDetails{},
+			want:   CircleCIConfigDetails{Incomplete: true},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := parseCircleCIConfig(tt.config)
+			got := mergeCircleCIFiles(parseCircleCIFile(tt.config))
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("parseCircleCIConfig() mismatch (-want +got):\n%s", diff)
+				t.Errorf("mergeCircleCIFiles(parseCircleCIFile()) mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -295,6 +424,22 @@ workflows:
 				UsesPushToAppCatalog:    true,
 				UsesRunTestsWithATS:     true,
 				ATSContainerTagConflict: true,
+			},
+		},
+		{
+			name: "orb imported under different aliases in different files",
+			files: []circleCIFile{setup, workflows, parseCircleCIFile(`orbs:
+  gs: giantswarm/architect@10.1.0
+workflows:
+  test:
+    jobs:
+      - gs/run-tests-with-ats
+`)},
+			want: CircleCIConfigDetails{
+				DynamicSetup:         true,
+				ArchitectOrbRef:      "10.1.0",
+				UsesPushToAppCatalog: true,
+				UsesRunTestsWithATS:  true,
 			},
 		},
 		{

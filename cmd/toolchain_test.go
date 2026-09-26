@@ -82,6 +82,7 @@ func TestApplyBuildToolchain(t *testing.T) {
 			},
 			wantLabels: map[string]string{
 				"giantswarm.io/architect-orb-version": "10.3.0",
+				"giantswarm.io/app-test-suite-status": "conflict",
 			},
 		},
 		{
@@ -94,40 +95,66 @@ func TestApplyBuildToolchain(t *testing.T) {
 			wantLabels: map[string]string{
 				"giantswarm.io/architect-orb-version":   "4.0.0",
 				"giantswarm.io/app-build-suite-version": "0.2.4",
+				"giantswarm.io/app-test-suite-status":   "unknown",
 			},
 		},
 		{
-			name: "orb release whose pins could not be read: orb version only",
+			name: "orb release whose pins could not be read: versions unknown",
 			ci: repositories.CircleCIConfigDetails{
 				ArchitectOrbRef:      "99.0.0",
 				UsesPushToAppCatalog: true,
 				UsesRunTestsWithATS:  true,
 			},
 			wantLabels: map[string]string{
-				"giantswarm.io/architect-orb-version": "99.0.0",
+				"giantswarm.io/architect-orb-version":  "99.0.0",
+				"giantswarm.io/app-build-suite-status": "unknown",
+				"giantswarm.io/app-test-suite-status":  "unknown",
 			},
 		},
 		{
-			name: "dev orb ref goes to the annotation only",
+			name: "dev orb ref: raw ref annotated, ABS unknown, repo's own ATS tag still stands",
 			ci: repositories.CircleCIConfigDetails{
 				ArchitectOrbRef:      "dev:abc123",
 				UsesPushToAppCatalog: true,
 				UsesRunTestsWithATS:  true,
 				ATSContainerTag:      "0.4.1",
 			},
+			wantLabels: map[string]string{
+				"giantswarm.io/architect-orb-status":   "non-release",
+				"giantswarm.io/app-build-suite-status": "unknown",
+				"giantswarm.io/app-test-suite-version": "0.4.1",
+			},
+			wantAnnotations: map[string]string{
+				"giantswarm.io/architect-orb-ref":             "dev:abc123",
+				"giantswarm.io/app-test-suite-version-source": "repo",
+			},
+		},
+		{
+			name: "dev orb ref with ATS on the orb default: ATS unknown",
+			ci: repositories.CircleCIConfigDetails{
+				ArchitectOrbRef:     "dev:abc123",
+				UsesRunTestsWithATS: true,
+			},
+			wantLabels: map[string]string{
+				"giantswarm.io/architect-orb-status":  "non-release",
+				"giantswarm.io/app-test-suite-status": "unknown",
+			},
 			wantAnnotations: map[string]string{
 				"giantswarm.io/architect-orb-ref": "dev:abc123",
 			},
 		},
 		{
-			name: "volatile orb ref goes to the annotation only",
+			name: "volatile orb ref",
 			ci:   repositories.CircleCIConfigDetails{ArchitectOrbRef: "volatile"},
+			wantLabels: map[string]string{
+				"giantswarm.io/architect-orb-status": "non-release",
+			},
 			wantAnnotations: map[string]string{
 				"giantswarm.io/architect-orb-ref": "volatile",
 			},
 		},
 		{
-			name: "an ATS override that is not a valid label value is dropped",
+			name: "an ATS override that is not a valid label value is unknown",
 			ci: repositories.CircleCIConfigDetails{
 				ArchitectOrbRef:     "10.3.0",
 				UsesRunTestsWithATS: true,
@@ -135,6 +162,40 @@ func TestApplyBuildToolchain(t *testing.T) {
 			},
 			wantLabels: map[string]string{
 				"giantswarm.io/architect-orb-version": "10.3.0",
+				"giantswarm.io/app-test-suite-status": "unknown",
+			},
+		},
+		{
+			name: "an ATS tag given as a CircleCI template expression is unknown",
+			ci: repositories.CircleCIConfigDetails{
+				ArchitectOrbRef:     "10.3.0",
+				UsesRunTestsWithATS: true,
+				ATSContainerTag:     "<< parameters.ats_version >>",
+			},
+			wantLabels: map[string]string{
+				"giantswarm.io/architect-orb-version": "10.3.0",
+				"giantswarm.io/app-test-suite-status": "unknown",
+			},
+		},
+		{
+			name: "incomplete config without an orb ref: the orb is unknown",
+			ci:   repositories.CircleCIConfigDetails{DynamicSetup: true, Incomplete: true},
+			wantLabels: map[string]string{
+				"giantswarm.io/architect-orb-status": "unknown",
+			},
+		},
+		{
+			name: "incomplete config with an orb ref: undetected tools are unknown, not absent",
+			ci: repositories.CircleCIConfigDetails{
+				DynamicSetup:         true,
+				Incomplete:           true,
+				ArchitectOrbRef:      "10.3.0",
+				UsesPushToAppCatalog: true,
+			},
+			wantLabels: map[string]string{
+				"giantswarm.io/architect-orb-version":   "10.3.0",
+				"giantswarm.io/app-build-suite-version": "2.3.0",
+				"giantswarm.io/app-test-suite-status":   "unknown",
 			},
 		},
 	}
