@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-github/v91/github"
+	"github.com/google/go-github/v92/github"
 )
 
 // executorV10 is src/executors/app-build-suite.yaml at architect-orb v10.3.0.
@@ -130,6 +130,15 @@ func TestParseATSDefaultContainerTag(t *testing.T) {
 			want: "0.4",
 		},
 		{
+			name: "float default keeps its trailing zero",
+			yaml: `parameters:
+  app-test-suite_container_tag:
+    type: string
+    default: 1.0
+`,
+			want: "1.0",
+		},
+		{
 			name: "parameter absent",
 			yaml: `parameters:
   chart_archive_prefix:
@@ -177,10 +186,7 @@ func (f *fakeGetter) GetContents(_ context.Context, owner, repo, path string, op
 }
 
 func newResolver(getter *fakeGetter) *Resolver {
-	r := NewResolver(context.Background(), getter)
-	r.logging = false
-
-	return r
+	return NewResolver(context.Background(), getter)
 }
 
 func TestResolver_Pins(t *testing.T) {
@@ -233,20 +239,37 @@ func TestResolver_Pins_UnknownStaysUnknown(t *testing.T) {
 		}
 	})
 
-	t.Run("API error", func(t *testing.T) {
+	t.Run("tag does not exist is cached", func(t *testing.T) {
+		getter := &fakeGetter{files: map[string]string{}}
+		r := newResolver(getter)
+		r.Pins("99.0.0")
+		requests := len(getter.requests)
+		r.Pins("99.0.0")
+		if len(getter.requests) != requests {
+			t.Errorf("a definite 404 was not cached: %d more requests", len(getter.requests)-requests)
+		}
+	})
+
+	t.Run("API error is not cached", func(t *testing.T) {
 		getter := &fakeGetter{failWith: errors.New("bad gateway")}
 		r := newResolver(getter)
 		if got := r.Pins("10.3.0"); got != (Pins{}) {
 			t.Errorf("Pins() = %+v, want empty", got)
 		}
-		// A non-404 error is not retried against the other extension, and the
-		// negative result is cached like any other.
+		// A non-404 error is not retried against the other extension.
 		if len(getter.requests) != 2 {
 			t.Errorf("issued %d requests, want 2 (one per file)", len(getter.requests))
 		}
-		r.Pins("10.3.0")
-		if len(getter.requests) != 2 {
-			t.Errorf("negative result was not cached: %d requests", len(getter.requests))
+
+		// Once GitHub recovers, the next caller gets the real answer.
+		getter.failWith = nil
+		getter.files = map[string]string{
+			"v10.3.0:src/executors/app-build-suite.yaml": executorV10,
+			"v10.3.0:src/jobs/run-tests-with-ats.yaml":   atsJobV10,
+		}
+		want := Pins{AppBuildSuite: "2.3.0", AppTestSuite: "0.15.0"}
+		if got := r.Pins("10.3.0"); got != want {
+			t.Errorf("Pins() after recovery = %+v, want %+v", got, want)
 		}
 	})
 }

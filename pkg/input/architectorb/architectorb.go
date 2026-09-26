@@ -15,7 +15,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/google/go-github/v91/github"
+	"github.com/google/go-github/v92/github"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -78,26 +78,28 @@ type ContentGetter interface {
 
 // Resolver looks up orb pins by release version, once per version per run.
 type Resolver struct {
-	ctx     context.Context
-	getter  ContentGetter
-	mu      sync.Mutex
-	cache   map[string]Pins
-	logging bool
+	ctx    context.Context
+	getter ContentGetter
+	mu     sync.Mutex
+	cache  map[string]Pins
 }
 
 // NewResolver returns a resolver backed by the given GitHub content API.
 func NewResolver(ctx context.Context, getter ContentGetter) *Resolver {
 	return &Resolver{
-		ctx:     ctx,
-		getter:  getter,
-		cache:   make(map[string]Pins),
-		logging: true,
+		ctx:    ctx,
+		getter: getter,
+		cache:  make(map[string]Pins),
 	}
 }
 
-// Pins returns what the orb release pins. Results are cached for the lifetime
-// of the resolver, including negative ones, so a fleet on a dozen orb versions
-// costs a dozen pairs of requests, not one per repo.
+// Pins returns what the orb release pins. Definite results are cached for the
+// lifetime of the resolver, negative ones included, so a fleet on a dozen orb
+// versions costs a dozen pairs of requests, not one per repo. A result that
+// rests on a failed request (transport error, 5xx, a 403 rate limit) is
+// returned but not cached, and the next repo on that version asks again:
+// otherwise one unlucky request would cost every repo on the orb release its
+// labels for the rest of the run.
 func (r *Resolver) Pins(version string) Pins {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -109,23 +111,27 @@ func (r *Resolver) Pins(version string) Pins {
 	ref := "v" + version
 	pins := Pins{}
 
-	if content, ok := r.load(ref, executorPath); ok {
-		pins.AppBuildSuite = ParseExecutorImageTag(content)
-	}
-	if content, ok := r.load(ref, atsJobPath); ok {
-		pins.AppTestSuite = ParseATSDefaultContainerTag(content)
-	}
+	executor, executorDefinite := r.load(ref, executorPath)
+	pins.AppBuildSuite = ParseExecutorImageTag(executor)
 
-	if r.logging && (pins.AppBuildSuite == "" || pins.AppTestSuite == "") {
+	atsJob, atsJobDefinite := r.load(ref, atsJobPath)
+	pins.AppTestSuite = ParseATSDefaultContainerTag(atsJob)
+
+	if pins.AppBuildSuite == "" || pins.AppTestSuite == "" {
 		log.Printf("DEBUG - architect-orb %s - pins partially unknown: abs=%q ats=%q\n", ref, pins.AppBuildSuite, pins.AppTestSuite)
 	}
 
-	r.cache[version] = pins
+	if executorDefinite && atsJobDefinite {
+		r.cache[version] = pins
+	}
 
 	return pins
 }
 
-// load fetches a source file at ref, trying each YAML extension in turn.
+// load fetches a source file at ref, trying each YAML extension in turn. It
+// returns the content ("" when there is none) and whether that answer is
+// definite: the file was read, or every spelling of it is a 404. Any other
+// failure is not.
 func (r *Resolver) load(ref, basePath string) (string, bool) {
 	for _, ext := range yamlExtensions {
 		path := basePath + ext
@@ -134,9 +140,7 @@ func (r *Resolver) load(ref, basePath string) (string, bool) {
 			if resp != nil && resp.StatusCode == http.StatusNotFound {
 				continue
 			}
-			if r.logging {
-				log.Printf("WARN - architect-orb %s - could not read %s: %v\n", ref, path, err)
-			}
+			log.Printf("WARN - architect-orb %s - could not read %s: %v\n", ref, path, err)
 
 			return "", false
 		}
@@ -145,9 +149,7 @@ func (r *Resolver) load(ref, basePath string) (string, bool) {
 		}
 		content, err := file.GetContent()
 		if err != nil {
-			if r.logging {
-				log.Printf("WARN - architect-orb %s - could not decode %s: %v\n", ref, path, err)
-			}
+			log.Printf("WARN - architect-orb %s - could not decode %s: %v\n", ref, path, err)
 
 			return "", false
 		}
@@ -155,7 +157,7 @@ func (r *Resolver) load(ref, basePath string) (string, bool) {
 		return content, true
 	}
 
-	return "", false
+	return "", true
 }
 
 // ParseExecutorImageTag reads the ABS version out of the orb's
@@ -196,11 +198,12 @@ func ParseExecutorImageTag(executorYAML string) string {
 
 // ParseATSDefaultContainerTag reads the default app-test-suite container tag
 // out of the orb's run-tests-with-ats job definition. Returns "" when the
-// parameter is absent or has no default.
+// parameter is absent or has no default. The default is taken as written: an
+// unquoted `1.0` is the tag "1.0", not the float 1.
 func ParseATSDefaultContainerTag(jobYAML string) string {
 	var job struct {
 		Parameters map[string]struct {
-			Default any `yaml:"default"`
+			Default yaml.Node `yaml:"default"`
 		} `yaml:"parameters"`
 	}
 
@@ -209,26 +212,13 @@ func ParseATSDefaultContainerTag(jobYAML string) string {
 	}
 
 	param, ok := job.Parameters[atsContainerTagParameter]
-	if !ok {
+	if !ok || param.Default.Kind != yaml.ScalarNode {
+		return ""
+	}
+	switch param.Default.ShortTag() {
+	case "!!null", "!!bool":
 		return ""
 	}
 
-	switch value := param.Default.(type) {
-	case string:
-		return strings.TrimSpace(value)
-	case nil:
-		return ""
-	default:
-		// A default like 0.4 parses as a float; the tag is still "0.4".
-		return strings.TrimSpace(strings.Trim(yamlScalar(value), "\n"))
-	}
-}
-
-func yamlScalar(v any) string {
-	out, err := yaml.Marshal(v)
-	if err != nil {
-		return ""
-	}
-
-	return string(out)
+	return strings.TrimSpace(param.Default.Value)
 }

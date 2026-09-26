@@ -18,6 +18,7 @@ import (
 	"go.yaml.in/yaml/v3"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/input/architectorb"
 )
 
 // valuesSchemaFileName is the values schema a deployable chart is expected to
@@ -153,15 +154,16 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 	if err == nil {
 		details.HasCircleCI = true
 
-		// Check if push-to-registries uses force-public: true
+		// Build toolchain facts, and whether push-to-registries uses
+		// force-public: true, from the merged view of all config files.
 		if circleciFileContent != nil {
 			content, contentErr := circleciFileContent.GetContent()
 			if contentErr == nil {
-				details.ForcePublicRegistry = circleciConfigHasForcePublic(content)
+				details.CircleCI = s.loadCircleCIDetails(name, content)
+				details.ForcePublicRegistry = details.CircleCI.ForcePublicRegistry
 				if details.ForcePublicRegistry {
 					log.Printf("DEBUG - %s - CircleCI config has force-public: true in push-to-registries\n", name)
 				}
-				details.CircleCI = s.loadCircleCIDetails(name, content)
 			}
 		}
 	} else if resp.StatusCode != http.StatusNotFound {
@@ -240,8 +242,10 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 // is a dynamic-config setup workflow whose real orb reference and jobs sit in
 // workflows.yml, merged at pipeline time with the optional custom.yml, so both
 // are fetched and merged here too. A continued file that cannot be read is
-// skipped with a warning: the toolchain then comes out unknown for that repo,
-// which is honest, whereas failing the whole import over it is not useful.
+// skipped with a warning and the result marked Incomplete: the toolchain then
+// comes out unknown for that repo, which is honest, whereas failing the whole
+// import over it is not useful. So is a setup workflow without workflows.yml,
+// which continues with something this does not know how to find.
 func (s *Service) loadCircleCIDetails(name string, configYAML string) CircleCIConfigDetails {
 	config := parseCircleCIFile(configYAML)
 	if !config.setup {
@@ -249,19 +253,26 @@ func (s *Service) loadCircleCIDetails(name string, configYAML string) CircleCICo
 	}
 
 	files := []circleCIFile{config}
+	incomplete := false
 	for _, path := range []string{circleCIWorkflowsPath, circleCICustomPath} {
 		content, found, err := s.loadOptionalGitHubFile(name, path)
 		if err != nil {
 			log.Printf("WARN - %s - could not read %s, build toolchain may be incomplete: %v\n", name, path, err)
+			incomplete = true
 
 			continue
 		}
 		if found {
 			files = append(files, parseCircleCIFile(content))
+		} else if path == circleCIWorkflowsPath {
+			incomplete = true
 		}
 	}
 
-	return mergeCircleCIFiles(files...)
+	details := mergeCircleCIFiles(files...)
+	details.Incomplete = details.Incomplete || incomplete
+
+	return details
 }
 
 // loadOptionalGitHubFile returns a file's content and whether it exists. A
@@ -511,45 +522,9 @@ func (s *Service) GetCircleCIConfig(name string) (CircleCIConfigDetails, error) 
 	return s.githubRepoContentDetails[name].CircleCI, nil
 }
 
-// GithubClient exposes the authenticated GitHub client, for lookups outside
-// the organization's own repositories that should share its rate limit budget
+// NewOrbResolver returns a resolver for architect orb pins that reads the orb
+// source through this service's GitHub client, sharing its rate limit budget
 // and retry behaviour.
-func (s *Service) GithubClient() *github.Client {
-	return s.githubClient
-}
-
-// circleciConfigHasForcePublic parses a CircleCI config YAML and checks whether
-// any push-to-registries job in the workflows section has force-public: true.
-func circleciConfigHasForcePublic(configYAML string) bool {
-	var config struct {
-		Workflows map[string]struct {
-			Jobs []map[string]any `yaml:"jobs"`
-		} `yaml:"workflows"`
-	}
-
-	if err := yaml.Unmarshal([]byte(configYAML), &config); err != nil {
-		return false
-	}
-
-	for _, workflow := range config.Workflows {
-		for _, job := range workflow.Jobs {
-			for jobName, jobConfig := range job {
-				// Match job names like "architect/push-to-registries" or "push-to-registries"
-				if !strings.HasSuffix(jobName, "push-to-registries") {
-					continue
-				}
-				params, ok := jobConfig.(map[string]any)
-				if !ok {
-					continue
-				}
-				if forcePublic, exists := params["force-public"]; exists {
-					if val, ok := forcePublic.(bool); ok && val {
-						return true
-					}
-				}
-			}
-		}
-	}
-
-	return false
+func (s *Service) NewOrbResolver() *architectorb.Resolver {
+	return architectorb.NewResolver(s.ctx, s.githubClient.Repositories)
 }

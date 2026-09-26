@@ -2,7 +2,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -15,7 +14,6 @@ import (
 	groups "github.com/giantswarm/backstage-catalog-importer/cmd/groups"
 	installations "github.com/giantswarm/backstage-catalog-importer/cmd/installations"
 	users "github.com/giantswarm/backstage-catalog-importer/cmd/users"
-	"github.com/giantswarm/backstage-catalog-importer/pkg/input/architectorb"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/helmchart"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/repositories"
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
@@ -123,7 +121,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// Resolves what each architect orb release pins (app-build-suite,
 	// app-test-suite), once per orb version for the whole run.
-	orbResolver := architectorb.NewResolver(context.Background(), repoService.GithubClient().Repositories)
+	orbResolver := repoService.NewOrbResolver()
 
 	numComponents := 0
 
