@@ -184,8 +184,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 					chartNames, _ := repoService.GetHelmChartNames(repo.Name)
 					for _, chartName := range chartNames {
 						log.Printf("DEBUG - %s - fetching info on helm chart %s\n", repo.Name, chartName)
-						path := fmt.Sprintf("helm/%s/Chart.yaml", chartName)
-						data, err := repoService.LoadGitHubFile(repo.Name, path)
+						data, err := repoService.GetChartYAML(repo.Name, chartName)
 						if err != nil {
 							if !repositories.IsFileNotFoundError(err) {
 								log.Printf("WARN - %s - error fetching helm chart %s: %v", repo.Name, chartName, err)
