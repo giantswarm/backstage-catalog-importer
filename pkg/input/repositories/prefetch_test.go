@@ -20,12 +20,14 @@ import (
 // README.md, and a repo named "charted" also has helm/app with a Chart.yaml
 // and a values schema. Repos named in failing return 500 for their CircleCI
 // config until healed; the first request for a repo named in rateLimitOnce is
-// refused with a secondary rate limit.
+// refused with a secondary rate limit, as is the first request for a
+// "repo/path" named in rateLimitPathOnce.
 type fakeContentsServer struct {
-	mu            sync.Mutex
-	requests      map[string]int
-	failing       map[string]bool
-	rateLimitOnce map[string]bool
+	mu                sync.Mutex
+	requests          map[string]int
+	failing           map[string]bool
+	rateLimitOnce     map[string]bool
+	rateLimitPathOnce map[string]bool
 
 	inFlight    atomic.Int32
 	maxInFlight atomic.Int32
@@ -55,8 +57,9 @@ func (f *fakeContentsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.mu.Lock()
 	f.requests[repo]++
 	failing := f.failing[repo]
-	rateLimited := f.rateLimitOnce[repo]
+	rateLimited := f.rateLimitOnce[repo] || f.rateLimitPathOnce[repo+"/"+path]
 	delete(f.rateLimitOnce, repo)
+	delete(f.rateLimitPathOnce, repo+"/"+path)
 	f.mu.Unlock()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -269,5 +272,25 @@ func TestPrefetchContentDetails_PausesOnRateLimit(t *testing.T) {
 	}
 	if uncached > workers {
 		t.Errorf("%d repos left uncached, want at most %d (those in flight when the limit hit)", uncached, workers)
+	}
+}
+
+// A rate limit on a chart's listing fails the repo's load rather than caching
+// the repo with that chart's schema presence unknown.
+func TestContentDetails_RateLimitOnChartListingIsNotCached(t *testing.T) {
+	fake := &fakeContentsServer{
+		requests:          make(map[string]int),
+		rateLimitPathOnce: map[string]bool{"charted/helm/app": true},
+	}
+	s := newFakeService(t, fake)
+
+	if _, err := s.contentDetails("charted"); !rateLimited(err) {
+		t.Fatalf("contentDetails() error = %v, want a rate limit error", err)
+	}
+	s.contentDetailsMu.RLock()
+	_, cached := s.githubRepoContentDetails["charted"]
+	s.contentDetailsMu.RUnlock()
+	if cached {
+		t.Error("a repo whose chart listing was rate limited was cached")
 	}
 }

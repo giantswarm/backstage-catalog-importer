@@ -236,6 +236,12 @@ func (s *Service) loadGithubRepoContentDetails(name string) (GithubRepoContentDe
 						// Everything after this would be refused too.
 						return GithubRepoContentDetails{}, err
 					}
+				} else if rateLimited(chartErr) {
+					// Every later request would be refused too, and caching
+					// the repo now would pin its remaining charts as unknown
+					// for the run. Fail the load so the pool pauses and the
+					// repo is loaded again after the reset.
+					return GithubRepoContentDetails{}, chartErr
 				} else if chartResp == nil || chartResp.StatusCode != http.StatusNotFound {
 					// Anything but "not found" means we do not know, so the
 					// chart stays absent from the map rather than being
