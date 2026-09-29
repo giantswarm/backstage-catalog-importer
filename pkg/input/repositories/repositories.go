@@ -167,7 +167,11 @@ func (s *Service) loadGithubRepoContentDetails(name string) (GithubRepoContentDe
 		if circleciFileContent != nil {
 			content, contentErr := circleciFileContent.GetContent()
 			if contentErr == nil {
-				details.CircleCI = s.loadCircleCIDetails(name, content)
+				ci, ciErr := s.loadCircleCIDetails(name, content)
+				if ciErr != nil {
+					return GithubRepoContentDetails{}, ciErr
+				}
+				details.CircleCI = ci
 				details.ForcePublicRegistry = details.CircleCI.ForcePublicRegistry
 				if details.ForcePublicRegistry {
 					log.Printf("DEBUG - %s - CircleCI config has force-public: true in push-to-registries\n", name)
@@ -416,21 +420,30 @@ func chartYAMLPath(chart string) string {
 // configuration. A plain config.yml is self-contained. A devctl-generated one
 // is a dynamic-config setup workflow whose real orb reference and jobs sit in
 // workflows.yml, merged at pipeline time with the optional custom.yml, so both
-// are fetched and merged here too. A continued file that cannot be read is
-// skipped with a warning and the result marked Incomplete: the toolchain then
-// comes out unknown for that repo, which is honest, whereas failing the whole
-// import over it is not useful. So is a setup workflow without workflows.yml,
-// which continues with something this does not know how to find.
-func (s *Service) loadCircleCIDetails(name string, configYAML string) CircleCIConfigDetails {
+// are fetched and merged here too.
+//
+// A continued file that cannot be read is skipped with a warning and the
+// result marked Incomplete: the toolchain then comes out unknown for that
+// repo, which is honest, whereas failing the whole import over it is not
+// useful. So is a setup workflow without workflows.yml, which continues with
+// something this does not know how to find. A rate limit is the exception and
+// is returned as an error, since it says nothing about the repo: the load
+// fails, the repo is not cached, and it is loaded again after the reset.
+func (s *Service) loadCircleCIDetails(name string, configYAML string) (CircleCIConfigDetails, error) {
 	config := parseCircleCIFile(configYAML)
 	if !config.setup {
-		return mergeCircleCIFiles(config)
+		return mergeCircleCIFiles(config), nil
 	}
 
 	files := []circleCIFile{config}
 	incomplete := false
 	for _, path := range []string{circleCIWorkflowsPath, circleCICustomPath} {
 		content, found, err := s.loadOptionalGitHubFile(name, path)
+		if rateLimited(err) {
+			// Not a fact about the repo: fail the load so the repo is not
+			// cached as incomplete, and is loaded again after the reset.
+			return CircleCIConfigDetails{}, err
+		}
 		if err != nil {
 			log.Printf("WARN - %s - could not read %s, build toolchain may be incomplete: %v\n", name, path, err)
 			incomplete = true
@@ -447,7 +460,7 @@ func (s *Service) loadCircleCIDetails(name string, configYAML string) CircleCICo
 	details := mergeCircleCIFiles(files...)
 	details.Incomplete = details.Incomplete || incomplete
 
-	return details
+	return details, nil
 }
 
 // loadOptionalGitHubFile returns a file's content and whether it exists. A
@@ -675,14 +688,12 @@ func (s *Service) GetHasValuesSchema(name string) (map[string]bool, error) {
 // Returns what the repo's CircleCI config declares about the build toolchain.
 // The zero value for a repo without a CircleCI config.
 func (s *Service) GetCircleCIConfig(name string) (CircleCIConfigDetails, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return CircleCIConfigDetails{}, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return CircleCIConfigDetails{}, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].CircleCI, nil
+	return details.CircleCI, nil
 }
 
 // NewOrbResolver returns a resolver for architect orb pins that reads the orb

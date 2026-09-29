@@ -16,12 +16,15 @@ import (
 	"github.com/google/go-github/v92/github"
 )
 
-// fakeContentsServer answers the GitHub contents API: every repo has a
-// README.md, and a repo named "charted" also has helm/app with a Chart.yaml
-// and a values schema. Repos named in failing return 500 for their CircleCI
-// config until healed; the first request for a repo named in rateLimitOnce is
-// refused with a secondary rate limit, as is the first request for a
-// "repo/path" named in rateLimitPathOnce.
+// fakeContentsServer answers the GitHub contents API. Every repo has a
+// README.md and nothing else, except:
+//
+//   - "charted" also has helm/app with a Chart.yaml and a values schema;
+//   - "dynamic" has a dynamic-config setup workflow and nothing it continues
+//     with;
+//   - repos in failing return 500 for their CircleCI config until healed;
+//   - the first request for a repo in rateLimitOnce, or for a "repo/path" in
+//     rateLimitPathOnce, is refused with a secondary rate limit.
 type fakeContentsServer struct {
 	mu                sync.Mutex
 	requests          map[string]int
@@ -70,6 +73,8 @@ func (f *fakeContentsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_, _ = fmt.Fprint(w, `{"message":"You have exceeded a secondary rate limit.","documentation_url":"https://docs.github.com/rest/overview/rate-limits-for-the-rest-api#about-secondary-rate-limits"}`)
 	case failing && path == ".circleci/config.yml":
 		http.Error(w, `{"message":"boom"}`, http.StatusInternalServerError)
+	case repo == "dynamic" && path == ".circleci/config.yml":
+		_, _ = fmt.Fprintf(w, `{"type":"file","name":"config.yml","path":".circleci/config.yml","content":%q,"encoding":"base64"}`, base64.StdEncoding.EncodeToString([]byte("version: 2.1\nsetup: true\n")))
 	case path == "README.md":
 		_, _ = fmt.Fprintf(w, `{"type":"file","name":"README.md","path":"README.md","content":"","encoding":"base64"}`)
 	case repo == "charted" && path == "helm":
@@ -93,7 +98,7 @@ func (f *fakeContentsServer) requestsFor(repo string) int {
 	return f.requests[repo]
 }
 
-func newFakeService(t *testing.T, fake *fakeContentsServer) *Service {
+func newFakeService(t *testing.T, fake *fakeContentsServer, opts ...github.ClientOptionsFunc) *Service {
 	t.Helper()
 
 	srv := httptest.NewServer(fake)
@@ -103,10 +108,10 @@ func newFakeService(t *testing.T, fake *fakeContentsServer) *Service {
 	// go-github's own rate limit check stays on, as in production: after a
 	// rate-limited response it refuses later requests without sending them,
 	// which is what PrefetchContentDetails has to cope with.
-	client, err := github.NewClient(
+	client, err := github.NewClient(append([]github.ClientOptionsFunc{
 		github.WithHTTPClient(srv.Client()),
 		github.WithURLs(&baseURL, &baseURL),
-	)
+	}, opts...)...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -292,5 +297,43 @@ func TestContentDetails_RateLimitOnChartListingIsNotCached(t *testing.T) {
 	s.contentDetailsMu.RUnlock()
 	if cached {
 		t.Error("a repo whose chart listing was rate limited was cached")
+	}
+}
+
+// A rate limit on a file a setup workflow continues with fails the load, so
+// the repo is not cached with an incomplete CircleCI config and unknown
+// toolchain labels for the rest of the run. go-github's own rate limit check
+// is off here: with it on, the next request would be refused and fail the
+// load anyway, which would hide whether this path handles it.
+func TestContentDetails_RateLimitOnContinuedConfigIsNotCached(t *testing.T) {
+	fake := &fakeContentsServer{
+		requests:          make(map[string]int),
+		rateLimitPathOnce: map[string]bool{"dynamic/.circleci/workflows.yml": true},
+	}
+	s := newFakeService(t, fake, github.WithDisableRateLimitCheck())
+
+	if _, err := s.contentDetails("dynamic"); !rateLimited(err) {
+		t.Fatalf("contentDetails() error = %v, want a rate limit error", err)
+	}
+	s.contentDetailsMu.RLock()
+	_, cached := s.githubRepoContentDetails["dynamic"]
+	s.contentDetailsMu.RUnlock()
+	if cached {
+		t.Error("a repo whose workflows.yml read was rate limited was cached")
+	}
+}
+
+// Without a rate limit, a setup workflow with no workflows.yml is a definite
+// answer: cached, and marked incomplete.
+func TestContentDetails_MissingContinuationIsIncomplete(t *testing.T) {
+	fake := &fakeContentsServer{requests: make(map[string]int)}
+	s := newFakeService(t, fake)
+
+	ci, err := s.GetCircleCIConfig("dynamic")
+	if err != nil {
+		t.Fatalf("GetCircleCIConfig() error = %v", err)
+	}
+	if !ci.DynamicSetup || !ci.Incomplete {
+		t.Errorf("GetCircleCIConfig() = %+v, want DynamicSetup and Incomplete", ci)
 	}
 }

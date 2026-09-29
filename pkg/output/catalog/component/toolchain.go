@@ -25,10 +25,12 @@ const (
 	ToolchainATSSourceOrbDefault = "orb-default"
 )
 
-// Status labels say why a tool the repo uses has no version label, so that
-// "could not tell" is a filter of its own instead of a repo silently missing
-// from every version filter. Each is set only when the matching version label
-// is not; a repo that does not use a tool gets neither.
+// Status labels say why a tool the repo uses, or may use, has no version
+// label, so that "could not tell" is a filter of its own instead of a repo
+// silently missing from every version filter. Each is set only when the
+// matching version label is not. A repo known not to use a tool gets neither;
+// one whose CircleCI config could not be read in full gets `unknown` for every
+// tool it was not seen to use.
 const (
 	LabelArchitectOrbStatus  = "giantswarm.io/architect-orb-status"
 	LabelAppBuildSuiteStatus = "giantswarm.io/app-build-suite-status"
