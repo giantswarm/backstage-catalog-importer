@@ -13,7 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCircleciConfigHasForcePublic(t *testing.T) {
+func TestForcePublicRegistry(t *testing.T) {
 	tests := []struct {
 		name   string
 		config string
@@ -66,6 +66,30 @@ workflows:
 			want: false,
 		},
 		{
+			name: "legacy workflows version key does not hide force-public",
+			config: `version: 2.1
+workflows:
+  version: 2
+  build:
+    jobs:
+      - architect/push-to-registries:
+          context: architect
+          force-public: true
+`,
+			want: true,
+		},
+		{
+			name: "force-public on another orb's push-to-registries is not ours",
+			config: `version: 2.1
+workflows:
+  build:
+    jobs:
+      - other/push-to-registries:
+          force-public: true
+`,
+			want: false,
+		},
+		{
 			name:   "empty config",
 			config: ``,
 			want:   false,
@@ -89,9 +113,9 @@ workflows:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := circleciConfigHasForcePublic(tt.config)
+			got := mergeCircleCIFiles(parseCircleCIFile(tt.config)).ForcePublicRegistry
 			if got != tt.want {
-				t.Errorf("circleciConfigHasForcePublic() = %v, want %v", got, tt.want)
+				t.Errorf("ForcePublicRegistry = %v, want %v", got, tt.want)
 			}
 		})
 	}
