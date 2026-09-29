@@ -6,12 +6,15 @@ package repositories
 import (
 	"context"
 	b64 "encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v92/github"
@@ -23,6 +26,9 @@ import (
 // valuesSchemaFileName is the values schema a deployable chart is expected to
 // ship. app-build-suite's HasValuesSchema check looks for exactly this name.
 const valuesSchemaFileName = "values.schema.json"
+
+// chartYAMLFileName is the chart metadata file in each helm/<chart> directory.
+const chartYAMLFileName = "Chart.yaml"
 
 type Config struct {
 	// Name of the GitHub organization owning our repository.
@@ -54,8 +60,10 @@ type Service struct {
 
 	// Cached information on certain repos
 	githubRepoDetails map[string]GithubRepoDetails
-	// Cached information on repo content
+	// Cached information on repo content, filled concurrently by
+	// PrefetchContentDetails and guarded by contentDetailsMu.
 	githubRepoContentDetails map[string]GithubRepoContentDetails
+	contentDetailsMu         sync.RWMutex
 }
 
 // New instantiates a new repositories service.
@@ -145,7 +153,7 @@ func (s *Service) loadGithubRepoDetails() error {
 }
 
 // Load details found in certain files in the repository.
-func (s *Service) loadGithubRepoContentDetails(name string) error {
+func (s *Service) loadGithubRepoContentDetails(name string) (GithubRepoContentDetails, error) {
 	details := GithubRepoContentDetails{}
 
 	// Detect CircleCI
@@ -163,18 +171,18 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 				}
 			}
 		}
-	} else if resp.StatusCode != http.StatusNotFound {
+	} else if resp == nil || resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
-		return err
+		return GithubRepoContentDetails{}, err
 	}
 
 	// Detect README
 	_, _, resp, err = s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, "README.md", nil)
 	if err == nil {
 		details.HasReadme = true
-	} else if resp.StatusCode != http.StatusNotFound {
+	} else if resp == nil || resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
-		return err
+		return GithubRepoContentDetails{}, err
 	}
 
 	// Detect helm folder
@@ -184,6 +192,8 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 			details.HasHelmFolder = true
 			details.HelmChartNames = make([]string, 0, len(directoryContent))
 			details.HasValuesSchema = make(map[string]bool, len(directoryContent))
+			details.ChartYAML = make(map[string]string, len(directoryContent))
+			details.ChartYAMLMissing = make(map[string]bool)
 			for _, item := range directoryContent {
 				// Only sub-directories are charts. A stray helm/README.md is
 				// not one, and listing it would spend a request that returns
@@ -201,17 +211,38 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 				// else we come to need is already in hand.
 				_, chartContent, chartResp, chartErr := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, name, fmt.Sprintf("helm/%s", chartName), nil)
 				if chartErr == nil {
+					hasChartYAML := false
 					for _, chartItem := range chartContent {
-						if chartItem.GetName() == valuesSchemaFileName {
+						switch chartItem.GetName() {
+						case valuesSchemaFileName:
 							details.HasValuesSchema[chartName] = true
-
-							break
+						case chartYAMLFileName:
+							hasChartYAML = true
 						}
 					}
 					if _, seen := details.HasValuesSchema[chartName]; !seen {
 						details.HasValuesSchema[chartName] = false
 					}
-				} else if chartResp != nil && chartResp.StatusCode != http.StatusNotFound {
+
+					// Read Chart.yaml here too, so the component loop does
+					// not pay one sequential request per chart for it. A
+					// read that fails stays out of both maps and is retried
+					// by GetChartYAML, which reports the error as before.
+					if !hasChartYAML {
+						details.ChartYAMLMissing[chartName] = true
+					} else if content, err := s.LoadGitHubFile(name, chartYAMLPath(chartName)); err == nil {
+						details.ChartYAML[chartName] = content
+					} else if rateLimited(err) {
+						// Everything after this would be refused too.
+						return GithubRepoContentDetails{}, err
+					}
+				} else if rateLimited(chartErr) {
+					// Every later request would be refused too, and caching
+					// the repo now would pin its remaining charts as unknown
+					// for the run. Fail the load so the pool pauses and the
+					// repo is loaded again after the reset.
+					return GithubRepoContentDetails{}, chartErr
+				} else if chartResp == nil || chartResp.StatusCode != http.StatusNotFound {
 					// Anything but "not found" means we do not know, so the
 					// chart stays absent from the map rather than being
 					// recorded as having no schema. It must not abort the
@@ -224,14 +255,158 @@ func (s *Service) loadGithubRepoContentDetails(name string) error {
 			}
 			details.NumHelmCharts = len(details.HelmChartNames)
 		}
-	} else if resp.StatusCode != http.StatusNotFound {
+	} else if resp == nil || resp.StatusCode != http.StatusNotFound {
 		// 404 is a "not found" error, which is expected. Everything else is not expected.
-		return err
+		return GithubRepoContentDetails{}, err
 	}
 
-	s.githubRepoContentDetails[name] = details
+	return details, nil
+}
 
-	return nil
+// contentDetails returns the repo's content details, loading them on first
+// use. Safe for concurrent use: two callers racing on the same uncached repo
+// may both load it, and the second write wins with identical data.
+func (s *Service) contentDetails(name string) (GithubRepoContentDetails, error) {
+	s.contentDetailsMu.RLock()
+	details, ok := s.githubRepoContentDetails[name]
+	s.contentDetailsMu.RUnlock()
+	if ok {
+		return details, nil
+	}
+
+	details, err := s.loadGithubRepoContentDetails(name)
+	if err != nil {
+		return GithubRepoContentDetails{}, err
+	}
+
+	s.contentDetailsMu.Lock()
+	s.githubRepoContentDetails[name] = details
+	s.contentDetailsMu.Unlock()
+
+	return details, nil
+}
+
+// PrefetchContentDetails loads the content details of the named repos with up
+// to workers concurrent loads, so the per-repo loop that follows is served
+// from cache instead of paying several sequential GitHub round trips per repo.
+// A name given twice (a repo declared by two teams) is loaded once.
+//
+// A repo that fails to load is logged and left uncached: the getters then try
+// again on first use and report the error exactly as they would without the
+// prefetch, so prefetching can make a run faster but never changes its
+// outcome.
+//
+// A rate limit pauses dispatch until GitHub's reset, logged once rather than
+// once per repo: go-github refuses every request until then without sending
+// it, so carrying on would only fail the remaining repos instantly. If the
+// reset is further off than maxPrefetchRateLimitWait, the prefetch stops and
+// leaves the remaining repos to the loop.
+func (s *Service) PrefetchContentDetails(names []string, workers int) {
+	var (
+		wg          sync.WaitGroup
+		sem         = make(chan struct{}, max(workers, 1))
+		mu          sync.Mutex
+		pausedUntil time.Time
+		seen        = make(map[string]bool, len(names))
+	)
+
+	for _, name := range names {
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+
+		sem <- struct{}{}
+
+		mu.Lock()
+		wait := time.Until(pausedUntil)
+		mu.Unlock()
+		if wait > maxPrefetchRateLimitWait {
+			log.Printf("WARN - rate limited by GitHub until %s, stopping the prefetch and leaving the remaining repos to load one by one\n", pausedUntil.Format(time.RFC3339))
+			<-sem
+
+			break
+		}
+		if wait > 0 {
+			log.Printf("INFO - rate limited by GitHub, pausing the prefetch for %s\n", wait.Round(time.Second))
+			time.Sleep(wait)
+		}
+
+		wg.Add(1)
+		go func() {
+			defer func() {
+				<-sem
+				wg.Done()
+			}()
+
+			_, err := s.contentDetails(name)
+			if err == nil {
+				return
+			}
+			if until, limited := rateLimitReset(err); limited {
+				mu.Lock()
+				if until.After(pausedUntil) {
+					pausedUntil = until
+				}
+				mu.Unlock()
+
+				return
+			}
+			log.Printf("WARN - %s - prefetching content details failed, will retry: %v\n", name, err)
+		}()
+	}
+
+	wg.Wait()
+}
+
+// maxPrefetchRateLimitWait is the longest PrefetchContentDetails pauses for a
+// rate limit before giving up on the rest of the prefetch.
+const maxPrefetchRateLimitWait = 5 * time.Minute
+
+// rateLimitReset reports whether err is a GitHub rate limit and when it ends.
+func rateLimitReset(err error) (time.Time, bool) {
+	var abuse *github.AbuseRateLimitError
+	if errors.As(err, &abuse) {
+		if abuse.RetryAfter != nil {
+			return time.Now().Add(*abuse.RetryAfter), true
+		}
+
+		return time.Now().Add(time.Minute), true
+	}
+
+	var primary *github.RateLimitError
+	if errors.As(err, &primary) {
+		return primary.Rate.Reset.Time, true
+	}
+
+	return time.Time{}, false
+}
+
+func rateLimited(err error) bool {
+	_, limited := rateLimitReset(err)
+
+	return limited
+}
+
+// GetChartYAML returns the content of helm/<chart>/Chart.yaml, from the
+// content details when they hold it, else read from GitHub. A Chart.yaml the
+// chart's listing showed to be absent yields a file-not-found error.
+func (s *Service) GetChartYAML(name, chart string) (string, error) {
+	details, err := s.contentDetails(name)
+	if err == nil {
+		if content, ok := details.ChartYAML[chart]; ok {
+			return content, nil
+		}
+		if details.ChartYAMLMissing[chart] {
+			return "", microerror.Maskf(fileNotFoundError, "file %s not found in repository %s", chartYAMLPath(chart), name)
+		}
+	}
+
+	return s.LoadGitHubFile(name, chartYAMLPath(chart))
+}
+
+func chartYAMLPath(chart string) string {
+	return fmt.Sprintf("helm/%s/%s", chart, chartYAMLFileName)
 }
 
 // Return the content of a source file in a repository as string.
@@ -372,77 +547,65 @@ func (s *Service) MustGetDefaultBranch(name string) string {
 
 // Returns whether the repo has a CircleCI configuration.
 func (s *Service) GetHasCircleCI(name string) (bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return false, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return false, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HasCircleCI, nil
+	return details.HasCircleCI, nil
 }
 
 // Returns whether the repo's CircleCI config uses force-public in push-to-registries,
 // meaning charts/images go to the public registry despite the repo being private.
 func (s *Service) GetForcePublicRegistry(name string) (bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return false, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return false, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].ForcePublicRegistry, nil
+	return details.ForcePublicRegistry, nil
 }
 
 // Returns whether the repo has a main README file.
 func (s *Service) GetHasReadme(name string) (bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return false, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return false, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HasReadme, nil
+	return details.HasReadme, nil
 }
 
 // Returns whether the repo has a Helm chart.
 func (s *Service) GetNumHelmCharts(name string) (int, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return 0, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return 0, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].NumHelmCharts, nil
+	return details.NumHelmCharts, nil
 }
 
 // Returns the name(s) of the repo's Helm chart(s).
 func (s *Service) GetHelmChartNames(name string) ([]string, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return nil, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HelmChartNames, nil
+	return details.HelmChartNames, nil
 }
 
 // Returns, per chart name, whether the repo carries
 // helm/<chart>/values.schema.json. A chart absent from the returned map was not
 // determined and must be treated as unknown, not as missing.
 func (s *Service) GetHasValuesSchema(name string) (map[string]bool, error) {
-	if _, ok := s.githubRepoContentDetails[name]; !ok {
-		err := s.loadGithubRepoContentDetails(name)
-		if err != nil {
-			return nil, microerror.Mask(err)
-		}
+	details, err := s.contentDetails(name)
+	if err != nil {
+		return nil, microerror.Mask(err)
 	}
 
-	return s.githubRepoContentDetails[name].HasValuesSchema, nil
+	return details.HasValuesSchema, nil
 }
 
 // circleciConfigHasForcePublic parses a CircleCI config YAML and checks whether

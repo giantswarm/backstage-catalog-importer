@@ -130,4 +130,11 @@ type GithubRepoContentDetails struct {
 	// A chart absent from the map was never looked at; callers must treat that
 	// as unknown rather than as absent.
 	HasValuesSchema map[string]bool
+
+	// Content of helm/<chart>/Chart.yaml, keyed by chart name, read along
+	// with the chart's listing. ChartYAMLMissing holds charts whose listing
+	// showed no Chart.yaml. A chart in neither map could not be read and must
+	// be treated as unknown; GetChartYAML then reads it from GitHub.
+	ChartYAML        map[string]string
+	ChartYAMLMissing map[string]bool
 }
