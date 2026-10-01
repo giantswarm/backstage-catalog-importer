@@ -36,6 +36,7 @@ replace go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.43.0 
 replace (
 	golang.org/x/crypto v0.49.0 => golang.org/x/crypto v0.56.0
 	golang.org/x/crypto v0.54.0 => golang.org/x/crypto v0.56.0
+	golang.org/x/crypto v0.55.0 => golang.org/x/crypto v0.57.0
 )
 
 replace golang.org/x/net v0.52.0 => golang.org/x/net v0.56.0
@@ -46,7 +47,10 @@ replace github.com/containerd/containerd => github.com/containerd/containerd v1.
 
 replace golang.org/x/text v0.38.0 => golang.org/x/text v0.40.0
 
-replace golang.org/x/mod v0.37.0 => golang.org/x/mod v0.40.0
+replace (
+	golang.org/x/mod v0.37.0 => golang.org/x/mod v0.40.0
+	golang.org/x/mod v0.38.0 => golang.org/x/mod v0.41.0
+)
 
 replace google.golang.org/grpc v1.82.1 => google.golang.org/grpc v1.83.1
 
