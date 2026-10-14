@@ -1,0 +1,8 @@
+active: false
+base: kiwi.example.com
+codename: kiwi
+customer: acme
+cmc_repository: acme-management-clusters
+ccr_repository: acme-configs
+pipeline: stable
+provider: capz

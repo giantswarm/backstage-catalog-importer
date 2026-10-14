@@ -1,6 +1,9 @@
 package installations
 
 type Installation struct {
+	// Active is false for a decommissioned installation whose record is kept
+	// for a re-creation. Absent means active, as in default-cluster.yaml.
+	Active                 *bool         `yaml:"active,omitempty"`
 	Base                   string        `yaml:"base"`
 	Codename               string        `yaml:"codename"`
 	Customer               string        `yaml:"customer"`
@@ -16,6 +19,12 @@ type Installation struct {
 	Aws                    *AwsDetails   `yaml:"aws,omitempty"`
 	CustomCA               string
 	AccessMarkdown         string
+}
+
+// Inactive says whether the installation is marked decommissioned
+// (active: false).
+func (i *Installation) Inactive() bool {
+	return i.Active != nil && !*i.Active
 }
 
 type SlackDetails struct {
