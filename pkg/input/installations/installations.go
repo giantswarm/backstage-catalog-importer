@@ -130,6 +130,11 @@ func (s *Service) GetInstallations() ([]*Installation, error) {
 			log.Fatalf("WARNING: error parsing content for file %s: %s", fullPath, err)
 		}
 
+		if installation.Inactive() {
+			log.Printf("INFO: skipping inactive installation %s", path)
+			continue
+		}
+
 		// Check if CA file exists
 		caFilePath := filepath.Join(path, caFile)
 		_, _, response, err := s.githubClient.Repositories.GetContents(s.ctx, s.config.GithubOrganization, s.config.GithubRepositoryName, caFilePath, nil)

@@ -90,6 +90,21 @@ func Test_parseInstallationInfo(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:      "kiwi",
+			inputPath: "testdata/kiwi/cluster.yaml",
+			want: &Installation{
+				Active:        new(false),
+				Base:          "kiwi.example.com",
+				CcrRepository: "acme-configs",
+				CmcRepository: "acme-management-clusters",
+				Codename:      "kiwi",
+				Customer:      "acme",
+				Pipeline:      "stable",
+				Provider:      "capz",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -106,6 +121,25 @@ func Test_parseInstallationInfo(t *testing.T) {
 			}
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("parseInstallationInfo() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestInstallation_Inactive(t *testing.T) {
+	tests := []struct {
+		name   string
+		active *bool
+		want   bool
+	}{
+		{name: "absent", active: nil, want: false},
+		{name: "active", active: new(true), want: false},
+		{name: "inactive", active: new(false), want: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := (&Installation{Active: tt.active}).Inactive(); got != tt.want {
+				t.Errorf("Inactive() = %v, want %v", got, tt.want)
 			}
 		})
 	}

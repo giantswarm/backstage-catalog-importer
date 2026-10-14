@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Skip installations whose `cluster.yaml` says `active: false`: a decommissioned installation whose record is kept for a re-creation no longer appears in the catalog. A record without `active` stays active, as `default-cluster.yaml` sets it.
+
 ### Added
 
 - Publish the build toolchain each component's default branch declares, so the devportal can show and filter on it: the labels `giantswarm.io/architect-orb-version`, `giantswarm.io/app-build-suite-version` and `giantswarm.io/app-test-suite-version`. The orb version is read from the `giantswarm/architect@<ref>` reference in `.circleci/config.yml`, which was already being fetched; for devctl-generated dynamic-config repos, from `.circleci/workflows.yml` merged with `.circleci/custom.yml`. The app-build-suite version is what the orb release pins as its `app-build-suite` executor image (the repo cannot override it) and is set only for repos that run `push-to-app-catalog`; the app-test-suite version is the repo's own `app-test-suite_container_tag` if it passes one to `run-tests-with-ats`, else the orb job's default at that release, and is set only for repos that run the job. `giantswarm.io/app-test-suite-version-source` (`repo` / `orb-default`) says which. Orb jobs are recognised as workflow jobs and as steps of repo-defined jobs and commands, by exact name only. Pins are resolved from `giantswarm/architect-orb` at tag `v<version>`, once per orb version per run; a failed request is retried by the next repo on that version rather than cached. A non-release orb ref (`dev:<sha>`, `volatile`) is not a valid label value and has no tag to resolve, so it is published as the annotation `giantswarm.io/architect-orb-ref`. These are declared versions — what a build on the default branch would use today — not proof of what the last build ran.
