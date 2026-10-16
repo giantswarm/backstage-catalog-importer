@@ -6,8 +6,15 @@ on:
       # Must run for the default branch!
       - main
 
+# The reusable workflow comments on the pull request and pushes the coverage
+# notes with GITHUB_TOKEN; it needs these permissions granted by the caller.
+permissions: {}
+
 jobs:
   coverage:
+    permissions:
+      pull-requests: write
+      contents: write
     uses: giantswarm/github-workflows/.github/workflows/go-coverage.yaml@main
     secrets:
-      token: "${{ secrets.TAYLORBOT_GITHUB_ACTION }}"
+      token: "${{ secrets.GITHUB_TOKEN }}"
