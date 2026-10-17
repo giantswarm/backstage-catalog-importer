@@ -7,43 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-10-14
+
 ### Changed
 
 - Skip installations whose `cluster.yaml` says `active: false`: a decommissioned installation whose record is kept for a re-creation no longer appears in the catalog. A record without `active` stays active, as `default-cluster.yaml` sets it.
+
+## [0.39.0] - 2026-09-29
 
 ### Added
 
 - Publish the build toolchain each component's default branch declares, so the devportal can show and filter on it: the labels `giantswarm.io/architect-orb-version`, `giantswarm.io/app-build-suite-version` and `giantswarm.io/app-test-suite-version`. The orb version is read from the `giantswarm/architect@<ref>` reference in `.circleci/config.yml`, which was already being fetched; for devctl-generated dynamic-config repos, from `.circleci/workflows.yml` merged with `.circleci/custom.yml`. The app-build-suite version is what the orb release pins as its `app-build-suite` executor image (the repo cannot override it) and is set only for repos that run `push-to-app-catalog`; the app-test-suite version is the repo's own `app-test-suite_container_tag` if it passes one to `run-tests-with-ats`, else the orb job's default at that release, and is set only for repos that run the job. `giantswarm.io/app-test-suite-version-source` (`repo` / `orb-default`) says which. Orb jobs are recognised as workflow jobs and as steps of repo-defined jobs and commands, by exact name only. Pins are resolved from `giantswarm/architect-orb` at tag `v<version>`, once per orb version per run; a failed request is retried by the next repo on that version rather than cached. A non-release orb ref (`dev:<sha>`, `volatile`) is not a valid label value and has no tag to resolve, so it is published as the annotation `giantswarm.io/architect-orb-ref`. These are declared versions — what a build on the default branch would use today — not proof of what the last build ran.
 - Where a used tool gets no version label, a status label says why, so gaps are filterable instead of silently missing from every version filter: `giantswarm.io/architect-orb-status` (`non-release` / `unknown`), `giantswarm.io/app-build-suite-status` (`unknown`) and `giantswarm.io/app-test-suite-status` (`conflict` / `unknown`). `conflict` means the repo would run more than one app-test-suite version — two different overrides, or an override alongside a job on the orb default. `unknown` covers config that could not be read, orb source that could not be read, a non-release orb ref, and values that are not versions, such as a `<< parameters.* >>` template expression.
 - The app-build-suite version is a pure function of the orb version, so this copies a small orb-to-ABS lookup onto every component that pushes charts: an orb bump rewrites the label on every repo using it, and the mapping is as fresh as the last import. That is deliberate — a catalog filter cannot join, and one-click filtering is the point.
-- Check each component's charts against the chart metadata standard and publish the outcome, so the devportal can show and filter on it. The verdict is the label `giantswarm.io/readiness-standards` (`ok` / `incomplete`) because Backstage only filters server-side on labels; the detail rides in `giantswarm.io/readiness-flags`, `giantswarm.io/readiness-advisory` and `giantswarm.io/chart-metadata-style` (`current` / `legacy` / `mixed` / `none`).
-- Enforced and advisory gaps are kept strictly apart, and only enforced gaps set the label. Enforced means it fails a build today, in app-build-suite inside `architect/push-to-app-catalog`: `META-NO-TEAM` (C0001 HasTeamLabel, which accepts either annotation prefix) and `NO-VALUES-SCHEMA` (F0001 HasValuesSchema). Measured over the fleet that is 4 components of 234. Everything else — `META-LEGACY`, `META-NO-AUDIENCE`, `META-NO-MANAGED`, `CHART-API-V1`, `CHART-NO-DESCRIPTION`, `CHART-NO-KEYWORDS`, `CHART-NO-HOME`, `HOME-NOT-GS` — is documented in the standard and gated nowhere, and describes a rollout that never happened rather than a broken chart: 189 components have no keywords, 153 no `managed` annotation, 127 no `audience`. Merging the two would mark four components in five as failing.
-- Detect `helm/<chart>/values.schema.json` per chart, one directory listing per chart, cached alongside the other repo content details. A chart whose listing could not be read stays absent from the map and is never flagged, so an unreadable repo cannot invent a gap. Library charts are exempt: they have no values to validate.
-
-### Fixed
-
-- Force-public detection no longer comes out `false` for a CircleCI config with the legacy `workflows: version: 2` key, and now also sees devctl-generated dynamic-config repos (`.circleci/workflows.yml` + `.circleci/custom.yml`). It reads the same parse as the build toolchain labels, which keeps a key of unexpected shape from discarding the rest of the file.
-- A team-file entry declared with `lifecycle: archived` is skipped before any GitHub lookup (logged at INFO), and a declared repository that is missing from the organisation's repository listing is skipped with a warning instead of failing the whole run. Archived declarations now stay in the team files as the record of the repository (the reconciler archives the repository on GitHub from them), so every archive used to abort the catalog import with `repository … not found` and the devportal catalog stopped regenerating.
-- Stop publishing unsubstituted chart and app versions to the component catalog. Component entities read `helm/<chart>/Chart.yaml` from each repo's default branch, where architect has not replaced the version placeholders yet, so 26 chart versions (`0.0.0-dev`, `1.6.0-dev`, `mcp-template`'s `0.0.0`) and 34 app versions were reaching the devportal. `cmd/charts` already guards the same annotations with `ociregistry.IsReleaseVersion`; the component path never got it. As in `cmd/charts`, the app version is only published for a chart whose chart version is publishable: both come from the same `Chart.yaml`, so an unsubstituted chart version means the app version beside it describes the default-branch tip rather than anything released. Withheld values keep their slot so the comma-separated lists stay aligned with `giantswarm.io/helmcharts` by index, and an annotation whose every slot is empty is now omitted rather than emitted as `,,`. The app-version guard is deliberately narrower than the chart-version one: app versions name the upstream release and follow no convention (`main`, `edge-25.12.3`, `4.9`, `1.12.8-gs-6158079b4` are all real), so only the `0.0.0` placeholder (in any spelling) and architect's own `-dev` prerelease are dropped.
 
 ### Changed
 
 - Fetch each repository's content details (CircleCI config, including `workflows.yml` and `custom.yml` for dynamic-config repos, README, Helm charts, values schemas, each chart's `Chart.yaml`) with a bounded pool of concurrent requests before building components, instead of one repository after another inside the loop. Set the pool size with `--github-concurrency` (default 8). A repository declared by two teams is fetched once. A repository whose prefetch fails is left uncached and loaded again in the loop, which reports the error as before. A GitHub rate limit pauses the pool until the reset, logged once, instead of failing every remaining repository; a reset more than five minutes off stops the prefetch and leaves the rest to the loop. One behaviour change: a `helm/<dir>` without a `Chart.yaml` no longer logs a WARN, since its listing already shows the file is absent.
+
+### Fixed
+
+- Force-public detection no longer comes out `false` for a CircleCI config with the legacy `workflows: version: 2` key, and now also sees devctl-generated dynamic-config repos (`.circleci/workflows.yml` + `.circleci/custom.yml`). It reads the same parse as the build toolchain labels, which keeps a key of unexpected shape from discarding the rest of the file.
+
+## [0.38.0] - 2026-09-29
+
+### Changed
+
 - The GitHub client's retries honour a rate limit's full wait instead of capping it at 30 seconds, read it from `Retry-After` (seconds or HTTP date), from `x-ratelimit-remaining: 0` plus `x-ratelimit-reset`, or from a secondary-rate-limit message in the body (a minute), and give up at once when the wait exceeds two minutes. A 403 with none of these is a permission error and is still returned at once.
+
+## [0.37.4] - 2026-09-17
+
+### Fixed
+
+- A team-file entry declared with `lifecycle: archived` is skipped before any GitHub lookup (logged at INFO), and a declared repository that is missing from the organisation's repository listing is skipped with a warning instead of failing the whole run. Archived declarations now stay in the team files as the record of the repository (the reconciler archives the repository on GitHub from them), so every archive used to abort the catalog import with `repository … not found` and the devportal catalog stopped regenerating.
+
+## [0.37.0] - 2026-09-09
+
+### Changed
+
 - `charts`: a chart whose `Chart.yaml` carries `deprecated: true` is exported with `spec.lifecycle: deprecated` instead of `production`. Helm's deprecation flag is how a chart's authors say it is retired; a catalog that kept calling such a chart production sent readers to something nobody should install any more. Every other chart stays `production`.
-- Emit the CI-generation state as a value tag (`ci:generated` / `ci:manual`, always exactly one) instead of the presence-only `ci-generated`. The catalog tag picker only ANDs positive tags, so a complement tag is needed to express queries like "auto-release but not devctl-generated CI" (`release:auto-release` + `ci:manual`).
+
+## [0.36.0] - 2026-09-01
 
 ### Added
 
-- Add a `groups` subcommand that exports Giant Swarm GitHub teams as Backstage group entities to `groups.yaml`.
-- The `groups` subcommand supports a `--teams` flag (comma-separated allowlist of team slugs) and a `--parent` flag (only export teams that are descendants of the given parent team, e.g. `employees`) to control which teams are exported.
+- Check each component's charts against the chart metadata standard and publish the outcome, so the devportal can show and filter on it. The verdict is the label `giantswarm.io/readiness-standards` (`ok` / `incomplete`) because Backstage only filters server-side on labels; the detail rides in `giantswarm.io/readiness-flags`, `giantswarm.io/readiness-advisory` and `giantswarm.io/chart-metadata-style` (`current` / `legacy` / `mixed` / `none`).
+- Enforced and advisory gaps are kept strictly apart, and only enforced gaps set the label. Enforced means it fails a build today, in app-build-suite inside `architect/push-to-app-catalog`: `META-NO-TEAM` (C0001 HasTeamLabel, which accepts either annotation prefix) and `NO-VALUES-SCHEMA` (F0001 HasValuesSchema). Measured over the fleet that is 4 components of 234. Everything else — `META-LEGACY`, `META-NO-AUDIENCE`, `META-NO-MANAGED`, `CHART-API-V1`, `CHART-NO-DESCRIPTION`, `CHART-NO-KEYWORDS`, `CHART-NO-HOME`, `HOME-NOT-GS` — is documented in the standard and gated nowhere, and describes a rollout that never happened rather than a broken chart: 189 components have no keywords, 153 no `managed` annotation, 127 no `audience`. Merging the two would mark four components in five as failing.
+- Detect `helm/<chart>/values.schema.json` per chart, one directory listing per chart, cached alongside the other repo content details. A chart whose listing could not be read stays absent from the map and is never flagged, so an unreadable repo cannot invent a gap. Library charts are exempt: they have no values to validate.
+
+## [0.35.5] - 2026-09-01
+
+### Fixed
+
+- Stop publishing unsubstituted chart and app versions to the component catalog. Component entities read `helm/<chart>/Chart.yaml` from each repo's default branch, where architect has not replaced the version placeholders yet, so 26 chart versions (`0.0.0-dev`, `1.6.0-dev`, `mcp-template`'s `0.0.0`) and 34 app versions were reaching the devportal. `cmd/charts` already guards the same annotations with `ociregistry.IsReleaseVersion`; the component path never got it. As in `cmd/charts`, the app version is only published for a chart whose chart version is publishable: both come from the same `Chart.yaml`, so an unsubstituted chart version means the app version beside it describes the default-branch tip rather than anything released. Withheld values keep their slot so the comma-separated lists stay aligned with `giantswarm.io/helmcharts` by index, and an annotation whose every slot is empty is now omitted rather than emitted as `,,`. The app-version guard is deliberately narrower than the chart-version one: app versions name the upstream release and follow no convention (`main`, `edge-25.12.3`, `4.9`, `1.12.8-gs-6158079b4` are all real), so only the `0.0.0` placeholder (in any spelling) and architect's own `-dev` prerelease are dropped.
+
+## [0.34.0] - 2026-06-26
+
+### Changed
+
+- Emit the CI-generation state as a value tag (`ci:generated` / `ci:manual`, always exactly one) instead of the presence-only `ci-generated`. The catalog tag picker only ANDs positive tags, so a complement tag is needed to express queries like "auto-release but not devctl-generated CI" (`release:auto-release` + `ci:manual`).
+
+## [0.33.0] - 2026-06-26
+
+### Added
+
 - The `groups` subcommand supports a `--namespace` flag (default `default`). Set it to an empty string to omit the `namespace` field from exported group entities (e.g. for customer-facing catalogs).
+
+### Changed
+
+- Exported catalog entities are now sorted with a stable sort, so the output ordering is fully deterministic across runs and diffs stay minimal.
+
+## [0.32.0] - 2026-06-26
+
+### Added
+
 - Emit additional component tags from the github repo configuration so the devportal catalog can be filtered company-wide by CI/release shape: `ci-generated` (when `gen.ci.generate` is set), `release:auto-release` / `release:legacy` (the effective release workflow), `upstream-check` (when `upstreamCheck` is configured), and `precommit` (when `gen.preCommit` is set).
+
+## [0.31.0] - 2026-06-26
+
+### Added
+
+- The `groups` subcommand supports a `--teams` flag (comma-separated allowlist of team slugs) and a `--parent` flag (only export teams that are descendants of the given parent team, e.g. `employees`) to control which teams are exported.
 
 ### Changed
 
 - The `groups` subcommand now requires at least one of `--teams` or `--parent` to be set. This prevents accidentally exporting all teams, which can expose sensitive (e.g. customer-specific) team names.
-- Exported catalog entities are now sorted with a stable sort, so the output ordering is fully deterministic across runs and diffs stay minimal.
+
+## [0.30.0] - 2026-06-26
+
+### Added
+
+- Add a `groups` subcommand that exports Giant Swarm GitHub teams as Backstage group entities to `groups.yaml`.
 
 ### Removed
 
@@ -520,7 +574,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial code
 
-[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.29.1...HEAD
+[Unreleased]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.40.0...HEAD
+[0.40.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.39.0...v0.40.0
+[0.39.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.38.0...v0.39.0
+[0.38.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.37.4...v0.38.0
+[0.37.4]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.37.0...v0.37.4
+[0.37.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.36.0...v0.37.0
+[0.36.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.35.5...v0.36.0
+[0.35.5]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.34.0...v0.35.5
+[0.34.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.33.0...v0.34.0
+[0.33.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.32.0...v0.33.0
+[0.32.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.31.0...v0.32.0
+[0.31.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.30.0...v0.31.0
+[0.30.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.29.1...v0.30.0
 [0.29.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.29.0...v0.29.1
 [0.29.0]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.28.1...v0.29.0
 [0.28.1]: https://github.com/giantswarm/backstage-catalog-importer/compare/v0.28.0...v0.28.1
