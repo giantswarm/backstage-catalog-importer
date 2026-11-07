@@ -3,7 +3,7 @@ package repositories
 import (
 	"strings"
 
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 )
 
 // The architect orb, as referenced from a repo's CircleCI orbs block:
