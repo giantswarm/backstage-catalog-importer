@@ -12,7 +12,7 @@ require (
 	github.com/google/go-github/v93 v93.0.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/spf13/cobra v1.10.2
-	go.yaml.in/yaml/v3 v3.0.6
+	go.yaml.in/yaml/v4 v4.0.0
 	helm.sh/helm/v3 v3.22.1
 	oras.land/oras-go/v2 v2.7.0
 	sigs.k8s.io/yaml v1.6.0
