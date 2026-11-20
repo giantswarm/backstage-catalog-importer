@@ -20,13 +20,15 @@ import (
 	bscatalog "github.com/giantswarm/backstage-catalog-importer/pkg/output/bscatalog/v1alpha1"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/catalog/component"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/output/export"
+	"github.com/giantswarm/backstage-catalog-importer/pkg/project"
 	componentutil "github.com/giantswarm/backstage-catalog-importer/pkg/util/component"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "backstage-catalog-importer",
-	Short: "Giant Swarm tool to import data into backstage's catalog",
-	Run:   runRoot,
+	Use:     "backstage-catalog-importer",
+	Short:   "Giant Swarm tool to import data into backstage's catalog",
+	Version: project.Version(),
+	Run:     runRoot,
 }
 
 const (
@@ -66,6 +68,7 @@ func init() {
 	rootCmd.AddCommand(groups.Command)
 	rootCmd.AddCommand(installations.Command)
 	rootCmd.AddCommand(users.Command)
+	rootCmd.AddCommand(newVersionCommand())
 }
 
 func Execute() {
