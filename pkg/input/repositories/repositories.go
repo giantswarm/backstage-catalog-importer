@@ -18,7 +18,7 @@ import (
 
 	"github.com/giantswarm/microerror"
 	"github.com/google/go-github/v93/github"
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/giantswarm/backstage-catalog-importer/pkg/httpclient"
 	"github.com/giantswarm/backstage-catalog-importer/pkg/input/architectorb"
