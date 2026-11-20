@@ -1,5 +1,14 @@
 # Usage
 
+## Show the version
+
+```nohighlight
+backstage-catalog-importer version
+backstage-catalog-importer --version
+```
+
+Both commands print the version, commit and date without requiring a GitHub token or generating catalog files. Build-time ldflags take precedence over Go's embedded build information; the date falls back to the VCS commit timestamp. An unstamped local build without a module version reports `0.0.0-dev`, with `unknown` for unavailable metadata.
+
 ## Generate catalog files for the Giant Swarm developer portal
 
 This requires a Github personal access token (PTA) with permission to read repository content, teams, and user info for the `giantswarm` organization, provided as `GITHUB_TOKEN` environment variable.
