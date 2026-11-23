@@ -196,15 +196,11 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 		r.Annotations["giantswarm.io/escalation-matrix"] = ins.EscalationMatrix
 	}
 
-	// Happa and Grafana link
+	// Grafana and Policy Reporter links
 	if ins.Provider == providerAWS || ins.Provider == "azure" || ins.Provider == "kvm" {
 		// Vintage
 		r.Links = append(r.Links, []bscatalog.EntityLink{
 			{
-				URL:   fmt.Sprintf("https://happa.g8s.%s/admin-login", ins.Base),
-				Title: "Happa",
-				Icon:  "giantswarm",
-			}, {
 				URL:   fmt.Sprintf("https://grafana.g8s.%s/", ins.Base),
 				Title: "Grafana",
 				Icon:  iconGrafana,
@@ -220,10 +216,6 @@ func toResourceEntity(ins *installations.Installation) *bscatalog.Entity {
 				URL:   fmt.Sprintf("https://grafana.%s.%s/", ins.Codename, ins.Base),
 				Title: "Grafana (customer URL)",
 				Icon:  iconGrafana,
-			}, {
-				URL:   fmt.Sprintf("https://happa.%s.%s/admin-login", ins.Codename, ins.Base),
-				Title: "Happa",
-				Icon:  "giantswarm",
 			}, {
 				URL:   fmt.Sprintf("https://kyverno-%s.teleport.giantswarm.io", ins.Codename),
 				Title: "Policy Reporter (via Teleport)",
